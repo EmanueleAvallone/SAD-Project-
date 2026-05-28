@@ -1,15 +1,87 @@
 package com.musicplayer.controller;
 
+import com.musicplayer.model.Playlist;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 
+
+import com.musicplayer.model.Track;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import java.io.IOException;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.RadioButton;
+
+import java.util.Optional;
 public class MainController {
 
     @FXML
     private Label statusLabel;
+    @FXML
+    private ListView<Playlist> playlistListView;
+    @FXML
+    private TableView<Track> trackTableView;
 
     @FXML
+    private TableColumn<Track, String> trackTitleColumn;
+
+    @FXML
+    private TableColumn<Track, String> trackAuthorColumn;
+
+    @FXML
+    private TableColumn<Track, String> trackLengthColumn;
+
+    @FXML
+    private TableColumn<Track, String> trackGenreColumn;
+
+    @FXML
+    private TableColumn<Track, Integer> trackYearColumn;
+
+    @FXML
+    private TableColumn<Track, Integer> trackPlayCountColumn;
+
+    @FXML
+    private RadioButton sequentialModeRadio;
+
+    @FXML
+    private RadioButton shuffleModeRadio;
+
+    @FXML
+    private RadioButton loopModeRadio;
+
+    private final ObservableList<Track> tracks = FXCollections.observableArrayList(); //lista delle tracce
+    private final ObservableList<Playlist> playlists = FXCollections.observableArrayList(); //lista delle playlist
+    @FXML
     private void initialize() {
+        playlistListView.setItems(playlists);
+
+        trackTitleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
+        trackAuthorColumn.setCellValueFactory(new PropertyValueFactory<>("author"));
+        trackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
+        trackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
+        trackYearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
+        trackPlayCountColumn.setCellValueFactory(new PropertyValueFactory<>("playedCount"));
+
+        trackTableView.setItems(tracks);
+
+
+        ToggleGroup playbackModeGroup = new ToggleGroup();
+        sequentialModeRadio.setToggleGroup(playbackModeGroup);
+        shuffleModeRadio.setToggleGroup(playbackModeGroup);
+        loopModeRadio.setToggleGroup(playbackModeGroup);
+
         if (statusLabel != null) {
             statusLabel.setText("Applicazione avviata correttamente.");
         }
@@ -24,7 +96,35 @@ public class MainController {
 
     @FXML
     private void handleNewPlaylist() {
-        System.out.println("New playlist");
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("New playlist");
+        dialog.setHeaderText("Crea una nuova playlist");
+        dialog.setContentText("Nome playlist:");
+
+        Optional<String> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            String playlistName = result.get().trim();
+
+            if (playlistName.isEmpty()) {
+                showError("Il nome della playlist non può essere vuoto.");
+                return;
+            }
+
+            boolean alreadyExists = playlists.stream()
+                    .anyMatch(p -> p.getName().equalsIgnoreCase(playlistName));
+
+            if (alreadyExists) {
+                showError("Esiste già una playlist con questo nome.");
+                return;
+            }
+
+            Playlist playlist = new Playlist(playlistName);
+            playlists.add(playlist);
+            playlistListView.getSelectionModel().select(playlist);
+
+            statusLabel.setText("Playlist creata: " + playlistName);
+        }
     }
 
     @FXML
@@ -54,7 +154,39 @@ public class MainController {
 
     @FXML
     private void handleAddTrack() {
-        System.out.println("Add track");
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/musicplayer/view/AddTrackView.fxml")
+            );
+
+            Parent root = loader.load();
+
+            AddTrackController controller = loader.getController();
+
+            Stage stage = new Stage();
+            stage.setTitle("Add track");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(trackTableView.getScene().getWindow());
+            stage.setResizable(false);
+
+            stage.showAndWait();
+
+            Track createdTrack = controller.getCreatedTrack();
+
+            if (createdTrack != null) {
+                tracks.add(createdTrack);
+                trackTableView.getSelectionModel().select(createdTrack);
+
+                if (statusLabel != null) {
+                    statusLabel.setText("Traccia aggiunta: " + createdTrack.getTitle());
+                }
+            }
+
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            showError("Impossibile aprire la schermata di aggiunta traccia.");
+        }
     }
 
     @FXML
@@ -120,5 +252,11 @@ public class MainController {
     @FXML
     private void handleRedo() {
         System.out.println("Redo");
+    }
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Errore");
+        alert.setHeaderText(message);
+        alert.showAndWait();
     }
 }

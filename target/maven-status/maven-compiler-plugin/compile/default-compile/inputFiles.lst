@@ -4,6 +4,7 @@
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/command/CommandManager.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/command/DeleteTrackCommand.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/command/RemoveTrackPCommand.java
+/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/controller/AddTrackController.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/controller/LibraryController.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/controller/MainController.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/controller/PlayerController.java

@@ -151,13 +151,9 @@
                 <Separator />
                 <Label styleClass="field-label" text="Playback mode" />
                 <VBox spacing="6.0">
-                    <RadioButton fx:id="sequentialModeRadio" selected="true" text="Sequential">
-                        <toggleGroup>
-                            <ToggleGroup fx:id="playbackModeGroup" />
-                        </toggleGroup>
-                    </RadioButton>
-                    <RadioButton fx:id="shuffleModeRadio" text="Shuffle" toggleGroup="$playbackModeGroup" />
-                    <RadioButton fx:id="loopModeRadio" text="Loop" toggleGroup="$playbackModeGroup" />
+                    <RadioButton fx:id="sequentialModeRadio" selected="true" text="Sequential" />
+                    <RadioButton fx:id="shuffleModeRadio" text="Shuffle" />
+                    <RadioButton fx:id="loopModeRadio" text="Loop" />
                 </VBox>
             </VBox>
 
