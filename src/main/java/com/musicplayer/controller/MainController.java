@@ -8,9 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-
-
 import com.musicplayer.model.Track;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -23,7 +20,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.RadioButton;
-
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.ButtonType;
 import java.util.Optional;
 public class MainController {
 
@@ -67,6 +65,8 @@ public class MainController {
     private void initialize() {
         playlistListView.setItems(playlists);
 
+        trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE); //gestisce la selezione di una riga nella tabella track library
+
         trackTitleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
         trackAuthorColumn.setCellValueFactory(new PropertyValueFactory<>("author"));
         trackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
@@ -75,7 +75,6 @@ public class MainController {
         trackPlayCountColumn.setCellValueFactory(new PropertyValueFactory<>("playedCount"));
 
         trackTableView.setItems(tracks);
-
 
         ToggleGroup playbackModeGroup = new ToggleGroup();
         sequentialModeRadio.setToggleGroup(playbackModeGroup);
@@ -196,7 +195,60 @@ public class MainController {
 
     @FXML
     private void handleDeleteTrack() {
-        System.out.println("Delete track");
+        Track selectedTrack = trackTableView.getSelectionModel().getSelectedItem();
+
+        if (selectedTrack == null) {
+            showError("Seleziona una traccia da eliminare.");
+            return;
+        }
+
+        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmationAlert.setTitle("Delete track");
+        confirmationAlert.setHeaderText("Conferma eliminazione");
+        confirmationAlert.setContentText(
+                "Vuoi eliminare definitivamente la traccia \""
+                        + selectedTrack.getTitle()
+                        + "\" dalla libreria?"
+        );
+
+        ButtonType cancelButton = new ButtonType("Cancel");
+        ButtonType deleteButton = new ButtonType("Delete");
+
+        confirmationAlert.getButtonTypes().setAll(cancelButton, deleteButton);
+
+        Optional<ButtonType> result = confirmationAlert.showAndWait();
+
+        if (result.isEmpty() || result.get() == cancelButton) {
+            if (statusLabel != null) {
+                statusLabel.setText("Eliminazione annullata.");
+            }
+            return;
+        }
+
+        removeTrackFromCatalog(selectedTrack);
+
+        if (statusLabel != null) {
+            statusLabel.setText("Traccia eliminata: " + selectedTrack.getTitle());
+        }
+    }
+
+
+    /*
+    Questo metodo permette alla traccia di essere rimossa dal catalogo
+    principale e da tutte le playlist in cui è presente.
+     */
+    private void removeTrackFromCatalog(Track track) {
+        if (track == null) {
+            return;
+        }
+
+        tracks.remove(track);
+
+        for (Playlist playlist : playlists) {
+            playlist.removeTrack(track);
+        }
+
+        trackTableView.getSelectionModel().clearSelection();
     }
 
     @FXML

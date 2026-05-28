@@ -48,4 +48,29 @@ public class Track {
     public void incrementPlayedCount() {
         playedCount++;
     }
+
+    //aggiungo i setter per la modifica della Traccia.
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public void setLength(String length) {
+        this.length = length;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
+    }
+
+    public void setPlayedCount(int playedCount) {
+        this.playedCount = playedCount;
+    }
 }

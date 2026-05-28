@@ -81,7 +81,11 @@ public class AddTrackController {
         }
 
         int year;
-
+        
+        if (yearText.isEmpty()) {
+            showError("L'anno della traccia è obbligatorio.");
+            return;
+        }
         try {
             year = Integer.parseInt(yearText);
         } catch (NumberFormatException exception) {
