@@ -53,7 +53,7 @@ public class MainController {
     @FXML
     private TableColumn<Track, Integer> trackPlayCountColumn;
 
-    @FXML
+  /*  @FXML
     private RadioButton sequentialModeRadio;
 
     @FXML
@@ -61,10 +61,14 @@ public class MainController {
 
     @FXML
     private RadioButton loopModeRadio;
+*/
+    @FXML
+    private PlayerController playerControlController;
 
     private final ObservableList<Track> tracks = FXCollections.observableArrayList(); //lista delle tracce
     private final ObservableList<Playlist> playlists = FXCollections.observableArrayList(); //lista delle playlist
     private final TrackService trackService = new TrackService();
+    //private final PlayerController playerController = new PlayerController();
 
     @FXML
     private void initialize() {
@@ -72,6 +76,18 @@ public class MainController {
 
         trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE); //gestisce la selezione di una riga nella tabella track library
 
+        /*trackTableView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldTrack, newTrack) ->
+                        playerController.setSelectedTrack(newTrack)
+                );*/
+        trackTableView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldTrack, newTrack) -> {
+                    if (playerControlController != null) {
+                        playerControlController.setSelectedTrack(newTrack);
+                    }
+                });
         trackTitleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
         trackAuthorColumn.setCellValueFactory(new PropertyValueFactory<>("author"));
         trackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
@@ -81,10 +97,10 @@ public class MainController {
 
         trackTableView.setItems(tracks);
 
-        ToggleGroup playbackModeGroup = new ToggleGroup();
+        /* ToggleGroup playbackModeGroup = new ToggleGroup();
         sequentialModeRadio.setToggleGroup(playbackModeGroup);
         shuffleModeRadio.setToggleGroup(playbackModeGroup);
-        loopModeRadio.setToggleGroup(playbackModeGroup);
+        loopModeRadio.setToggleGroup(playbackModeGroup);*/
 
         if (statusLabel != null) {
             statusLabel.setText("Applicazione avviata correttamente.");
@@ -334,20 +350,38 @@ public class MainController {
         System.out.println("Move track down");
     }
 
-    @FXML
+    /*@FXML
     private void handlePlay() {
-        System.out.println("Play");
+        Track selectedTrack = trackTableView.getSelectionModel().getSelectedItem();
+
+        if (selectedTrack == null) {
+            showError("Seleziona una traccia da riprodurre.");
+            return;
+        }
+
+        playerController.setSelectedTrack(selectedTrack);
+        playerController.handlePlay();
+
+        if (statusLabel != null) {
+            statusLabel.setText("Riproduzione avviata: " + selectedTrack.getTitle());
+        }
+
+        trackTableView.refresh();
     }
 
     @FXML
     private void handlePause() {
-        System.out.println("Pause");
+        playerController.handlePause();
+
+        if (statusLabel != null) {
+            statusLabel.setText("Riproduzione sospesa.");
+        }
     }
 
     @FXML
     private void handleSkip() {
         System.out.println("Skip");
-    }
+    }*/
 
     @FXML
     private void handleApplyFilters() {

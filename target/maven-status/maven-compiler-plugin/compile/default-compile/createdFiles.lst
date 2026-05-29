@@ -1,4 +1,5 @@
 com/musicplayer/model/engine/PlayerObserver.class
+com/musicplayer/model/engine/StoppedState.class
 com/musicplayer/model/engine/PlayerState.class
 com/musicplayer/model/Playlist.class
 com/musicplayer/view/PlaylistView.class
@@ -9,7 +10,6 @@ com/musicplayer/controller/LibraryController.class
 com/musicplayer/model/engine/SequentialPlay.class
 com/musicplayer/model/engine/PlayStrategy.class
 com/musicplayer/command/CommandManager.class
-com/musicplayer/model/engine/RestartState.class
 com/musicplayer/controller/PlayerController.class
 com/musicplayer/model/PlaylistFactory.class
 com/musicplayer/model/engine/ShufflePlay.class
@@ -21,6 +21,7 @@ com/musicplayer/model/engine/PausedState.class
 com/musicplayer/model/Tag.class
 com/musicplayer/model/Library.class
 com/musicplayer/command/DeleteTrackCommand.class
+com/musicplayer/service/PlaybackService.class
 com/musicplayer/MainApp.class
 com/musicplayer/model/Track.class
 com/musicplayer/model/engine/PlayerObservable.class
