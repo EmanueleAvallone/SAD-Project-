@@ -1,6 +1,6 @@
 package com.musicplayer.model.engine;
 
-public class PausedState implements PlayerState {
+public class StoppedState implements PlayerState {
 
     @Override
     public void play(MediaPlayerEngine engine) {
@@ -9,16 +9,16 @@ public class PausedState implements PlayerState {
 
     @Override
     public void pause(MediaPlayerEngine engine) {
-        // già in pausa, nessuna transizione
+        // transizione non valida: nessuna azione
     }
 
     @Override
     public void stop(MediaPlayerEngine engine) {
-        engine.setState(new StoppedState());
+        // già fermo: nessuna azione
     }
 
     @Override
     public String getName() {
-        return "PAUSED";
+        return "STOPPED";
     }
 }
