@@ -30,3 +30,4 @@ com/musicplayer/command/Command.class
 com/musicplayer/command/AddTrackPCommand.class
 com/musicplayer/controller/MainController.class
 com/musicplayer/view/PlayerControlView.class
+com/musicplayer/service/TrackService.class

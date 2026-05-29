@@ -26,6 +26,7 @@
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/RestartState.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/SequentialPlay.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/ShufflePlay.java
+/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/service/TrackService.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/view/LibraryView.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/view/MainWindow.java
 /Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/view/PlayerControlView.java

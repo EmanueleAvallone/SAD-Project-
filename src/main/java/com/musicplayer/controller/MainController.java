@@ -8,7 +8,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert;
+
 import com.musicplayer.model.Track;
+import com.musicplayer.service.TrackService;
+
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -61,6 +64,8 @@ public class MainController {
 
     private final ObservableList<Track> tracks = FXCollections.observableArrayList(); //lista delle tracce
     private final ObservableList<Playlist> playlists = FXCollections.observableArrayList(); //lista delle playlist
+    private final TrackService trackService = new TrackService();
+
     @FXML
     private void initialize() {
         playlistListView.setItems(playlists);
@@ -151,6 +156,12 @@ public class MainController {
         System.out.println("Generate by tag");
     }
 
+    /**
+     * Apre la schermata Add Track e aggiunge al catalogo la traccia creata.
+     *
+     * La creazione della traccia viene gestita da AddTrackController, mentre
+     * MainController si occupa di aggiornare la Track Library.
+     */
     @FXML
     private void handleAddTrack() {
         try {
@@ -174,8 +185,7 @@ public class MainController {
             Track createdTrack = controller.getCreatedTrack();
 
             if (createdTrack != null) {
-                tracks.add(createdTrack);
-                trackTableView.getSelectionModel().select(createdTrack);
+                trackService.addTrack(tracks, createdTrack);                trackTableView.getSelectionModel().select(createdTrack);
 
                 if (statusLabel != null) {
                     statusLabel.setText("Traccia aggiunta: " + createdTrack.getTitle());
@@ -188,10 +198,64 @@ public class MainController {
         }
     }
 
+    /**
+     * Apre la schermata AddTrackView in modalità modifica.
+     *
+     * La stessa view viene riutilizzata per evitare duplicazione dell'interfaccia.
+     * I dati della traccia selezionata vengono precompilati e, al salvataggio,
+     * vengono aggiornati solo i campi modificabili.
+     */
     @FXML
     private void handleEditTrack() {
-        System.out.println("Edit track");
+        Track selectedTrack = trackTableView.getSelectionModel().getSelectedItem();
+
+        if (selectedTrack == null) {
+            showError("Seleziona una traccia da modificare.");
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/musicplayer/view/AddTrackView.fxml")
+            );
+
+            Parent root = loader.load();
+
+            AddTrackController controller = loader.getController();
+            controller.setTrackToEdit(selectedTrack);
+
+            Stage stage = new Stage();
+            stage.setTitle("Edit track");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(trackTableView.getScene().getWindow());
+            stage.setResizable(false);
+
+            stage.showAndWait();
+
+            Track editedTrack = controller.getCreatedTrack();
+
+            if (editedTrack != null) {
+                trackService.updateEditableFields(selectedTrack, editedTrack);
+                trackTableView.refresh();
+
+                if (statusLabel != null) {
+                    statusLabel.setText("Traccia modificata: " + selectedTrack.getTitle());
+                }
+            }
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            showError("Impossibile aprire la schermata di modifica traccia.");
+        }
     }
+
+    /**
+     * Gestisce il click sul pulsante Delete della Track Library.
+     *
+     * Recupera la traccia selezionata, mostra un pop-up di conferma e,
+     * in caso di conferma, delega la rimozione al metodo removeTrackFromCatalog.
+     */
 
     @FXML
     private void handleDeleteTrack() {
@@ -233,21 +297,20 @@ public class MainController {
     }
 
 
-    /*
-    Questo metodo permette alla traccia di essere rimossa dal catalogo
-    principale e da tutte le playlist in cui è presente.
+    /**
+     * Rimuove una traccia dal catalogo principale e da tutte le playlist.
+     *
+     * Il controller delega la logica applicativa al TrackService e si occupa solo
+     * dell'aggiornamento della selezione nella UI.
+     *
+     * @param track traccia da eliminare
      */
     private void removeTrackFromCatalog(Track track) {
         if (track == null) {
             return;
         }
 
-        tracks.remove(track);
-
-        for (Playlist playlist : playlists) {
-            playlist.removeTrack(track);
-        }
-
+        trackService.removeTrack(tracks, playlists, track);
         trackTableView.getSelectionModel().clearSelection();
     }
 

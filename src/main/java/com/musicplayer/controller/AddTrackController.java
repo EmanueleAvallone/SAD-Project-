@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javafx.scene.control.Button;
 
 public class AddTrackController {
 
@@ -40,8 +41,16 @@ public class AddTrackController {
 
     @FXML
     private Label statusLabel;
+    @FXML
+    private Label formTitleLabel;
+
+    @FXML
+    private Button submitButton;
 
     private Track createdTrack;
+    private Track trackToEdit;
+    private boolean editMode;
+
 
     public Track getCreatedTrack() {
         return createdTrack;
@@ -93,7 +102,11 @@ public class AddTrackController {
             return;
         }
 
-        createdTrack = new Track(title, author, length, genre, year);
+        if (editMode && trackToEdit != null) {
+            createdTrack = new Track(title, author, trackToEdit.getLength(), genre, year);
+        } else {
+            createdTrack = new Track(title, author, length, genre, year);
+        }
 
         closeWindow();
     }
@@ -118,6 +131,32 @@ public class AddTrackController {
     private void handleCancel() {
         createdTrack = null;
         closeWindow();
+    }
+
+    /**
+     * Configura la schermata in modalità modifica.
+     *
+     * I campi vengono precompilati con i valori della traccia selezionata.
+     * La durata viene mostrata ma non resa modificabile.
+     *
+     * @param track traccia da modificare
+     */
+    public void setTrackToEdit(Track track) {
+        this.trackToEdit = track;
+        this.editMode = true;
+
+        formTitleLabel.setText("Edit track");
+        submitButton.setText("Save");
+
+        titleField.setText(track.getTitle());
+        authorField.setText(track.getAuthor());
+        lengthField.setText(track.getLength());
+        genreField.setText(track.getGenre());
+        yearField.setText(String.valueOf(track.getYear()));
+
+        lengthField.setDisable(true);
+
+        statusLabel.setText("Editing track: " + track.getTitle());
     }
 
     private void closeWindow() {

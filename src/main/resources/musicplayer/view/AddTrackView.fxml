@@ -36,8 +36,7 @@
                 <Insets top="20.0" right="24.0" bottom="20.0" left="24.0"/>
             </padding>
 
-            <Label text="Add track" styleClass="section-title"/>
-
+            <Label fx:id="formTitleLabel" text="Add track" styleClass="section-title"/>
             <GridPane hgap="18.0" vgap="16.0">
 
                 <Label text="Title" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
@@ -113,8 +112,7 @@
 
             <Button text="Reset" onAction="#handleReset"/>
             <Button text="Cancel" onAction="#handleCancel"/>
-            <Button text="Add track" onAction="#handleAddTrack"/>
-        </HBox>
+            <Button fx:id="submitButton" text="Add track" onAction="#handleAddTrack"/>        </HBox>
     </bottom>
 
 </BorderPane>
