@@ -25,7 +25,16 @@ public class Playlist {
         return tracks;
     }
 
+    //posso aggiungere solo tracce valide
     public void addTrack(Track track) {
+        if (track == null) { //se aggiungo una traccia null
+            throw new IllegalArgumentException("Track cannot be null");
+        }
+
+        if (tracks.contains(track)) { //se aggiungo una traccia già presente
+            throw new IllegalArgumentException("Track already exists in this playlist");
+        }
+
         tracks.add(track);
     }
 

@@ -1,5 +1,7 @@
 package com.musicplayer.model;
 
+import java.util.Objects;
+
 /**
  * Rappresenta una traccia audio nella libreria.
  */
@@ -72,5 +74,24 @@ public class Track {
 
     public void setPlayedCount(int playedCount) {
         this.playedCount = playedCount;
+    }
+
+    //per controllare se due tracce sono duplicate (titolo e autore uguali)
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Track other)) {
+            return false;
+        }
+
+        return Objects.equals(title, other.title) && Objects.equals(author, other.author);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, author);
     }
 }

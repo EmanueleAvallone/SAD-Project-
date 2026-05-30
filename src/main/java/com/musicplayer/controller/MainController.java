@@ -11,6 +11,7 @@ import javafx.scene.control.Alert;
 
 import com.musicplayer.model.Track;
 import com.musicplayer.service.TrackService;
+import com.musicplayer.service.PlaylistService;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -53,6 +54,24 @@ public class MainController {
     @FXML
     private TableColumn<Track, Integer> trackPlayCountColumn;
 
+    @FXML
+    private TableView<Track> playlistTrackTableView;
+
+    @FXML
+    private TableColumn<Track, Integer> playlistTrackOrderColumn;
+
+    @FXML
+    private TableColumn<Track, String> playlistTrackTitleColumn;
+
+    @FXML
+    private TableColumn<Track, String> playlistTrackAuthorColumn;
+
+    @FXML
+    private TableColumn<Track, String> playlistTrackLengthColumn;
+
+    @FXML
+    private TableColumn<Track, String> playlistTrackGenreColumn;
+
   /*  @FXML
     private RadioButton sequentialModeRadio;
 
@@ -67,13 +86,20 @@ public class MainController {
 
     private final ObservableList<Track> tracks = FXCollections.observableArrayList(); //lista delle tracce
     private final ObservableList<Playlist> playlists = FXCollections.observableArrayList(); //lista delle playlist
+    private final ObservableList<Track> selectedPlaylistTracks = FXCollections.observableArrayList();
     private final TrackService trackService = new TrackService();
+    private final PlaylistService playlistService = new PlaylistService();
     //private final PlayerController playerController = new PlayerController();
 
     @FXML
     private void initialize() {
         playlistListView.setItems(playlists);
-
+        playlistListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        playlistListView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldPlaylist, newPlaylist) -> {
+                    updateSelectedPlaylistView(newPlaylist);
+                });
         trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE); //gestisce la selezione di una riga nella tabella track library
 
         /*trackTableView.getSelectionModel()
@@ -96,6 +122,24 @@ public class MainController {
         trackPlayCountColumn.setCellValueFactory(new PropertyValueFactory<>("playedCount"));
 
         trackTableView.setItems(tracks);
+        playlistTrackOrderColumn.setCellValueFactory(cellData ->
+                new javafx.beans.property.SimpleIntegerProperty(
+                        playlistTrackTableView.getItems().indexOf(cellData.getValue()) + 1
+                ).asObject()
+        );
+
+        playlistTrackTitleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
+        playlistTrackAuthorColumn.setCellValueFactory(new PropertyValueFactory<>("author"));
+        playlistTrackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
+        playlistTrackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
+
+        playlistTrackTableView.setItems(selectedPlaylistTracks);
+
+        playlistListView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldPlaylist, newPlaylist) -> {
+                    updateSelectedPlaylistView(newPlaylist);
+                });
 
         /* ToggleGroup playbackModeGroup = new ToggleGroup();
         sequentialModeRadio.setToggleGroup(playbackModeGroup);
@@ -143,7 +187,7 @@ public class MainController {
             playlists.add(playlist);
             playlistListView.getSelectionModel().select(playlist);
 
-            statusLabel.setText("Playlist creata: " + playlistName);
+            updateSelectedPlaylistView(playlist);
         }
     }
 
@@ -330,9 +374,56 @@ public class MainController {
         trackTableView.getSelectionModel().clearSelection();
     }
 
+
+    private void updateSelectedPlaylistView(Playlist playlist) {
+        selectedPlaylistTracks.clear();
+
+        if (playlist == null) {
+            if (statusLabel != null) {
+                statusLabel.setText("Nessuna playlist selezionata.");
+            }
+            return;
+        }
+
+        selectedPlaylistTracks.addAll(playlist.getTracks());
+
+        if (statusLabel != null) {
+            if (playlist.getTracks().isEmpty()) {
+                statusLabel.setText("Playlist selezionata: " + playlist.getName() + " - nessuna traccia presente.");
+            } else {
+                statusLabel.setText("Playlist selezionata: " + playlist.getName());
+            }
+        }
+    }
+
+
+    private Playlist getSelectedPlaylist() {
+        return playlistListView.getSelectionModel().getSelectedItem();
+
+    }
+
+    private Track getSelectedTrackFromLibrary() {
+        return trackTableView.getSelectionModel().getSelectedItem();
+
+    }
+
+
     @FXML
     private void handleAddToPlaylist() {
-        System.out.println("Add selected track to playlist");
+        Playlist selectedPlaylist = getSelectedPlaylist();
+        Track selectedTrack = getSelectedTrackFromLibrary();
+
+        try {
+            playlistService.validateTrackAdditionSelection(selectedPlaylist, selectedTrack);
+            System.out.println("Playlist selezionata: " + selectedPlaylist.getName());
+            System.out.println("Traccia selezionata: " + selectedTrack.getTitle());
+            if (statusLabel != null) {
+                statusLabel.setText("Selezione valida: " + selectedTrack.getTitle() + " → " + selectedPlaylist.getName());
+            }
+
+        } catch (IllegalArgumentException exception) {
+            showError(exception.getMessage());
+        }
     }
 
     @FXML
@@ -405,6 +496,7 @@ public class MainController {
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Errore");
+        alert.setHeaderText(null);
         alert.setHeaderText(message);
         alert.showAndWait();
     }
