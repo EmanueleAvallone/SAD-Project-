@@ -1,19 +1,23 @@
 package com.musicplayer.controller;
 
 import com.musicplayer.model.Playlist;
+import com.musicplayer.model.Track;
+import com.musicplayer.service.TrackService;
+import com.musicplayer.service.PlaylistService;
+import com.musicplayer.command.Command;
+import com.musicplayer.command.CommandManager;
+import com.musicplayer.command.RemoveTrackPCommand;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
 import javafx.fxml.FXML;
+
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert;
-
-import com.musicplayer.model.Track;
-import com.musicplayer.service.TrackService;
-import com.musicplayer.service.PlaylistService;
-
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -22,11 +26,15 @@ import java.io.IOException;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.ButtonType;
+import javafx.scene.layout.BorderPane;
+// import javafx.scene.control.ToggleGroup;
+// import javafx.scene.control.RadioButton;
+
 import java.util.Optional;
+
+
 public class MainController {
 
     @FXML
@@ -72,6 +80,9 @@ public class MainController {
     @FXML
     private TableColumn<Track, String> playlistTrackGenreColumn;
 
+    @FXML
+    private BorderPane rootPane;
+
   /*  @FXML
     private RadioButton sequentialModeRadio;
 
@@ -89,6 +100,7 @@ public class MainController {
     private final ObservableList<Track> selectedPlaylistTracks = FXCollections.observableArrayList();
     private final TrackService trackService = new TrackService();
     private final PlaylistService playlistService = new PlaylistService();
+    private final CommandManager commandManager = new CommandManager();
     //private final PlayerController playerController = new PlayerController();
 
     @FXML
@@ -100,20 +112,25 @@ public class MainController {
                 .addListener((observable, oldPlaylist, newPlaylist) -> {
                     updateSelectedPlaylistView(newPlaylist);
                 });
-        trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE); //gestisce la selezione di una riga nella tabella track library
 
-        /*trackTableView.getSelectionModel()
-                .selectedItemProperty()
-                .addListener((observable, oldTrack, newTrack) ->
-                        playerController.setSelectedTrack(newTrack)
-                );*/
+        trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE); //gestisce la selezione di una riga nella tabella track library
         trackTableView.getSelectionModel()
                 .selectedItemProperty()
                 .addListener((observable, oldTrack, newTrack) -> {
                     if (playerControlController != null) {
                         playerControlController.setSelectedTrack(newTrack);
                     }
+
+                    if (statusLabel != null && newTrack != null) {
+                        statusLabel.setText(
+                                "Traccia selezionata: "
+                                        + newTrack.getTitle()
+                                        + " - "
+                                        + newTrack.getAuthor()
+                        );
+                    }
                 });
+
         trackTitleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
         trackAuthorColumn.setCellValueFactory(new PropertyValueFactory<>("author"));
         trackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
@@ -122,6 +139,28 @@ public class MainController {
         trackPlayCountColumn.setCellValueFactory(new PropertyValueFactory<>("playedCount"));
 
         trackTableView.setItems(tracks);
+
+        playlistTrackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        playlistTrackTableView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldTrack, newTrack) -> {
+                    if (playerControlController != null) {
+                        playerControlController.setSelectedTrack(newTrack);
+                    }
+
+                    if (statusLabel != null && newTrack != null) {
+                        statusLabel.setText(
+                                "Traccia selezionata nella playlist: "
+                                        + newTrack.getTitle()
+                                        + " - "
+                                        + newTrack.getAuthor()
+                        );
+                    }
+                });
+
+
+        playlistTrackTableView.setItems(selectedPlaylistTracks);
+
         playlistTrackOrderColumn.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleIntegerProperty(
                         playlistTrackTableView.getItems().indexOf(cellData.getValue()) + 1
@@ -133,13 +172,6 @@ public class MainController {
         playlistTrackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
         playlistTrackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
 
-        playlistTrackTableView.setItems(selectedPlaylistTracks);
-
-        playlistListView.getSelectionModel()
-                .selectedItemProperty()
-                .addListener((observable, oldPlaylist, newPlaylist) -> {
-                    updateSelectedPlaylistView(newPlaylist);
-                });
 
         /* ToggleGroup playbackModeGroup = new ToggleGroup();
         sequentialModeRadio.setToggleGroup(playbackModeGroup);
@@ -149,6 +181,27 @@ public class MainController {
         if (statusLabel != null) {
             statusLabel.setText("Applicazione avviata correttamente.");
         }
+
+        rootPane.setOnMouseClicked(event -> {
+            Object target = event.getTarget();
+
+            boolean clickedOnPlaylistArea = isInsideNode(target, playlistListView);
+            boolean clickedOnTrackLibraryArea = isInsideNode(target, trackTableView);
+            boolean clickedOnSelectedPlaylistArea = isInsideNode(target, playlistTrackTableView);
+            boolean clickedOnButton = target instanceof javafx.scene.Node clickedNode && isInsideButton(clickedNode);
+
+            if (!clickedOnPlaylistArea && !clickedOnTrackLibraryArea && !clickedOnSelectedPlaylistArea && !clickedOnButton) {
+                playlistListView.getSelectionModel().clearSelection();
+                trackTableView.getSelectionModel().clearSelection();
+                playlistTrackTableView.getSelectionModel().clearSelection();
+
+                selectedPlaylistTracks.clear();
+
+                if (statusLabel != null) {
+                    statusLabel.setText("Selezione annullata.");
+                }
+            }
+        });
 
         System.out.println("FXML collegato correttamente al MainController.");
     }
@@ -374,6 +427,33 @@ public class MainController {
         trackTableView.getSelectionModel().clearSelection();
     }
 
+    private boolean isInsideNode(Object target, javafx.scene.Node node) {
+        if (!(target instanceof javafx.scene.Node clickedNode)) {
+            return false;
+        }
+
+        while (clickedNode != null) {
+            if (clickedNode == node) {
+                return true;
+            }
+
+            clickedNode = clickedNode.getParent();
+        }
+
+        return false;
+    }
+
+    private boolean isInsideButton(javafx.scene.Node clickedNode) {
+        while (clickedNode != null) {
+            if (clickedNode instanceof javafx.scene.control.Button) {
+                return true;
+            }
+
+            clickedNode = clickedNode.getParent();
+        }
+
+        return false;
+    }
 
     private void updateSelectedPlaylistView(Playlist playlist) {
         selectedPlaylistTracks.clear();
@@ -391,11 +471,49 @@ public class MainController {
             if (playlist.getTracks().isEmpty()) {
                 statusLabel.setText("Playlist selezionata: " + playlist.getName() + " - nessuna traccia presente.");
             } else {
-                statusLabel.setText("Playlist selezionata: " + playlist.getName());
+                statusLabel.setText("Playlist selezionata: " + playlist.getName() + " - " + playlist.getTracks().size() + " tracce");
             }
         }
     }
 
+    private void handleRemovedTrackPlayback(Playlist playlist, Track removedTrack, int removedIndex) {
+        if (playlist == null || removedTrack == null || playerControlController == null) {
+            return;
+        }
+
+        Track currentTrack = playerControlController.getCurrentTrack();
+
+        if (currentTrack == null || !currentTrack.equals(removedTrack)) {
+            return;
+        }
+
+        if (playlist.getTracks().isEmpty()) {
+            playerControlController.stopPlayback();
+
+            if (statusLabel != null) {
+                statusLabel.setText("La playlist è vuota: riproduzione fermata.");
+            }
+
+            return;
+        }
+
+        Track nextTrack;
+
+        if (removedIndex < playlist.getTracks().size()) {
+            nextTrack = playlist.getTracks().get(removedIndex);
+        } else {
+            nextTrack = playlist.getTracks().get(playlist.getTracks().size() - 1);
+        }
+
+        playerControlController.playTrackFromPlaylist(nextTrack);
+
+        if (statusLabel != null) {
+            statusLabel.setText(
+                    "Traccia rimossa durante la riproduzione. Ora in riproduzione: "
+                            + nextTrack.getTitle()
+            );
+        }
+    }
 
     private Playlist getSelectedPlaylist() {
         return playlistListView.getSelectionModel().getSelectedItem();
@@ -407,6 +525,10 @@ public class MainController {
 
     }
 
+    private Track getSelectedTrackFromPlaylist() {
+        return playlistTrackTableView.getSelectionModel().getSelectedItem();
+    }
+
 
     @FXML
     private void handleAddToPlaylist() {
@@ -414,13 +536,17 @@ public class MainController {
         Track selectedTrack = getSelectedTrackFromLibrary();
 
         try {
-            playlistService.validateTrackAdditionSelection(selectedPlaylist, selectedTrack);
-            System.out.println("Playlist selezionata: " + selectedPlaylist.getName());
-            System.out.println("Traccia selezionata: " + selectedTrack.getTitle());
-            if (statusLabel != null) {
-                statusLabel.setText("Selezione valida: " + selectedTrack.getTitle() + " → " + selectedPlaylist.getName());
-            }
+            playlistService.addTrackToPlaylist(selectedPlaylist, selectedTrack);
+            updateSelectedPlaylistView(selectedPlaylist);
 
+            if (statusLabel != null) {
+                statusLabel.setText(
+                        "Traccia aggiunta alla playlist: "
+                                + selectedTrack.getTitle()
+                                + " → "
+                                + selectedPlaylist.getName()
+                );
+            }
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
         }
@@ -428,7 +554,66 @@ public class MainController {
 
     @FXML
     private void handleRemoveFromPlaylist() {
-        System.out.println("Remove from playlist");
+        Playlist selectedPlaylist = getSelectedPlaylist();
+        Track selectedTrack = getSelectedTrackFromPlaylist();
+
+        try {
+            playlistService.validateTrackRemovalSelection(selectedPlaylist, selectedTrack);
+            Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmationAlert.setTitle("Remove track");
+            confirmationAlert.setHeaderText("Conferma rimozione");
+            confirmationAlert.setContentText(
+                    "Vuoi rimuovere la traccia \""
+                            + selectedTrack.getTitle()
+                            + "\" dalla playlist \""
+                            + selectedPlaylist.getName()
+                            + "\"?"
+            );
+
+            ButtonType cancelButton = new ButtonType("Cancel");
+            ButtonType removeButton = new ButtonType("Remove");
+
+            confirmationAlert.getButtonTypes().setAll(cancelButton, removeButton);
+
+            Optional<ButtonType> result = confirmationAlert.showAndWait();
+
+            if (result.isEmpty() || result.get() == cancelButton) {
+                if (statusLabel != null) {
+                    statusLabel.setText("Rimozione annullata.");
+                }
+                return;
+            }
+
+            int removedIndex = selectedPlaylist.getTracks().indexOf(selectedTrack);
+            boolean removedTrackWasPlaying = playerControlController != null
+                    && playerControlController.getCurrentTrack() != null
+                    && playerControlController.getCurrentTrack().equals(selectedTrack);
+
+            Command removeCommand = new RemoveTrackPCommand(
+                    playlistService,
+                    selectedPlaylist,
+                    selectedTrack
+            );
+
+            commandManager.executeCommand(removeCommand);
+
+            handleRemovedTrackPlayback(selectedPlaylist, selectedTrack, removedIndex);
+
+            updateSelectedPlaylistView(selectedPlaylist);
+            playlistTrackTableView.getSelectionModel().clearSelection();
+
+            if (statusLabel != null && !removedTrackWasPlaying) {
+                statusLabel.setText(
+                        "Traccia rimossa dalla playlist: "
+                                + selectedTrack.getTitle()
+                                + " ← "
+                                + selectedPlaylist.getName()
+                );
+            }
+
+        } catch (IllegalArgumentException exception) {
+            showError(exception.getMessage());
+        }
     }
 
     @FXML
@@ -497,7 +682,7 @@ public class MainController {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Errore");
         alert.setHeaderText(null);
-        alert.setHeaderText(message);
+        alert.setContentText(message);
         alert.showAndWait();
     }
 }

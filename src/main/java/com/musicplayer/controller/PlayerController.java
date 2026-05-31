@@ -152,6 +152,35 @@ public class PlayerController implements PlayerObserver {
         return playbackService;
     }
 
+    public Track getCurrentTrack() {
+        return playbackService.getCurrentTrack();
+    }
+
+    public boolean isPlaying() {
+        return playbackService.isPlaying();
+    }
+
+    public void playTrackFromPlaylist(Track track) {
+        if (track == null) {
+            updateStatus("Nessuna traccia disponibile per continuare la riproduzione.");
+            refreshPlaybackView();
+            return;
+        }
+
+        this.selectedTrack = track;
+        playbackService.playTrack(track);
+        updateStatus("Riproduzione continuata con: " + track.getTitle());
+        refreshPlaybackView();
+    }
+
+    public void stopPlayback() {
+        playbackService.resetTrack();
+        selectedTrack = null;
+        updateStatus("Riproduzione fermata.");
+        refreshPlaybackView();
+    }
+
+
     /**
      * Restituisce l'ultimo messaggio di stato.
      *
