@@ -10,6 +10,8 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.scene.control.Button;
 
+import com.musicplayer.service.TrackService;
+
 public class AddTrackController {
 
     @FXML
@@ -51,7 +53,7 @@ public class AddTrackController {
     private Track trackToEdit;
     private boolean editMode;
 
-
+    private final TrackService trackService = new TrackService();
     public Track getCreatedTrack() {
         return createdTrack;
     }
@@ -61,58 +63,70 @@ public class AddTrackController {
         statusLabel.setText("Ready");
     }
 
+    /**
+     * Gestisce il salvataggio della traccia.
+     *
+     * In modalità Add crea una nuova traccia usando i dati inseriti.
+     * In modalità Edit crea una traccia temporanea con i nuovi dati,
+     * mantenendo invariata la durata originale.
+     */
     @FXML
     private void handleAddTrack() {
-        String title = titleField.getText().trim();
-        String author = authorField.getText().trim();
-        String length = lengthField.getText().trim();
-        String genre = genreField.getText().trim();
-        String yearText = yearField.getText().trim();
+        String title = titleField.getText();
+        String author = authorField.getText();
+        String length = lengthField.getText();
+        String genre = genreField.getText();
+        String yearText = yearField.getText();
 
-        if (title.isEmpty()) {
-            showError("Il titolo della traccia è obbligatorio.");
-            return;
-        }
-
-        if (author.isEmpty()) {
-            showError("L'autore della traccia è obbligatorio.");
-            return;
-        }
-
-        if (length.isEmpty()) {
-            showError("La durata della traccia è obbligatoria.");
-            return;
-        }
-
-        if (genre.isEmpty()) {
-            showError("Il genere della traccia è obbligatorio.");
-            return;
-        }
-
-        int year;
-        
-        if (yearText.isEmpty()) {
-            showError("L'anno della traccia è obbligatorio.");
-            return;
-        }
         try {
-            year = Integer.parseInt(yearText);
-        } catch (NumberFormatException exception) {
-            showError("L'anno deve essere un numero valido.");
-            return;
-        }
+            if (editMode && trackToEdit != null) {
+                createdTrack = trackService.createTrack(
+                        title,
+                        author,
+                        trackToEdit.getLength(),
+                        genre,
+                        yearText
+                );
+            } else {
+                createdTrack = trackService.createTrack(
+                        title,
+                        author,
+                        length,
+                        genre,
+                        yearText
+                );
+            }
 
-        if (editMode && trackToEdit != null) {
-            createdTrack = new Track(title, author, trackToEdit.getLength(), genre, year);
-        } else {
-            createdTrack = new Track(title, author, length, genre, year);
-        }
+            closeWindow();
 
-        closeWindow();
+        } catch (IllegalArgumentException exception) {
+            showError(exception.getMessage());
+        }
     }
 
+    /**
+     * Ripristina i campi della schermata.
+     *
+     * In modalità Add svuota i campi.
+     * In modalità Edit ripristina i valori originali della traccia selezionata.
+     */
     @FXML
     private void handleReset() {
+        if (editMode && trackToEdit != null) {
+            titleField.setText(trackToEdit.getTitle());
+            authorField.setText(trackToEdit.getAuthor());
+            lengthField.setText(trackToEdit.getLength());
+            genreField.setText(trackToEdit.getGenre());
+            yearField.setText(String.valueOf(trackToEdit.getYear()));
+
+            favouriteCheckBox.setSelected(false);
+            explicitCheckBox.setSelected(false);
+            newReleaseCheckBox.setSelected(false);
+
+            statusLabel.setText("Valori originali ripristinati.");
+            return;
+        }
+
         titleField.clear();
         authorField.clear();
         lengthField.clear();
@@ -140,8 +154,13 @@ public class AddTrackController {
      * La durata viene mostrata ma non resa modificabile.
      *
      * @param track traccia da modificare
+     * @throws IllegalArgumentException se la traccia è null
      */
     public void setTrackToEdit(Track track) {
+        if (track == null) {
+            throw new IllegalArgumentException("La traccia da modificare non può essere null.");
+        }
+
         this.trackToEdit = track;
         this.editMode = true;
 

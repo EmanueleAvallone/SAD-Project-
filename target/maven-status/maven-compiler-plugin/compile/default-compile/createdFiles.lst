@@ -10,6 +10,7 @@ com/musicplayer/controller/LibraryController.class
 com/musicplayer/model/engine/SequentialPlay.class
 com/musicplayer/model/engine/PlayStrategy.class
 com/musicplayer/command/CommandManager.class
+com/musicplayer/service/PlaylistService.class
 com/musicplayer/controller/PlayerController.class
 com/musicplayer/model/PlaylistFactory.class
 com/musicplayer/model/engine/ShufflePlay.class
