@@ -22,6 +22,7 @@ public class PlaybackService {
     private boolean playing;
     private List<Track> currentQueue;
     private int currentTrackIndex;
+    private boolean loopEnabled;
 
     /**
      * Crea un nuovo service di riproduzione inizialmente fermo.
@@ -33,6 +34,7 @@ public class PlaybackService {
         this.playing = false;
         this.currentQueue = new ArrayList<>();
         this.currentTrackIndex = -1;
+        this.loopEnabled = false;
 
     }
     /**
@@ -134,9 +136,12 @@ public class PlaybackService {
             return;
         }
 
-        if (currentTime < getDuration()) {
+        if (currentTime < duration) {
             currentTime++;
-        } else {
+        }
+
+        if (currentTime >= duration) {
+            currentTime = duration;
             playing = false;
         }
     }
@@ -238,7 +243,7 @@ public class PlaybackService {
      * Se esiste una traccia successiva, essa diventa la nuova traccia corrente
      * e la riproduzione riparte dal suo inizio. Se invece la traccia corrente
      * è l'ultima della coda oppure non esiste una coda valida, la riproduzione
-     * viene fermata.
+     * viene fermata, se non è abilitata la ripetizione della coda(loopEnabled).
      * </p>
      */
     public void nextTrack() {
@@ -248,17 +253,31 @@ public class PlaybackService {
 
         int index = currentQueue.indexOf(currentTrack);
 
-        if (index >= 0 && index < currentQueue.size() - 1) {
+        if (index < 0) {
+            return;
+        }
+
+        if (index < currentQueue.size() - 1) {
             Track nextTrack = currentQueue.get(index + 1);
             this.currentTrackIndex = index + 1;
             this.currentTrack = nextTrack;
             this.currentTime = 0;
             this.duration = parseDuration(nextTrack.getLength());
             this.playing = true;
+            return;
+        }
+
+        if (loopEnabled) {
+            Track firstTrack = currentQueue.get(0);
+            this.currentTrackIndex = 0;
+            this.currentTrack = firstTrack;
+            this.currentTime = 0;
+            this.duration = parseDuration(firstTrack.getLength());
+            this.playing = true;
         } else {
             this.currentTrackIndex = index;
-            this.playing = false;
             this.currentTime = 0;
+            this.playing = false;
         }
     }
     /**
@@ -329,5 +348,12 @@ public class PlaybackService {
 
         this.currentQueue = reorderedQueue;
         this.currentTrackIndex = index;
+    }
+    public boolean isLoopEnabled() {
+        return loopEnabled;
+    }
+
+    public void setLoopEnabled(boolean loopEnabled) {
+        this.loopEnabled = loopEnabled;
     }
 }

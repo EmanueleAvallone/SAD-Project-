@@ -78,9 +78,17 @@ public class PlayerController implements PlayerObserver {
 
         playbackTimeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), event -> {
-                    if (playbackService.isPlaying()) {
-                        playbackService.advanceOneSecond();
-                        refreshPlaybackView();
+                    if (!playbackService.isPlaying()) {
+                        return;
+                    }
+
+                    playbackService.advanceOneSecond();
+                    refreshPlaybackView();
+
+                    if (!playbackService.isPlaying()
+                            && playbackService.getCurrentTrack() != null
+                            && playbackService.getCurrentTime() >= playbackService.getDuration()) {
+                        handleTrackCompletion();
                     }
                 })
         );
@@ -90,6 +98,7 @@ public class PlayerController implements PlayerObserver {
                 if (originalPlaylist != null && !originalPlaylist.isEmpty()) {
                     currentPlaylist = new java.util.ArrayList<>(originalPlaylist);
                     playbackService.setCurrentQueue(currentPlaylist);
+                    playbackService.setLoopEnabled(false);
                     updateStatus("Modalità sequenziale attivata.");
                     refreshPlaybackView();
                 }
@@ -98,6 +107,13 @@ public class PlayerController implements PlayerObserver {
         shuffleModeRadio.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (Boolean.TRUE.equals(newValue)) {
                 handleShuffleMode();
+            }
+        });
+        loopModeRadio.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (Boolean.TRUE.equals(newValue)) {
+                playbackService.setLoopEnabled(true);
+                updateStatus("Modalità loop attivata.");
+                refreshPlaybackView();
             }
         });
 
@@ -545,6 +561,46 @@ public class PlayerController implements PlayerObserver {
      *
      * @param engine motore del player che ha generato la notifica
      */
+    /**
+     * Gestisce il completamento automatico della traccia corrente
+     * applicando la modalità di riproduzione attiva.
+     */
+    private void handleTrackCompletion() {
+        Track finishedTrack = playbackService.getCurrentTrack();
+
+        if (finishedTrack == null) {
+            refreshPlaybackView();
+            return;
+        }
+
+        if (currentPlaylist != null && !currentPlaylist.isEmpty()) {
+            playbackService.setCurrentQueue(currentPlaylist);
+        }
+
+        playbackService.nextTrack();
+        Track currentTrack = playbackService.getCurrentTrack();
+
+        if (currentTrack != null && !currentTrack.equals(finishedTrack) && playbackService.isPlaying()) {
+            selectedTrack = currentTrack;
+
+            if (playbackTimeline != null) {
+                playbackTimeline.stop();
+                playbackTimeline.playFromStart();
+            }
+
+            updateStatus("Riproduzione continuata con: " + currentTrack.getTitle());
+        } else {
+            selectedTrack = currentTrack;
+
+            if (playbackTimeline != null) {
+                playbackTimeline.stop();
+            }
+
+            updateStatus("Riproduzione terminata.");
+        }
+
+        refreshPlaybackView();
+    }
     @Override
     public void update(MediaPlayerEngine engine) {
         updateStatus("Stato player: " + engine.getCurrentStateName());

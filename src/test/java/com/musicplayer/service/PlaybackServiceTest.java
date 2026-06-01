@@ -313,4 +313,42 @@ class PlaybackServiceTest {
         assertEquals(expectedTracks, actualTracks);
         assertEquals(expectedTracks.size(), shuffledQueue.size());
     }
+    @Test
+    void nextTrack_shouldRestartFromFirst_whenLoopIsEnabledAndCurrentIsLast() {
+        PlaybackService service = new PlaybackService();
+
+        Track t1 = new Track("Song A", "Artist A", "3:00","Pop",2020);
+        Track t2 = new Track("Song B", "Artist B", "4:00","rock",2000);
+
+        service.setCurrentQueue(List.of(t1, t2));
+        service.playTrack(t2);
+        service.setCurrentQueue(List.of(t1, t2));
+        service.setLoopEnabled(true);
+
+        service.nextTrack();
+
+        assertEquals(t1, service.getCurrentTrack());
+        assertEquals(0, service.getCurrentTrackIndex());
+        assertEquals(0, service.getCurrentTime());
+        assertTrue(service.isPlaying());
+    }
+    @Test
+    void nextTrack_shouldStopOnLast_whenLoopIsDisabledAndCurrentIsLast() {
+        PlaybackService service = new PlaybackService();
+
+        Track t1 = new Track("Song A", "Artist A", "3:00","Pop",2020);
+        Track t2 = new Track("Song B", "Artist B", "4:00","rock",2000);
+
+        service.setCurrentQueue(List.of(t1, t2));
+        service.playTrack(t2);
+        service.setCurrentQueue(List.of(t1, t2));
+        service.setLoopEnabled(false);
+
+        service.nextTrack();
+
+        assertEquals(t2, service.getCurrentTrack());
+        assertEquals(1, service.getCurrentTrackIndex());
+        assertEquals(0, service.getCurrentTime());
+        assertFalse(service.isPlaying());
+    }
 }
