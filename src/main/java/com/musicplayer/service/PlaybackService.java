@@ -277,15 +277,18 @@ public class PlaybackService {
 
         int index = currentQueue.indexOf(currentTrack);
 
-        if (index == -1) {
+        if (currentTime > 3) {
+            this.currentTime = 0;
             return;
         }
 
-        if (index == 0) {
-            this.currentTrackIndex = 0;
-            this.currentTrack = currentQueue.get(0);
+        if (index <= 0) {
+            this.currentTrackIndex = index == -1 ? -1 : 0;
             this.currentTime = 0;
-            this.duration = parseDuration(currentTrack.getLength());
+            if (index == 0) {
+                this.currentTrack = currentQueue.get(0);
+                this.duration = parseDuration(currentTrack.getLength());
+            }
             return;
         }
 
