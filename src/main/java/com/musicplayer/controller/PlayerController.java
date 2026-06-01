@@ -4,12 +4,15 @@ import com.musicplayer.model.Track;
 import com.musicplayer.model.engine.MediaPlayerEngine;
 import com.musicplayer.model.engine.PlayerObserver;
 import com.musicplayer.service.PlaybackService;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
+import javafx.util.Duration;
 
 /**
  * Controller responsabile della gestione dei comandi del player.
@@ -42,9 +45,12 @@ public class PlayerController implements PlayerObserver {
     @FXML
     private RadioButton loopModeRadio;
 
+
+
     private final PlaybackService playbackService;
     private Track selectedTrack;
     private String lastStatusMessage;
+    private Timeline playbackTimeline;
 
     /**
      * Crea un controller del player con un nuovo PlaybackService.
@@ -57,6 +63,7 @@ public class PlayerController implements PlayerObserver {
     /**
      * Inizializza la sezione del player.
      */
+
     @FXML
     private void initialize() {
         ToggleGroup playbackModeGroup = new ToggleGroup();
@@ -64,6 +71,17 @@ public class PlayerController implements PlayerObserver {
         shuffleModeRadio.setToggleGroup(playbackModeGroup);
         loopModeRadio.setToggleGroup(playbackModeGroup);
         sequentialModeRadio.setSelected(true);
+
+        playbackTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), event -> {
+                    if (playbackService.isPlaying()) {
+                        playbackService.advanceOneSecond();
+                        refreshPlaybackView();
+                    }
+                })
+        );
+        playbackTimeline.setCycleCount(Timeline.INDEFINITE);
+
         refreshPlaybackView();
     }
 
@@ -97,6 +115,7 @@ public class PlayerController implements PlayerObserver {
         }
 
         playbackService.playTrack(selectedTrack);
+        playbackTimeline.play();
         updateStatus("Riproduzione avviata: " + selectedTrack.getTitle());
         refreshPlaybackView();
     }
@@ -107,6 +126,7 @@ public class PlayerController implements PlayerObserver {
     @FXML
     public void handlePause() {
         playbackService.pauseTrack();
+        playbackTimeline.pause();
         updateStatus("Riproduzione sospesa.");
         refreshPlaybackView();
     }
@@ -175,6 +195,7 @@ public class PlayerController implements PlayerObserver {
 
     public void stopPlayback() {
         playbackService.resetTrack();
+        playbackTimeline.stop();
         selectedTrack = null;
         updateStatus("Riproduzione fermata.");
         refreshPlaybackView();

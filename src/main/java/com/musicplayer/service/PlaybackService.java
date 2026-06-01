@@ -40,7 +40,7 @@ public class PlaybackService {
 
         this.currentTrack = track;
         this.currentTime = 0;
-        this.duration = 0;
+        this.duration = parseDuration(track.getLength());
         this.playing = true;
         track.incrementPlayedCount();
     }
@@ -107,5 +107,27 @@ public class PlaybackService {
      */
     public boolean isPlaying() {
         return playing;
+    }
+    public void advanceOneSecond() {
+        if (!playing || currentTrack == null) {
+            return;
+        }
+
+        if (currentTime < getDuration()) {
+            currentTime++;
+        } else {
+            playing = false;
+        }
+    }
+    private int parseDuration(String length) {
+        if (length == null || !length.contains(":")) {
+            return 0;
+        }
+
+        String[] parts = length.split(":");
+        int minutes = Integer.parseInt(parts[0].trim());
+        int seconds = Integer.parseInt(parts[1].trim());
+
+        return minutes * 60 + seconds;
     }
 }

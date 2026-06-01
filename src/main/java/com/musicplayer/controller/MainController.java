@@ -113,7 +113,7 @@ public class MainController {
                     updateSelectedPlaylistView(newPlaylist);
                 });
 
-        trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE); //gestisce la selezione di una riga nella tabella track library
+        trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         trackTableView.getSelectionModel()
                 .selectedItemProperty()
                 .addListener((observable, oldTrack, newTrack) -> {
@@ -123,10 +123,7 @@ public class MainController {
 
                     if (statusLabel != null && newTrack != null) {
                         statusLabel.setText(
-                                "Traccia selezionata: "
-                                        + newTrack.getTitle()
-                                        + " - "
-                                        + newTrack.getAuthor()
+                                "Traccia selezionata: " + newTrack.getTitle() + " - " + newTrack.getAuthor()
                         );
                     }
                 });
@@ -137,7 +134,6 @@ public class MainController {
         trackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
         trackYearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
         trackPlayCountColumn.setCellValueFactory(new PropertyValueFactory<>("playedCount"));
-
         trackTableView.setItems(tracks);
 
         playlistTrackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -150,14 +146,10 @@ public class MainController {
 
                     if (statusLabel != null && newTrack != null) {
                         statusLabel.setText(
-                                "Traccia selezionata nella playlist: "
-                                        + newTrack.getTitle()
-                                        + " - "
-                                        + newTrack.getAuthor()
+                                "Traccia selezionata nella playlist: " + newTrack.getTitle() + " - " + newTrack.getAuthor()
                         );
                     }
                 });
-
 
         playlistTrackTableView.setItems(selectedPlaylistTracks);
 
@@ -172,38 +164,12 @@ public class MainController {
         playlistTrackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
         playlistTrackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
 
-
-        /* ToggleGroup playbackModeGroup = new ToggleGroup();
-        sequentialModeRadio.setToggleGroup(playbackModeGroup);
-        shuffleModeRadio.setToggleGroup(playbackModeGroup);
-        loopModeRadio.setToggleGroup(playbackModeGroup);*/
-
         if (statusLabel != null) {
             statusLabel.setText("Applicazione avviata correttamente.");
         }
 
-        rootPane.setOnMouseClicked(event -> {
-            Object target = event.getTarget();
-
-            boolean clickedOnPlaylistArea = isInsideNode(target, playlistListView);
-            boolean clickedOnTrackLibraryArea = isInsideNode(target, trackTableView);
-            boolean clickedOnSelectedPlaylistArea = isInsideNode(target, playlistTrackTableView);
-            boolean clickedOnButton = target instanceof javafx.scene.Node clickedNode && isInsideButton(clickedNode);
-
-            if (!clickedOnPlaylistArea && !clickedOnTrackLibraryArea && !clickedOnSelectedPlaylistArea && !clickedOnButton) {
-                playlistListView.getSelectionModel().clearSelection();
-                trackTableView.getSelectionModel().clearSelection();
-                playlistTrackTableView.getSelectionModel().clearSelection();
-
-                selectedPlaylistTracks.clear();
-
-                if (statusLabel != null) {
-                    statusLabel.setText("Selezione annullata.");
-                }
-            }
-        });
-
         System.out.println("FXML collegato correttamente al MainController.");
+        System.out.println("playerControlController = " + playerControlController);
     }
 
     @FXML
