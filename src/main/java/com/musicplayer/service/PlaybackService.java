@@ -130,4 +130,9 @@ public class PlaybackService {
 
         return minutes * 60 + seconds;
     }
+    public void resumeTrack() {
+        if (currentTrack != null && currentTime < duration) {
+            this.playing = true;
+        }
+    }
 }

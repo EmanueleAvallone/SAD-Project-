@@ -114,9 +114,19 @@ public class PlayerController implements PlayerObserver {
             return;
         }
 
-        playbackService.playTrack(selectedTrack);
-        playbackTimeline.play();
-        updateStatus("Riproduzione avviata: " + selectedTrack.getTitle());
+        Track currentTrack = playbackService.getCurrentTrack();
+
+        if (currentTrack == null || !currentTrack.equals(selectedTrack)) {
+            playbackService.playTrack(selectedTrack);   // parte da 0 solo su nuova traccia
+            playbackTimeline.stop();
+            playbackTimeline.playFromStart();
+            updateStatus("Riproduzione avviata: " + selectedTrack.getTitle());
+        } else if (!playbackService.isPlaying()) {
+            playbackService.resumeTrack();              // riprende dal tempo corrente
+            playbackTimeline.play();                    // resume del timeline
+            updateStatus("Riproduzione ripresa: " + selectedTrack.getTitle());
+        }
+
         refreshPlaybackView();
     }
 
