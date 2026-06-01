@@ -54,6 +54,7 @@ public class PlayerController implements PlayerObserver {
     private String lastStatusMessage;
     private Timeline playbackTimeline;
     private List<Track> currentPlaylist;
+    private List<Track> originalPlaylist;
 
     /**
      * Crea un controller del player con un nuovo PlaybackService.
@@ -84,6 +85,21 @@ public class PlayerController implements PlayerObserver {
                 })
         );
         playbackTimeline.setCycleCount(Timeline.INDEFINITE);
+        sequentialModeRadio.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (Boolean.TRUE.equals(newValue)) {
+                if (originalPlaylist != null && !originalPlaylist.isEmpty()) {
+                    currentPlaylist = new java.util.ArrayList<>(originalPlaylist);
+                    playbackService.setCurrentQueue(currentPlaylist);
+                    updateStatus("Modalità sequenziale attivata.");
+                    refreshPlaybackView();
+                }
+            }
+        });
+        shuffleModeRadio.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (Boolean.TRUE.equals(newValue)) {
+                handleShuffleMode();
+            }
+        });
 
         refreshPlaybackView();
     }
@@ -107,7 +123,20 @@ public class PlayerController implements PlayerObserver {
     }
 
     /**
-     * Gestisce l'azione Play.
+     * Avvia la riproduzione della traccia selezionata oppure riprende
+     * la riproduzione della traccia corrente se il player è in pausa.
+     * <p>
+     * Se non è stata selezionata alcuna traccia, il metodo non avvia
+     * la riproduzione e aggiorna soltanto il messaggio di stato.
+     * Se è disponibile una playlist corrente, essa viene sincronizzata
+     * con la coda del {@link PlaybackService} prima di eseguire il comando.
+     * </p>
+     * <p>
+     * Quando la traccia selezionata è diversa da quella in riproduzione,
+     * la riproduzione parte dall'inizio e la timeline del player viene
+     * riavviata. Se invece la traccia è la stessa ma il player è in pausa,
+     * la riproduzione viene ripresa dal tempo corrente.
+     * </p>
      */
     @FXML
     public void handlePlay() {
@@ -146,7 +175,16 @@ public class PlayerController implements PlayerObserver {
     }
 
     /**
-     * Gestisce l'azione Pause.
+     * Mette in pausa la riproduzione corrente.
+     * <p>
+     * Il metodo sospende sia lo stato logico gestito dal
+     * {@link PlaybackService} sia la timeline che aggiorna
+     * l'avanzamento simulato della riproduzione.
+     * </p>
+     * <p>
+     * Se non è presente alcuna traccia attiva, il metodo mantiene
+     * comunque coerente lo stato del controller e aggiorna la vista.
+     * </p>
      */
     @FXML
     public void handlePause() {
@@ -157,9 +195,20 @@ public class PlayerController implements PlayerObserver {
     }
 
     /**
-     * Gestisce l'azione Skip.
-     *
-     * Per ora il comportamento non è ancora implementato.
+     * Passa alla traccia successiva della playlist corrente, se disponibile.
+     * <p>
+     * Se non è in riproduzione alcuna traccia, il metodo non esegue
+     * alcun avanzamento e aggiorna soltanto il messaggio di stato.
+     * Se è disponibile una playlist corrente, essa viene sincronizzata
+     * con la coda del {@link PlaybackService} prima di eseguire il comando.
+     * </p>
+     * <p>
+     * Quando esiste una traccia successiva, essa diventa la nuova traccia
+     * selezionata e la timeline viene riavviata dall'inizio. Se invece
+     * il player si trova già sull'ultimo brano, il metodo mantiene la
+     * traccia corrente, evita errori di indice fuori limite e aggiorna
+     * il messaggio di stato con l'esito del comando.
+     * </p>
      */
     @FXML
     public void handleSkip() {
@@ -236,7 +285,18 @@ public class PlayerController implements PlayerObserver {
         refreshPlaybackView();
     }
     /**
-     * Aggiorna la sezione Simulated Playback.
+     * Aggiorna i controlli grafici della sezione Simulated Playback
+     * in base allo stato corrente della riproduzione.
+     * <p>
+     * Il metodo legge la traccia attualmente gestita dal
+     * {@link PlaybackService} e sincronizza le label informative,
+     * la progress bar e lo slider con i dati correnti del player.
+     * </p>
+     * <p>
+     * Se non è presente alcuna traccia in riproduzione, la vista
+     * viene riportata allo stato iniziale mostrando valori di default
+     * e azzerando gli indicatori di avanzamento.
+     * </p>
      */
     public void refreshPlaybackView() {
         Track currentTrack = playbackService.getCurrentTrack();
@@ -424,7 +484,12 @@ public class PlayerController implements PlayerObserver {
     private double calculateSliderValue() {
         return calculateProgress() * 100.0;
     }
-
+    /**
+     * Converte un tempo espresso in secondi nel formato {@code mm:ss}.
+     *
+     * @param seconds numero totale di secondi da formattare
+     * @return rappresentazione testuale del tempo nel formato minuti:secondi
+     */
     private String formatTime(int seconds) {
         int minutes = seconds / 60;
         int remainingSeconds = seconds % 60;
@@ -444,8 +509,32 @@ public class PlayerController implements PlayerObserver {
      *                        oppure {@code null} per rimuovere la playlist corrente
      */
     public void setCurrentPlaylist(List<Track> currentPlaylist) {
-        this.currentPlaylist = currentPlaylist;
+        this.originalPlaylist = currentPlaylist == null ? null : List.copyOf(currentPlaylist);
+        this.currentPlaylist = currentPlaylist == null ? null : List.copyOf(currentPlaylist);
+        playbackService.setCurrentQueue(this.currentPlaylist);
+    }
+    /**
+     * Attiva la modalità di riproduzione casuale riorganizzando
+     * le tracce rimanenti della coda corrente.
+     * <p>
+     * La traccia eventualmente già in riproduzione non viene modificata
+     * né riavviata; viene aggiornata soltanto la struttura della coda
+     * usata per i successivi comandi di avanzamento.
+     * </p>
+     */
+    private void handleShuffleMode() {
+        if (originalPlaylist == null || originalPlaylist.isEmpty()) {
+            updateStatus("Nessuna playlist disponibile per la modalità casuale.");
+            return;
+        }
+
+        currentPlaylist = new java.util.ArrayList<>(originalPlaylist);
         playbackService.setCurrentQueue(currentPlaylist);
+        playbackService.shuffleRemainingQueue();
+        currentPlaylist = playbackService.getCurrentQueue();
+
+        updateStatus("Modalità casuale attivata.");
+        refreshPlaybackView();
     }
     /**
      * Riceve un aggiornamento dal motore del player osservato.

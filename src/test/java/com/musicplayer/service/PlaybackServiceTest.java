@@ -3,7 +3,9 @@ package com.musicplayer.service;
 import com.musicplayer.model.Track;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -280,5 +282,35 @@ class PlaybackServiceTest {
         assertNull(service.getCurrentTrack());
         assertEquals(-1, service.getCurrentTrackIndex());
         assertFalse(service.isPlaying());
+    }
+    @Test
+    void shuffleRemainingQueue_shouldKeepCurrentTrackAndPreserveAllRemainingTracks() {
+        PlaybackService service = new PlaybackService();
+
+        Track t1 = new Track("Song A", "Artist A", "3:00","Pop",2020);
+        Track t2 = new Track("Song B", "Artist B", "3:10","rock",2000);
+        Track t3 = new Track("Song C", "Artist C", "3:20","Pop",2020);
+        Track t4 = new Track("Song D", "Artist D", "3:30","rock",2000);
+
+        List<Track> originalQueue = List.of(t1, t2, t3, t4);
+
+        service.setCurrentQueue(originalQueue);
+        service.playTrack(t2);
+        service.setCurrentQueue(originalQueue);
+
+        service.shuffleRemainingQueue();
+
+        List<Track> shuffledQueue = service.getCurrentQueue();
+
+        assertEquals(4, shuffledQueue.size());
+        assertEquals(t2, service.getCurrentTrack());
+        assertEquals(t2, shuffledQueue.get(1));
+        assertEquals(t1, shuffledQueue.get(0));
+
+        Set<Track> expectedTracks = new HashSet<>(originalQueue);
+        Set<Track> actualTracks = new HashSet<>(shuffledQueue);
+
+        assertEquals(expectedTracks, actualTracks);
+        assertEquals(expectedTracks.size(), shuffledQueue.size());
     }
 }

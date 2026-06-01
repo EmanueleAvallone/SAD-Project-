@@ -3,6 +3,7 @@ package com.musicplayer.service;
 import com.musicplayer.model.Track;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -298,5 +299,35 @@ public class PlaybackService {
         this.currentTime = 0;
         this.duration = parseDuration(previousTrack.getLength());
         this.playing = true;
+    }
+    /**
+     * Riorganizza in ordine casuale le tracce rimanenti della coda corrente,
+     * mantenendo invariata la traccia attualmente in riproduzione.
+     * <p>
+     * La traccia corrente resta nella stessa posizione della coda e non viene
+     * né sostituita né riavviata. Vengono randomizzate soltanto le tracce
+     * successive alla corrente.
+     * </p>
+     */
+    public void shuffleRemainingQueue() {
+        if (currentQueue == null || currentQueue.isEmpty() || currentTrack == null) {
+            return;
+        }
+
+        int index = currentQueue.indexOf(currentTrack);
+
+        if (index < 0 || index >= currentQueue.size() - 1) {
+            currentTrackIndex = index;
+            return;
+        }
+
+        List<Track> remainingTracks = new ArrayList<>(currentQueue.subList(index + 1, currentQueue.size()));
+        Collections.shuffle(remainingTracks);
+
+        List<Track> reorderedQueue = new ArrayList<>(currentQueue.subList(0, index + 1));
+        reorderedQueue.addAll(remainingTracks);
+
+        this.currentQueue = reorderedQueue;
+        this.currentTrackIndex = index;
     }
 }
