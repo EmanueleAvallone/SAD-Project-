@@ -108,6 +108,19 @@ public class PlaybackService {
     public boolean isPlaying() {
         return playing;
     }
+    /**
+     * Avanza la riproduzione simulata di un secondo.
+     * <p>
+     * Il metodo incrementa il tempo corrente solo se la riproduzione è attiva
+     * e se esiste una traccia corrente. Quando il tempo corrente raggiunge la
+     * durata totale della traccia, la riproduzione viene fermata.
+     * </p>
+     *
+     * <p>
+     * Se non è in corso alcuna riproduzione oppure non è presente una traccia,
+     * il metodo non esegue alcuna operazione.
+     * </p>
+     */
     public void advanceOneSecond() {
         if (!playing || currentTrack == null) {
             return;
@@ -119,6 +132,22 @@ public class PlaybackService {
             playing = false;
         }
     }
+    /**
+     * Converte una durata espressa nel formato {@code mm:ss} in secondi totali.
+     * <p>
+     * Se la stringa è {@code null} oppure non contiene il separatore {@code ":"},
+     * il metodo restituisce {@code 0}.
+     * </p>
+     *
+     * <p>
+     * Esempio: {@code "3:21"} viene convertito in {@code 201} secondi.
+     * </p>
+     *
+     * @param length durata della traccia nel formato {@code mm:ss}
+     * @return durata totale espressa in secondi, oppure {@code 0} se il formato
+     *         non è valido
+     * @throws NumberFormatException se i valori di minuti o secondi non sono numerici
+     */
     private int parseDuration(String length) {
         if (length == null || !length.contains(":")) {
             return 0;
@@ -130,6 +159,18 @@ public class PlaybackService {
 
         return minutes * 60 + seconds;
     }
+    /**
+     * Riprende la riproduzione della traccia corrente dal tempo già raggiunto.
+     * <p>
+     * Il metodo non riporta il tempo a zero: riattiva soltanto lo stato di
+     * riproduzione se esiste una traccia corrente e se il tempo corrente è ancora
+     * inferiore alla durata totale.
+     * </p>
+     *
+     * <p>
+     * Questo metodo è pensato per il comportamento di "resume" dopo una pausa.
+     * </p>
+     */
     public void resumeTrack() {
         if (currentTrack != null && currentTime < duration) {
             this.playing = true;

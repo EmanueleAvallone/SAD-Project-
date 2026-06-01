@@ -181,15 +181,34 @@ public class PlayerController implements PlayerObserver {
     public PlaybackService getPlaybackService() {
         return playbackService;
     }
-
+    /**
+     * Restituisce la traccia attualmente in riproduzione nel service.
+     *
+     * @return traccia corrente, oppure {@code null} se nessuna traccia è stata
+     *         avviata
+     */
     public Track getCurrentTrack() {
         return playbackService.getCurrentTrack();
     }
-
+    /**
+     * Indica se il player si trova attualmente nello stato di riproduzione.
+     *
+     * @return {@code true} se la riproduzione è attiva, {@code false} altrimenti
+     */
     public boolean isPlaying() {
         return playbackService.isPlaying();
     }
-
+    /**
+     * Avvia la riproduzione di una traccia proveniente da una playlist.
+     * <p>
+     * Se la traccia fornita è valida, essa viene impostata come traccia
+     * selezionata e la riproduzione simulata viene avviata dall'inizio.
+     * Se il parametro è {@code null}, il metodo non avvia alcuna riproduzione
+     * e aggiorna soltanto lo stato del controller.
+     * </p>
+     *
+     * @param track traccia da riprodurre dalla playlist, oppure {@code null}
+     */
     public void playTrackFromPlaylist(Track track) {
         if (track == null) {
             updateStatus("Nessuna traccia disponibile per continuare la riproduzione.");
@@ -202,7 +221,14 @@ public class PlayerController implements PlayerObserver {
         updateStatus("Riproduzione continuata con: " + track.getTitle());
         refreshPlaybackView();
     }
-
+    /**
+     * Ferma completamente la riproduzione simulata.
+     * <p>
+     * Il metodo resetta lo stato del {@link PlaybackService}, arresta la
+     * timeline del player, annulla la traccia selezionata e aggiorna la vista
+     * riportandola alla condizione iniziale.
+     * </p>
+     */
     public void stopPlayback() {
         playbackService.resetTrack();
         playbackTimeline.stop();
@@ -220,11 +246,24 @@ public class PlayerController implements PlayerObserver {
     public String getLastStatusMessage() {
         return lastStatusMessage;
     }
-
+    /**
+     * Aggiorna l'ultimo messaggio di stato prodotto dal controller.
+     *
+     * @param message nuovo messaggio di stato
+     */
     private void updateStatus(String message) {
         this.lastStatusMessage = message;
     }
-
+    /**
+     * Costruisce il testo da mostrare nella label "Now playing".
+     * <p>
+     * Il testo include il titolo della traccia e lo stato corrente del player,
+     * distinguendo tra riproduzione attiva e pausa.
+     * </p>
+     *
+     * @param track traccia da rappresentare
+     * @return testo descrittivo da visualizzare nella sezione "Now playing"
+     */
     private String buildNowPlayingText(Track track) {
         if (playbackService.isPlaying()) {
             return track.getTitle() + " - In riproduzione";
@@ -232,25 +271,44 @@ public class PlayerController implements PlayerObserver {
 
         return track.getTitle() + " - In pausa";
     }
-
+    /**
+     * Imposta il testo di una label solo se il riferimento grafico è disponibile.
+     *
+     * @param label label da aggiornare
+     * @param text testo da assegnare
+     */
     private void setLabelText(Label label, String text) {
         if (label != null) {
             label.setText(text);
         }
     }
-
+    /**
+     * Aggiorna la progress bar del player.
+     *
+     * @param progress valore di avanzamento compreso normalmente tra {@code 0.0}
+     *                 e {@code 1.0}
+     */
     private void setProgress(double progress) {
         if (playbackProgressBar != null) {
             playbackProgressBar.setProgress(progress);
         }
     }
-
+    /**
+     * Aggiorna il valore dello slider di riproduzione.
+     *
+     * @param value valore da assegnare allo slider
+     */
     private void setSliderValue(double value) {
         if (playbackSlider != null) {
             playbackSlider.setValue(value);
         }
     }
-
+    /**
+     * Calcola il progresso corrente della riproduzione in formato normalizzato.
+     *
+     * @return valore compreso tra {@code 0.0} e {@code 1.0}; restituisce
+     *         {@code 0.0} se la durata della traccia non è valida
+     */
     private double calculateProgress() {
         int duration = playbackService.getDuration();
 
@@ -260,7 +318,11 @@ public class PlayerController implements PlayerObserver {
 
         return (double) playbackService.getCurrentTime() / duration;
     }
-
+    /**
+     * Calcola il valore dello slider come percentuale di avanzamento.
+     *
+     * @return percentuale di avanzamento compresa tra {@code 0.0} e {@code 100.0}
+     */
     private double calculateSliderValue() {
         return calculateProgress() * 100.0;
     }
@@ -271,7 +333,15 @@ public class PlayerController implements PlayerObserver {
 
         return String.format("%02d:%02d", minutes, remainingSeconds);
     }
-
+    /**
+     * Riceve un aggiornamento dal motore del player osservato.
+     * <p>
+     * Il metodo aggiorna il messaggio di stato del controller in base al nome
+     * dello stato corrente del motore di riproduzione.
+     * </p>
+     *
+     * @param engine motore del player che ha generato la notifica
+     */
     @Override
     public void update(MediaPlayerEngine engine) {
         updateStatus("Stato player: " + engine.getCurrentStateName());
