@@ -119,6 +119,7 @@ public class MainController {
                 .addListener((observable, oldTrack, newTrack) -> {
                     if (playerControlController != null) {
                         playerControlController.setSelectedTrack(newTrack);
+                        playerControlController.setCurrentPlaylist(trackTableView.getItems());
                     }
 
                     if (statusLabel != null && newTrack != null) {
@@ -142,6 +143,7 @@ public class MainController {
                 .addListener((observable, oldTrack, newTrack) -> {
                     if (playerControlController != null) {
                         playerControlController.setSelectedTrack(newTrack);
+                        playerControlController.setCurrentPlaylist(playlistTrackTableView.getItems());
                     }
 
                     if (statusLabel != null && newTrack != null) {

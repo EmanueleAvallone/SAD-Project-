@@ -151,4 +151,40 @@ class PlaybackServiceTest {
         assertEquals(240, playbackService.getDuration());
         assertTrue(playbackService.isPlaying());
     }
+    @Test
+    void nextTrackShouldMoveToNextTrackWhenAvailable() {
+        PlaybackService playbackService = new PlaybackService();
+
+        Track firstTrack = new Track("Song A", "Artist A", "03:30", "Pop", 2024);
+        Track secondTrack = new Track("Song B", "Artist B", "04:00", "Rock", 2023);
+
+        playbackService.setCurrentQueue(java.util.List.of(firstTrack, secondTrack));
+        playbackService.playTrack(firstTrack);
+        playbackService.advanceOneSecond();
+
+        playbackService.nextTrack();
+
+        assertEquals(secondTrack, playbackService.getCurrentTrack());
+        assertEquals(0, playbackService.getCurrentTime());
+        assertEquals(240, playbackService.getDuration());
+        assertTrue(playbackService.isPlaying());
+        assertEquals(1, playbackService.getCurrentTrackIndex());
+    }
+    @Test
+    void nextTrackShouldStopPlaybackWhenThereIsNoNextTrack() {
+        PlaybackService playbackService = new PlaybackService();
+
+        Track onlyTrack = new Track("Song A", "Artist A", "03:30", "Pop", 2024);
+
+        playbackService.setCurrentQueue(java.util.List.of(onlyTrack));
+        playbackService.playTrack(onlyTrack);
+        playbackService.advanceOneSecond();
+
+        playbackService.nextTrack();
+
+        assertEquals(onlyTrack, playbackService.getCurrentTrack());
+        assertEquals(0, playbackService.getCurrentTime());
+        assertFalse(playbackService.isPlaying());
+        assertEquals(0, playbackService.getCurrentTrackIndex());
+    }
 }

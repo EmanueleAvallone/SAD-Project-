@@ -2,6 +2,9 @@ package com.musicplayer.service;
 
 import com.musicplayer.model.Track;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Service responsabile della gestione della riproduzione simulata dei brani.
  * <p>
@@ -16,6 +19,8 @@ public class PlaybackService {
     private int currentTime;
     private int duration;
     private boolean playing;
+    private List<Track> currentQueue;
+    private int currentTrackIndex;
 
     /**
      * Crea un nuovo service di riproduzione inizialmente fermo.
@@ -25,8 +30,10 @@ public class PlaybackService {
         this.currentTime = 0;
         this.duration = 0;
         this.playing = false;
-    }
+        this.currentQueue = new ArrayList<>();
+        this.currentTrackIndex = -1;
 
+    }
     /**
      * Avvia la riproduzione simulata della traccia indicata.
      *
@@ -149,11 +156,23 @@ public class PlaybackService {
      * @throws NumberFormatException se i valori di minuti o secondi non sono numerici
      */
     private int parseDuration(String length) {
-        if (length == null || !length.contains(":")) {
+        if (length == null || length.isBlank()) {
             return 0;
         }
 
-        String[] parts = length.split(":");
+        String value = length.trim();
+
+        if (!value.contains(":")) {
+            int minutes = Integer.parseInt(value);
+            return minutes * 60;
+        }
+
+        String[] parts = value.split(":");
+
+        if (parts.length != 2) {
+            return 0;
+        }
+
         int minutes = Integer.parseInt(parts[0].trim());
         int seconds = Integer.parseInt(parts[1].trim());
 
@@ -176,4 +195,70 @@ public class PlaybackService {
             this.playing = true;
         }
     }
+    /**
+     * Imposta la coda attualmente in riproduzione.
+     *
+     * @param queue lista delle tracce da considerare come coda corrente
+     */
+    public void setCurrentQueue(List<Track> queue) {
+        if (queue == null) {
+            this.currentQueue = new ArrayList<>();
+            this.currentTrackIndex = -1;
+            return;
+        }
+
+        this.currentQueue = new ArrayList<>(queue);
+
+        if (currentTrack == null) {
+            this.currentTrackIndex = -1;
+        } else {
+            this.currentTrackIndex = currentQueue.indexOf(currentTrack);
+        }
+    }
+    /**
+     * Restituisce la coda attualmente associata alla riproduzione.
+     *
+     * @return copia della coda corrente
+     */
+    public List<Track> getCurrentQueue() {
+        return new ArrayList<>(currentQueue);
+    }
+    /**
+     * Restituisce l'indice della traccia corrente nella coda.
+     *
+     * @return indice corrente, oppure {@code -1} se non disponibile
+     */
+    public int getCurrentTrackIndex() {
+        return currentTrackIndex;
+    }
+    /**
+     * Passa alla traccia successiva nella coda corrente, se disponibile.
+     * <p>
+     * Se esiste una traccia successiva, essa diventa la nuova traccia corrente
+     * e la riproduzione riparte dal suo inizio. Se invece la traccia corrente
+     * è l'ultima della coda oppure non esiste una coda valida, la riproduzione
+     * viene fermata.
+     * </p>
+     */
+    public void nextTrack() {
+        if (currentQueue == null || currentQueue.isEmpty() || currentTrack == null) {
+            return;
+        }
+
+        int index = currentQueue.indexOf(currentTrack);
+
+        if (index >= 0 && index < currentQueue.size() - 1) {
+            Track nextTrack = currentQueue.get(index + 1);
+            this.currentTrackIndex = index + 1;
+            this.currentTrack = nextTrack;
+            this.currentTime = 0;
+            this.duration = parseDuration(nextTrack.getLength());
+            this.playing = true;
+        } else {
+            this.currentTrackIndex = index;
+            this.playing = false;
+            this.currentTime = 0;
+        }
+    }
+
 }

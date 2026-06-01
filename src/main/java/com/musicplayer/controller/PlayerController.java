@@ -14,6 +14,8 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
 import javafx.util.Duration;
 
+import java.util.List;
+
 /**
  * Controller responsabile della gestione dei comandi del player.
  *
@@ -51,6 +53,7 @@ public class PlayerController implements PlayerObserver {
     private Track selectedTrack;
     private String lastStatusMessage;
     private Timeline playbackTimeline;
+    private List<Track> currentPlaylist;
 
     /**
      * Crea un controller del player con un nuovo PlaybackService.
@@ -114,16 +117,28 @@ public class PlayerController implements PlayerObserver {
             return;
         }
 
+        if (currentPlaylist != null && !currentPlaylist.isEmpty()) {
+            playbackService.setCurrentQueue(currentPlaylist);
+        }
+
         Track currentTrack = playbackService.getCurrentTrack();
 
         if (currentTrack == null || !currentTrack.equals(selectedTrack)) {
-            playbackService.playTrack(selectedTrack);   // parte da 0 solo su nuova traccia
-            playbackTimeline.stop();
-            playbackTimeline.playFromStart();
+            playbackService.playTrack(selectedTrack);
+
+            if (playbackTimeline != null) {
+                playbackTimeline.stop();
+                playbackTimeline.playFromStart();
+            }
+
             updateStatus("Riproduzione avviata: " + selectedTrack.getTitle());
         } else if (!playbackService.isPlaying()) {
-            playbackService.resumeTrack();              // riprende dal tempo corrente
-            playbackTimeline.play();                    // resume del timeline
+            playbackService.resumeTrack();
+
+            if (playbackTimeline != null) {
+                playbackTimeline.play();
+            }
+
             updateStatus("Riproduzione ripresa: " + selectedTrack.getTitle());
         }
 
@@ -148,7 +163,37 @@ public class PlayerController implements PlayerObserver {
      */
     @FXML
     public void handleSkip() {
-        updateStatus("Skip non ancora implementato.");
+        Track previousTrack = playbackService.getCurrentTrack();
+
+        if (previousTrack == null) {
+            updateStatus("Nessuna traccia in riproduzione.");
+            refreshPlaybackView();
+            return;
+        }
+
+        if (currentPlaylist != null && !currentPlaylist.isEmpty()) {
+            playbackService.setCurrentQueue(currentPlaylist);
+        }
+
+        playbackService.nextTrack();
+        Track currentTrack = playbackService.getCurrentTrack();
+
+        if (playbackTimeline != null) {
+            playbackTimeline.stop();
+            if (playbackService.isPlaying()) {
+                playbackTimeline.playFromStart();
+            }
+        }
+
+        if (currentTrack != null && !currentTrack.equals(previousTrack)) {
+            selectedTrack = currentTrack;
+            updateStatus("Riproduzione passata a: " + currentTrack.getTitle());
+        } else {
+            selectedTrack = currentTrack;
+            updateStatus("Nessuna traccia successiva disponibile.");
+        }
+
+        refreshPlaybackView();
     }
 
     /**
@@ -216,8 +261,18 @@ public class PlayerController implements PlayerObserver {
             return;
         }
 
+        if (currentPlaylist != null && !currentPlaylist.isEmpty()) {
+            playbackService.setCurrentQueue(currentPlaylist);
+        }
+
         this.selectedTrack = track;
         playbackService.playTrack(track);
+
+        if (playbackTimeline != null) {
+            playbackTimeline.stop();
+            playbackTimeline.playFromStart();
+        }
+
         updateStatus("Riproduzione continuata con: " + track.getTitle());
         refreshPlaybackView();
     }
@@ -336,6 +391,22 @@ public class PlayerController implements PlayerObserver {
         int remainingSeconds = seconds % 60;
 
         return String.format("%02d:%02d", minutes, remainingSeconds);
+    }
+    /**
+     * Imposta la playlist corrente utilizzata dal player per la riproduzione
+     * sequenziale e per il passaggio alla traccia successiva.
+     * <p>
+     * Il metodo aggiorna anche la coda interna del {@link PlaybackService},
+     * così che le operazioni di Play, Pause e Skip lavorino sulla stessa
+     * sequenza di brani visualizzata nell'interfaccia.
+     * </p>
+     *
+     * @param currentPlaylist lista di tracce attualmente disponibile per la riproduzione,
+     *                        oppure {@code null} per rimuovere la playlist corrente
+     */
+    public void setCurrentPlaylist(List<Track> currentPlaylist) {
+        this.currentPlaylist = currentPlaylist;
+        playbackService.setCurrentQueue(currentPlaylist);
     }
     /**
      * Riceve un aggiornamento dal motore del player osservato.
