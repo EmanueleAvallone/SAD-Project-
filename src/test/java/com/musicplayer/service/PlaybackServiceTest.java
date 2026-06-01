@@ -3,6 +3,8 @@ package com.musicplayer.service;
 import com.musicplayer.model.Track;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class PlaybackServiceTest {
@@ -186,5 +188,97 @@ class PlaybackServiceTest {
         assertEquals(0, playbackService.getCurrentTime());
         assertFalse(playbackService.isPlaying());
         assertEquals(0, playbackService.getCurrentTrackIndex());
+    }
+    @Test
+    void previousTrack_shouldGoToPreviousTrack_whenPreviousExists() {
+        PlaybackService service = new PlaybackService();
+
+        Track track1 = new Track("Song A", "Artist A", "3:00","Pop",2020);
+        Track track2 = new Track("Song B", "Artist B", "4:00","rock",2000);
+
+        service.setCurrentQueue(List.of(track1, track2));
+        service.playTrack(track2);
+        service.setCurrentQueue(List.of(track1, track2));
+
+        service.previousTrack();
+
+        assertNotNull(service.getCurrentTrack());
+        assertEquals(track1, service.getCurrentTrack());
+        assertEquals(0, service.getCurrentTrackIndex());
+        assertEquals(0, service.getCurrentTime());
+        assertTrue(service.isPlaying());
+    }
+
+    @Test
+    void previousTrack_shouldRestartCurrentTrack_whenCurrentIsFirst() {
+        PlaybackService service = new PlaybackService();
+
+        Track track1 = new Track("Song A", "Artist A", "3:00","Pop",2020);
+
+        service.setCurrentQueue(List.of(track1));
+        service.playTrack(track1);
+        service.setCurrentQueue(List.of(track1));
+        service.advanceOneSecond();
+        service.advanceOneSecond();
+
+        service.previousTrack();
+
+        assertEquals(track1, service.getCurrentTrack());
+        assertEquals(0, service.getCurrentTrackIndex());
+        assertEquals(0, service.getCurrentTime());
+    }
+    @Test
+    void nextTrack_shouldStopAndStayOnLastTrack_whenCurrentIsLast() {
+        PlaybackService service = new PlaybackService();
+
+        Track t1 = new Track("Song A", "Artist A", "3:00","Pop",2020);
+        Track t2 = new Track("Song B", "Artist B", "4:00","rock",2000);
+
+        service.setCurrentQueue(List.of(t1, t2));
+        service.playTrack(t2);
+        service.setCurrentQueue(List.of(t1, t2));
+
+        assertDoesNotThrow(service::nextTrack);
+        assertEquals(t2, service.getCurrentTrack());
+        assertEquals(1, service.getCurrentTrackIndex());
+        assertEquals(0, service.getCurrentTime());
+        assertFalse(service.isPlaying());
+    }
+
+    @Test
+    void previousTrack_shouldRestartFirstTrack_whenCurrentIsFirst() {
+        PlaybackService service = new PlaybackService();
+
+        Track t1 = new Track("Song A", "Artist A", "3:00","Pop",2020);
+
+        service.setCurrentQueue(List.of(t1));
+        service.playTrack(t1);
+        service.setCurrentQueue(List.of(t1));
+        service.advanceOneSecond();
+
+        assertDoesNotThrow(service::previousTrack);
+        assertEquals(t1, service.getCurrentTrack());
+        assertEquals(0, service.getCurrentTrackIndex());
+        assertEquals(0, service.getCurrentTime());
+    }
+
+    @Test
+    void nextTrack_shouldDoNothing_whenQueueIsEmpty() {
+        PlaybackService service = new PlaybackService();
+
+        assertDoesNotThrow(service::nextTrack);
+        assertNull(service.getCurrentTrack());
+        assertEquals(-1, service.getCurrentTrackIndex());
+        assertFalse(service.isPlaying());
+    }
+
+    @Test
+    void previousTrack_shouldDoNothing_whenQueueIsEmpty() {
+        PlaybackService service = new PlaybackService();
+
+        assertDoesNotThrow(service::previousTrack);
+        assertNull(service.getCurrentTrack());
+        assertEquals(-1, service.getCurrentTrackIndex());
+        assertFalse(service.isPlaying());
     }
 }

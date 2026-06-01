@@ -163,9 +163,9 @@ public class PlayerController implements PlayerObserver {
      */
     @FXML
     public void handleSkip() {
-        Track previousTrack = playbackService.getCurrentTrack();
+        Track trackBeforeCommand = playbackService.getCurrentTrack();
 
-        if (previousTrack == null) {
+        if (trackBeforeCommand == null) {
             updateStatus("Nessuna traccia in riproduzione.");
             refreshPlaybackView();
             return;
@@ -185,17 +185,56 @@ public class PlayerController implements PlayerObserver {
             }
         }
 
-        if (currentTrack != null && !currentTrack.equals(previousTrack)) {
-            selectedTrack = currentTrack;
+        selectedTrack = currentTrack;
+
+        if (currentTrack != null && !currentTrack.equals(trackBeforeCommand)) {
             updateStatus("Riproduzione passata a: " + currentTrack.getTitle());
         } else {
-            selectedTrack = currentTrack;
-            updateStatus("Nessuna traccia successiva disponibile.");
+            updateStatus("Nessuna traccia successiva disponibile. Riproduzione fermata sull'ultimo brano.");
         }
 
         refreshPlaybackView();
     }
+    /**
+     * Gestisce l'azione Previous.
+     *
+     * Se esiste una traccia precedente nella playlist corrente,
+     * passa a quella; altrimenti riporta il brano corrente all'inizio.
+     */
+    @FXML
+    public void handlePrevious() {
+        Track trackBeforeCommand = playbackService.getCurrentTrack();
 
+        if (trackBeforeCommand == null) {
+            updateStatus("Nessuna traccia in riproduzione.");
+            refreshPlaybackView();
+            return;
+        }
+
+        if (currentPlaylist != null && !currentPlaylist.isEmpty()) {
+            playbackService.setCurrentQueue(currentPlaylist);
+        }
+
+        playbackService.previousTrack();
+        Track currentTrack = playbackService.getCurrentTrack();
+
+        if (playbackTimeline != null) {
+            playbackTimeline.stop();
+            if (playbackService.isPlaying()) {
+                playbackTimeline.playFromStart();
+            }
+        }
+
+        selectedTrack = currentTrack;
+
+        if (currentTrack != null && !currentTrack.equals(trackBeforeCommand)) {
+            updateStatus("Riproduzione tornata a: " + currentTrack.getTitle());
+        } else {
+            updateStatus("Nessuna traccia precedente disponibile. Brano riportato all'inizio.");
+        }
+
+        refreshPlaybackView();
+    }
     /**
      * Aggiorna la sezione Simulated Playback.
      */

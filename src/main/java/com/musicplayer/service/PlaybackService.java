@@ -260,5 +260,40 @@ public class PlaybackService {
             this.currentTime = 0;
         }
     }
+    /**
+     * Torna alla traccia precedente nella coda corrente oppure
+     * riporta il brano corrente all'inizio.
+     * <p>
+     * Comportamento:
+     * - se non esiste una coda valida o non c'è traccia corrente, non fa nulla;
+     * - se la traccia corrente non è la prima, passa alla precedente;
+     * - se la traccia corrente è la prima, resta su quella e riporta il tempo a 0.
+     * </p>
+     */
+    public void previousTrack() {
+        if (currentQueue == null || currentQueue.isEmpty() || currentTrack == null) {
+            return;
+        }
 
+        int index = currentQueue.indexOf(currentTrack);
+
+        if (index == -1) {
+            return;
+        }
+
+        if (index == 0) {
+            this.currentTrackIndex = 0;
+            this.currentTrack = currentQueue.get(0);
+            this.currentTime = 0;
+            this.duration = parseDuration(currentTrack.getLength());
+            return;
+        }
+
+        Track previousTrack = currentQueue.get(index - 1);
+        this.currentTrackIndex = index - 1;
+        this.currentTrack = previousTrack;
+        this.currentTime = 0;
+        this.duration = parseDuration(previousTrack.getLength());
+        this.playing = true;
+    }
 }
