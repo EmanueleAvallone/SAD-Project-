@@ -1,35 +1,35 @@
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/MainApp.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/command/AddTrackPCommand.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/command/Command.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/command/CommandManager.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/command/DeleteTrackCommand.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/command/RemoveTrackPCommand.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/controller/AddTrackController.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/controller/LibraryController.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/controller/MainController.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/controller/PlayerController.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/controller/PlaylistController.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/Library.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/PlayMode.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/Playlist.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/PlaylistFactory.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/Tag.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/Track.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/LoopPlay.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/MediaPlayerEngine.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/PausedState.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/PlayStrategy.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/PlayerObservable.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/PlayerObserver.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/PlayerState.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/PlayingState.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/SequentialPlay.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/ShufflePlay.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/model/engine/StoppedState.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/service/PlaybackService.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/service/PlaylistService.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/service/TrackService.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/view/LibraryView.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/view/MainWindow.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/view/PlayerControlView.java
-/Users/emanueleavallone/Desktop/Magistrale/Secondo semestre/Software Arch Design/SAD project/src/main/java/com/musicplayer/view/PlaylistView.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/MainApp.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/command/AddTrackPCommand.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/command/Command.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/command/CommandManager.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/command/DeleteTrackCommand.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/command/RemoveTrackPCommand.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/controller/AddTrackController.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/controller/LibraryController.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/controller/MainController.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/controller/PlayerController.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/controller/PlaylistController.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/Library.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/PlayMode.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/Playlist.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/PlaylistFactory.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/Tag.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/Track.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/LoopPlay.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/MediaPlayerEngine.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/PausedState.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/PlayStrategy.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/PlayerObservable.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/PlayerObserver.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/PlayerState.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/PlayingState.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/SequentialPlay.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/ShufflePlay.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/model/engine/StoppedState.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/service/PlaybackService.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/service/PlaylistService.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/service/TrackService.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/view/LibraryView.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/view/MainWindow.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/view/PlayerControlView.java
+/Users/francesco/Downloads/SCRUM/src/main/java/com/musicplayer/view/PlaylistView.java

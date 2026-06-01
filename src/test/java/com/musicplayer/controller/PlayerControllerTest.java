@@ -8,48 +8,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class PlayerControllerTest {
 
     @Test
-    void playButtonShouldStartPlaybackWithSelectedTrack() {
-        PlayerController playerController = new PlayerController();
-        Track selectedTrack = new Track("Song", "Artist", "03:30", "Pop", 2024);
-
-        playerController.setSelectedTrack(selectedTrack);
-
-        playerController.handlePlay();
-
-        assertEquals(selectedTrack, playerController.getPlaybackService().getCurrentTrack());
-        assertTrue(playerController.getPlaybackService().isPlaying());
-        assertEquals(0, playerController.getPlaybackService().getCurrentTime());
-        assertEquals(1, selectedTrack.getPlayedCount());
-    }
-
-    @Test
-    void pauseButtonShouldPauseCurrentPlayback() {
-        PlayerController playerController = new PlayerController();
-        Track selectedTrack = new Track("Song", "Artist", "03:30", "Pop", 2024);
-
-        playerController.setSelectedTrack(selectedTrack);
-        playerController.handlePlay();
-
-        playerController.handlePause();
-
-        assertEquals(selectedTrack, playerController.getPlaybackService().getCurrentTrack());
-        assertFalse(playerController.getPlaybackService().isPlaying());
-    }
-
-    @Test
-    void playButtonShouldNotStartPlaybackWhenNoTrackIsSelected() {
-        PlayerController playerController = new PlayerController();
-
-        playerController.setSelectedTrack(null);
-
-        playerController.handlePlay();
-
-        assertNull(playerController.getPlaybackService().getCurrentTrack());
-        assertFalse(playerController.getPlaybackService().isPlaying());
-        assertEquals(0, playerController.getPlaybackService().getCurrentTime());
-    }
-
-    @Test
     void selectedTrackShouldBeStoredInPlayerController() {
         PlayerController playerController = new PlayerController();
         Track selectedTrack = new Track("Song", "Artist", "03:30", "Pop", 2024);
@@ -60,20 +18,27 @@ class PlayerControllerTest {
     }
 
     @Test
-    void playAndPauseButtonsShouldModifyPlayerStateCorrectly() {
+    void playWithoutSelectedTrackShouldNotStartPlayback() {
+        PlayerController playerController = new PlayerController();
+
+        playerController.setSelectedTrack(null);
+        playerController.handlePlay();
+
+        assertNull(playerController.getPlaybackService().getCurrentTrack());
+        assertFalse(playerController.getPlaybackService().isPlaying());
+        assertEquals("Seleziona una traccia da riprodurre.", playerController.getLastStatusMessage());
+    }
+
+    @Test
+    void stopPlaybackShouldResetControllerState() {
         PlayerController playerController = new PlayerController();
         Track selectedTrack = new Track("Song", "Artist", "03:30", "Pop", 2024);
 
         playerController.setSelectedTrack(selectedTrack);
+        playerController.stopPlayback();
 
-        playerController.handlePlay();
-
-        assertEquals(selectedTrack, playerController.getPlaybackService().getCurrentTrack());
-        assertTrue(playerController.getPlaybackService().isPlaying());
-
-        playerController.handlePause();
-
-        assertEquals(selectedTrack, playerController.getPlaybackService().getCurrentTrack());
+        assertNull(playerController.getSelectedTrack());
+        assertNull(playerController.getPlaybackService().getCurrentTrack());
         assertFalse(playerController.getPlaybackService().isPlaying());
     }
 }

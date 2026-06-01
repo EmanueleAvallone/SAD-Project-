@@ -231,7 +231,11 @@ public class PlayerController implements PlayerObserver {
      */
     public void stopPlayback() {
         playbackService.resetTrack();
-        playbackTimeline.stop();
+
+        if (playbackTimeline != null) {
+            playbackTimeline.stop();
+        }
+
         selectedTrack = null;
         updateStatus("Riproduzione fermata.");
         refreshPlaybackView();

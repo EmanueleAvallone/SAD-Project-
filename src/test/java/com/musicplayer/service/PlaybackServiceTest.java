@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PlaybackServiceTest {
+
     @Test
     void playTrackShouldStartPlaybackWithValidTrack() {
         PlaybackService playbackService = new PlaybackService();
@@ -15,6 +16,7 @@ class PlaybackServiceTest {
 
         assertEquals(track, playbackService.getCurrentTrack());
         assertEquals(0, playbackService.getCurrentTime());
+        assertEquals(210, playbackService.getDuration());
         assertTrue(playbackService.isPlaying());
         assertEquals(1, track.getPlayedCount());
     }
@@ -37,10 +39,29 @@ class PlaybackServiceTest {
         Track track = new Track("Song", "Artist", "03:30", "Pop", 2024);
 
         playbackService.playTrack(track);
+        playbackService.advanceOneSecond();
+        playbackService.advanceOneSecond();
+
         playbackService.stopTrack();
 
         assertEquals(track, playbackService.getCurrentTrack());
         assertEquals(0, playbackService.getCurrentTime());
+        assertFalse(playbackService.isPlaying());
+    }
+
+    @Test
+    void resetTrackShouldClearEntirePlaybackState() {
+        PlaybackService playbackService = new PlaybackService();
+        Track track = new Track("Song", "Artist", "03:30", "Pop", 2024);
+
+        playbackService.playTrack(track);
+        playbackService.advanceOneSecond();
+
+        playbackService.resetTrack();
+
+        assertNull(playbackService.getCurrentTrack());
+        assertEquals(0, playbackService.getCurrentTime());
+        assertEquals(0, playbackService.getDuration());
         assertFalse(playbackService.isPlaying());
     }
 
@@ -52,20 +73,82 @@ class PlaybackServiceTest {
         assertNull(playbackService.getCurrentTrack());
         assertFalse(playbackService.isPlaying());
         assertEquals(0, playbackService.getCurrentTime());
+        assertEquals(0, playbackService.getDuration());
     }
+
     @Test
-    void playerShouldStartAndPauseSimulatedPlayback() {
+    void advanceOneSecondShouldIncreaseCurrentTimeWhilePlaying() {
         PlaybackService playbackService = new PlaybackService();
         Track track = new Track("Song", "Artist", "03:30", "Pop", 2024);
 
         playbackService.playTrack(track);
+        playbackService.advanceOneSecond();
+        playbackService.advanceOneSecond();
 
-        assertEquals(track, playbackService.getCurrentTrack());
+        assertEquals(2, playbackService.getCurrentTime());
         assertTrue(playbackService.isPlaying());
+    }
 
+    @Test
+    void advanceOneSecondShouldNotIncreaseCurrentTimeWhenPaused() {
+        PlaybackService playbackService = new PlaybackService();
+        Track track = new Track("Song", "Artist", "03:30", "Pop", 2024);
+
+        playbackService.playTrack(track);
+        playbackService.pauseTrack();
+        playbackService.advanceOneSecond();
+
+        assertEquals(0, playbackService.getCurrentTime());
+        assertFalse(playbackService.isPlaying());
+    }
+
+    @Test
+    void resumeTrackShouldContinuePlaybackWithoutResettingCurrentTime() {
+        PlaybackService playbackService = new PlaybackService();
+        Track track = new Track("Song", "Artist", "03:30", "Pop", 2024);
+
+        playbackService.playTrack(track);
+        playbackService.advanceOneSecond();
+        playbackService.advanceOneSecond();
         playbackService.pauseTrack();
 
+        playbackService.resumeTrack();
+
+        assertEquals(2, playbackService.getCurrentTime());
+        assertTrue(playbackService.isPlaying());
         assertEquals(track, playbackService.getCurrentTrack());
+    }
+
+    @Test
+    void playbackShouldStopAutomaticallyWhenTrackEnds() {
+        PlaybackService playbackService = new PlaybackService();
+        Track track = new Track("Short Song", "Artist", "00:02", "Pop", 2024);
+
+        playbackService.playTrack(track);
+
+        playbackService.advanceOneSecond();
+        playbackService.advanceOneSecond();
+        playbackService.advanceOneSecond();
+
+        assertEquals(2, playbackService.getCurrentTime());
         assertFalse(playbackService.isPlaying());
+    }
+
+    @Test
+    void playTrackShouldRestartFromZeroWhenANewTrackStarts() {
+        PlaybackService playbackService = new PlaybackService();
+        Track firstTrack = new Track("Song A", "Artist A", "03:30", "Pop", 2024);
+        Track secondTrack = new Track("Song B", "Artist B", "04:00", "Rock", 2023);
+
+        playbackService.playTrack(firstTrack);
+        playbackService.advanceOneSecond();
+        playbackService.advanceOneSecond();
+
+        playbackService.playTrack(secondTrack);
+
+        assertEquals(secondTrack, playbackService.getCurrentTrack());
+        assertEquals(0, playbackService.getCurrentTime());
+        assertEquals(240, playbackService.getDuration());
+        assertTrue(playbackService.isPlaying());
     }
 }
