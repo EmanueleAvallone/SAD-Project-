@@ -55,6 +55,8 @@ public class PlayerController implements PlayerObserver {
     private Timeline playbackTimeline;
     private List<Track> currentPlaylist;
     private List<Track> originalPlaylist;
+    private Runnable playbackChangeListener;
+    private boolean updatingSliderFromPlayback;
 
     /**
      * Crea un controller del player con un nuovo PlaybackService.
@@ -93,6 +95,7 @@ public class PlayerController implements PlayerObserver {
                 })
         );
         playbackTimeline.setCycleCount(Timeline.INDEFINITE);
+        configurePlaybackSlider();
         sequentialModeRadio.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (Boolean.TRUE.equals(newValue)) {
                 if (originalPlaylist != null && !originalPlaylist.isEmpty()) {
@@ -205,7 +208,11 @@ public class PlayerController implements PlayerObserver {
     @FXML
     public void handlePause() {
         playbackService.pauseTrack();
-        playbackTimeline.pause();
+
+        if (playbackTimeline != null) {
+            playbackTimeline.pause();
+        }
+
         updateStatus("Riproduzione sospesa.");
         refreshPlaybackView();
     }
@@ -323,14 +330,16 @@ public class PlayerController implements PlayerObserver {
             setLabelText(totalTimeLabel, "00:00");
             setProgress(0.0);
             setSliderValue(0.0);
+            notifyPlaybackChange();
             return;
         }
 
         setLabelText(nowPlayingLabel, buildNowPlayingText(currentTrack));
         setLabelText(elapsedTimeLabel, formatTime(playbackService.getCurrentTime()));
-        setLabelText(totalTimeLabel, currentTrack.getLength());
+        setLabelText(totalTimeLabel, safeText(currentTrack.getLength(), "00:00"));
         setProgress(calculateProgress());
         setSliderValue(calculateSliderValue());
+        notifyPlaybackChange();
     }
 
     /**
@@ -350,6 +359,24 @@ public class PlayerController implements PlayerObserver {
     public Track getCurrentTrack() {
         return playbackService.getCurrentTrack();
     }
+
+    /**
+     * Registra una callback da eseguire quando cambia lo stato visivo
+     * della riproduzione.
+     * <p>
+     * La callback viene usata dai controller della schermata principale
+     * per aggiornare le tabelle e rimuovere/applicare l'evidenziazione
+     * della traccia attualmente in riproduzione.
+     * </p>
+     *
+     * @param playbackChangeListener callback da eseguire quando cambia la riproduzione
+     */
+
+    public void setPlaybackChangeListener(Runnable playbackChangeListener) {
+        this.playbackChangeListener = playbackChangeListener;
+    }
+
+
     /**
      * Indica se il player si trova attualmente nello stato di riproduzione.
      *
@@ -420,6 +447,7 @@ public class PlayerController implements PlayerObserver {
     public String getLastStatusMessage() {
         return lastStatusMessage;
     }
+
     /**
      * Aggiorna l'ultimo messaggio di stato prodotto dal controller.
      *
@@ -428,6 +456,21 @@ public class PlayerController implements PlayerObserver {
     private void updateStatus(String message) {
         this.lastStatusMessage = message;
     }
+
+    /**
+     * Notifica alla schermata principale che lo stato della riproduzione
+     * è cambiato.
+     * <p>
+     * Se una callback è stata registrata, viene eseguita per permettere
+     * il refresh delle tabelle che evidenziano la traccia in esecuzione.
+     * </p>
+     */
+    private void notifyPlaybackChange() {
+        if (playbackChangeListener != null) {
+            playbackChangeListener.run();
+        }
+    }
+
     /**
      * Costruisce il testo da mostrare nella label "Now playing".
      * <p>
@@ -439,12 +482,23 @@ public class PlayerController implements PlayerObserver {
      * @return testo descrittivo da visualizzare nella sezione "Now playing"
      */
     private String buildNowPlayingText(Track track) {
-        if (playbackService.isPlaying()) {
-            return track.getTitle() + " - In riproduzione";
-        }
+        String title = safeText(track.getTitle(), "Titolo sconosciuto");
+        String author = safeText(track.getAuthor(), "Autore sconosciuto");
+        String year = track.getYear() > 0 ? String.valueOf(track.getYear()) : "Anno sconosciuto";
+        String length = safeText(track.getLength(), "Durata sconosciuta");
+        String playbackState = playbackService.isPlaying() ? "In riproduzione" : "In pausa";
 
-        return track.getTitle() + " - In pausa";
+        return title
+                + " - "
+                + author
+                + " | "
+                + year
+                + " | "
+                + length
+                + " | "
+                + playbackState;
     }
+
     /**
      * Imposta il testo di una label solo se il riferimento grafico è disponibile.
      *
@@ -456,6 +510,27 @@ public class PlayerController implements PlayerObserver {
             label.setText(text);
         }
     }
+
+    /**
+     * Restituisce un testo sicuro da mostrare nell'interfaccia.
+     * <p>
+     * Se il valore ricevuto è null, vuoto o composto solo da spazi,
+     * viene restituito il testo alternativo passato come fallback.
+     * In caso contrario viene restituito il valore ripulito dagli spazi
+     * iniziali e finali.
+     * </p>
+     *
+     * @param value valore testuale da controllare
+     * @param fallback testo alternativo da usare se il valore non è disponibile
+     * @return il valore ripulito se valido, altrimenti il testo di fallback
+     */
+    private String safeText(String value, String fallback) {
+        if (value == null || value.trim().isEmpty()) {
+            return fallback;
+        }
+        return value.trim();
+    }
+
     /**
      * Aggiorna la progress bar del player.
      *
@@ -467,16 +542,89 @@ public class PlayerController implements PlayerObserver {
             playbackProgressBar.setProgress(progress);
         }
     }
+
     /**
      * Aggiorna il valore dello slider di riproduzione.
+     * <p>
+     * Il valore viene aggiornato automaticamente dalla timeline del player.
+     * Durante questo aggiornamento viene usato un flag interno per evitare
+     * che il listener dello slider interpreti il cambiamento come un'azione
+     * manuale dell'utente.
+     * </p>
      *
      * @param value valore da assegnare allo slider
      */
+
     private void setSliderValue(double value) {
-        if (playbackSlider != null) {
-            playbackSlider.setValue(value);
+        if (playbackSlider == null) {
+            return;
         }
+
+        updatingSliderFromPlayback = true;
+        playbackSlider.setValue(value);
+        updatingSliderFromPlayback = false;
     }
+
+    /**
+     * Configura lo slider di avanzamento della riproduzione.
+     * <p>
+     * Lo slider rappresenta la posizione corrente della traccia in percentuale,
+     * da 0 a 100. Quando l'utente trascina o rilascia lo slider, il tempo
+     * corrente del {@link PlaybackService} viene aggiornato in base alla durata
+     * della traccia attiva.
+     * </p>
+     * <p>
+     * Se non è presente alcuna traccia oppure la durata non è valida,
+     * l'interazione non produce effetti.
+     * </p>
+     */
+    private void configurePlaybackSlider() {
+        if (playbackSlider == null) {
+            return;
+        }
+
+        playbackSlider.setMin(0.0);
+        playbackSlider.setMax(100.0);
+        playbackSlider.setValue(0.0);
+
+        playbackSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (updatingSliderFromPlayback) {
+                return;
+            }
+            updatePlaybackTimeFromSlider();
+        });
+
+    }
+
+    /**
+     * Aggiorna il tempo corrente della riproduzione usando il valore dello slider.
+     * <p>
+     * Il valore dello slider viene interpretato come percentuale di avanzamento
+     * della traccia. Il metodo calcola il secondo corrispondente, aggiorna il
+     * {@link PlaybackService} e sincronizza subito label, progress bar e slider.
+     * </p>
+     */
+    private void updatePlaybackTimeFromSlider() {
+        if (playbackSlider == null) {
+            return;
+        }
+
+        if (playbackService.getCurrentTrack() == null) {
+            return;
+        }
+
+        int duration = playbackService.getDuration();
+
+        if (duration <= 0) {
+            return;
+        }
+
+        int newCurrentTime = (int) Math.round((playbackSlider.getValue() / 100.0) * duration);
+
+        playbackService.setCurrentTime(newCurrentTime);
+        refreshPlaybackView();
+    }
+
     /**
      * Calcola il progresso corrente della riproduzione in formato normalizzato.
      *
@@ -529,6 +677,7 @@ public class PlayerController implements PlayerObserver {
         this.currentPlaylist = currentPlaylist == null ? null : List.copyOf(currentPlaylist);
         playbackService.setCurrentQueue(this.currentPlaylist);
     }
+
     /**
      * Attiva la modalità di riproduzione casuale riorganizzando
      * le tracce rimanenti della coda corrente.
@@ -552,15 +701,7 @@ public class PlayerController implements PlayerObserver {
         updateStatus("Modalità casuale attivata.");
         refreshPlaybackView();
     }
-    /**
-     * Riceve un aggiornamento dal motore del player osservato.
-     * <p>
-     * Il metodo aggiorna il messaggio di stato del controller in base al nome
-     * dello stato corrente del motore di riproduzione.
-     * </p>
-     *
-     * @param engine motore del player che ha generato la notifica
-     */
+
     /**
      * Gestisce il completamento automatico della traccia corrente
      * applicando la modalità di riproduzione attiva.
@@ -601,6 +742,16 @@ public class PlayerController implements PlayerObserver {
 
         refreshPlaybackView();
     }
+
+    /**
+     * Riceve un aggiornamento dal motore del player osservato.
+     * <p>
+     * Il metodo aggiorna il messaggio di stato del controller in base al nome
+     * dello stato corrente del motore di riproduzione.
+     * </p>
+     *
+     * @param engine motore del player che ha generato la notifica
+     */
     @Override
     public void update(MediaPlayerEngine engine) {
         updateStatus("Stato player: " + engine.getCurrentStateName());

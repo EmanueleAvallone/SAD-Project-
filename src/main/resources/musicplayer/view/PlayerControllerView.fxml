@@ -31,7 +31,7 @@
            wrapText="true" />
 
     <Slider fx:id="playbackSlider"
-            disable="true"
+            disable="false"
             max="100.0"
             min="0.0"
             value="0.0" />

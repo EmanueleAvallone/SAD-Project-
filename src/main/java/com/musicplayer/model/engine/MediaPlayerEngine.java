@@ -1,6 +1,5 @@
 package com.musicplayer.model.engine;
 
-import com.musicplayer.model.PlayMode;
 import com.musicplayer.model.Playlist;
 
 import java.util.ArrayList;
@@ -188,7 +187,13 @@ public class MediaPlayerEngine implements PlayerObservable {
 
     @Override
     public void addObserver(PlayerObserver observer) {
-        observers.add(observer);
+        if (observer == null) {
+            throw new IllegalArgumentException("L'observer non può essere null.");
+        }
+
+        if (!observers.contains(observer)) {
+            observers.add(observer);
+        }
     }
 
     /**
@@ -208,7 +213,9 @@ public class MediaPlayerEngine implements PlayerObservable {
      */
 
     public void notifyObservers() {
-        for (PlayerObserver observer : observers) {
+        List<PlayerObserver> observersSnapshot = new ArrayList<>(observers);
+
+        for (PlayerObserver observer : observersSnapshot) {
             observer.update(this);
         }
     }

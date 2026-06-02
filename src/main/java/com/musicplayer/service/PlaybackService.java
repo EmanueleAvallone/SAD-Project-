@@ -111,6 +111,31 @@ public class PlaybackService {
     }
 
     /**
+     * Imposta manualmente il tempo corrente della traccia in riproduzione.
+     * <p>
+     * Il valore viene mantenuto entro i limiti validi della traccia:
+     * non può essere minore di zero e non può superare la durata totale.
+     * Questo metodo viene usato dallo slider del player per simulare
+     * lo spostamento manuale nella traccia.
+     * </p>
+     *
+     * @param currentTime nuovo tempo corrente espresso in secondi
+     */
+    public void setCurrentTime(int currentTime) {
+        if (currentTime < 0) {
+            this.currentTime = 0;
+            return;
+        }
+
+        if (currentTime > duration) {
+            this.currentTime = duration;
+            return;
+        }
+
+        this.currentTime = currentTime;
+    }
+
+    /**
      * Indica se una traccia è attualmente in riproduzione.
      *
      * @return {@code true} se la riproduzione è attiva, altrimenti {@code false}

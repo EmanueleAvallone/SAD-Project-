@@ -20,6 +20,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.TableRow;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -172,6 +173,13 @@ public class MainController {
                 playerControlController
         );
 
+        if (playerControlController != null) {
+            playerControlController.setPlaybackChangeListener(() -> {
+                trackTableView.refresh();
+                playlistSectionController.refreshSelectedPlaylistTable();
+            });
+        }
+
         if (statusLabel != null) {
             statusLabel.setText("Applicazione avviata correttamente.");
         }
@@ -216,6 +224,23 @@ public class MainController {
         trackPlayCountColumn.setCellValueFactory(new PropertyValueFactory<>("playedCount"));
 
         trackTableView.setItems(tracks);
+
+        trackTableView.setRowFactory(tableView -> new TableRow<>() {
+            @Override
+            protected void updateItem(Track track, boolean empty) {
+                super.updateItem(track, empty);
+                if (empty || track == null || playerControlController == null) {
+                    setStyle("");
+                    return;
+                }
+                Track currentTrack = playerControlController.getCurrentTrack();
+                if (currentTrack != null && currentTrack.equals(track) && playerControlController.isPlaying()) {
+                    setStyle("-fx-font-weight: bold; -fx-background-color: #fff3b0;");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
     }
 
     /**

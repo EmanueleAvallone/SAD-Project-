@@ -18,6 +18,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.TableRow;
 
 import java.util.Optional;
 
@@ -143,9 +144,10 @@ public class PlaylistController {
 
         playlistListView.getSelectionModel()
                 .selectedItemProperty()
-                .addListener((observable, oldPlaylist, newPlaylist) ->
-                        updateSelectedPlaylistView(newPlaylist)
-                );
+                .addListener((observable, oldPlaylist, newPlaylist) ->{
+                    System.out.println("Playlist selezionata: " + newPlaylist);
+                    updateSelectedPlaylistView(newPlaylist);
+                });
     }
 
     /**
@@ -183,6 +185,23 @@ public class PlaylistController {
         playlistTrackAuthorColumn.setCellValueFactory(new PropertyValueFactory<>("author"));
         playlistTrackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
         playlistTrackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
+
+        playlistTrackTableView.setRowFactory(tableView -> new TableRow<>() {
+            @Override
+            protected void updateItem(Track track, boolean empty) {
+                super.updateItem(track, empty);
+                if (empty || track == null || playerControlController == null) {
+                    setStyle("");
+                    return;
+                }
+                Track currentTrack = playerControlController.getCurrentTrack();
+                if (currentTrack != null && currentTrack.equals(track) && playerControlController.isPlaying()) {
+                    setStyle("-fx-font-weight: bold; -fx-background-color: #fff3b0;");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
     }
 
     /**
@@ -394,11 +413,23 @@ public class PlaylistController {
         selectedPlaylistTracks.clear();
 
         if (playlist == null) {
+            if (playlistTrackTableView != null) {
+                playlistTrackTableView.refresh();
+            }
+
             setStatus("Nessuna playlist selezionata.");
             return;
         }
 
         selectedPlaylistTracks.addAll(playlist.getTracks());
+
+        if (playlistTrackTableView != null) {
+            playlistTrackTableView.refresh();
+        }
+
+        if (playerControlController != null) {
+            playerControlController.setCurrentPlaylist(selectedPlaylistTracks);
+        }
 
         if (playlist.getTracks().isEmpty()) {
             setStatus("Playlist selezionata: " + playlist.getName() + " - nessuna traccia presente.");
@@ -410,6 +441,20 @@ public class PlaylistController {
                             + playlist.getTracks().size()
                             + " tracce"
             );
+        }
+    }
+
+    /**
+     * Forza l'aggiornamento grafico della tabella della playlist selezionata.
+     * <p>
+     * Il metodo viene usato quando cambia la traccia in riproduzione, così da
+     * applicare o rimuovere immediatamente lo stile evidenziato dalla riga
+     * corrispondente.
+     * </p>
+     */
+    public void refreshSelectedPlaylistTable() {
+        if (playlistTrackTableView != null) {
+            playlistTrackTableView.refresh();
         }
     }
 
