@@ -54,6 +54,10 @@ public class Playlist {
             throw new IllegalArgumentException("La traccia da rimuovere non può essere nulla.");
         }
 
+        if (!tracks.contains(track)) {
+            throw new IllegalArgumentException("La traccia non è presente in questa playlist.");
+        }
+
         tracks.remove(track);
     }
 

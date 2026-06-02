@@ -92,7 +92,9 @@ public class TrackService {
         tracks.remove(track);
 
         for (Playlist playlist : playlists) {
-            playlist.removeTrack(track);
+            if (playlist.getTracks().contains(track)) {
+                playlist.removeTrack(track);
+            }
         }
     }
 
