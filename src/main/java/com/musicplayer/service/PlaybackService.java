@@ -349,10 +349,23 @@ public class PlaybackService {
         this.currentQueue = reorderedQueue;
         this.currentTrackIndex = index;
     }
+    /**
+     * Indica se la modalità Loop è attualmente attiva.
+     *
+     * @return {@code true} se il Loop è abilitato, {@code false} altrimenti
+     */
     public boolean isLoopEnabled() {
         return loopEnabled;
     }
-
+    /**
+     * Attiva o disattiva la modalità Loop.
+     * <p>
+     * Quando il Loop è abilitato, il player torna automaticamente alla prima
+     * traccia della coda al termine dell'ultima traccia disponibile.
+     * </p>
+     *
+     * @param loopEnabled {@code true} per attivare il Loop, {@code false} per disattivarlo
+     */
     public void setLoopEnabled(boolean loopEnabled) {
         this.loopEnabled = loopEnabled;
     }
