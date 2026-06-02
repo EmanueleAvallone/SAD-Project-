@@ -110,9 +110,11 @@
 
             <Region HBox.hgrow="ALWAYS"/>
 
+            <Button text="Import from file" onAction="#handleImport"/>
             <Button text="Reset" onAction="#handleReset"/>
             <Button text="Cancel" onAction="#handleCancel"/>
-            <Button fx:id="submitButton" text="Add track" onAction="#handleAddTrack"/>        </HBox>
+            <Button fx:id="submitButton" text="Add track" onAction="#handleAddTrack"/>
+        </HBox>
     </bottom>
 
 </BorderPane>

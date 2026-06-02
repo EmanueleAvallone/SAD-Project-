@@ -9,6 +9,10 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.scene.control.Button;
+import javafx.stage.FileChooser;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
 
 import com.musicplayer.service.TrackService;
 
@@ -176,6 +180,44 @@ public class AddTrackController {
         lengthField.setDisable(true);
 
         statusLabel.setText("Editing track: " + track.getTitle());
+    }
+
+    @FXML
+    private void handleImport() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Importa dati traccia");
+
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Text Files (*.txt)", "*.txt")
+        );
+
+        Stage stage = (Stage) titleField.getScene().getWindow();
+        File file = fileChooser.showOpenDialog(stage);
+
+        if (file != null) {
+            importDataFromFile(file);
+        }
+    }
+
+    private void importDataFromFile(File file) {
+        Properties props = new Properties();
+
+        try (FileInputStream fis = new FileInputStream(file)) {
+            props.load(fis);
+
+            if (props.getProperty("title") != null) titleField.setText(props.getProperty("title"));
+            if (props.getProperty("author") != null) authorField.setText(props.getProperty("author"));
+            if (props.getProperty("length") != null) lengthField.setText(props.getProperty("length"));
+            if (props.getProperty("genre") != null) genreField.setText(props.getProperty("genre"));
+            if (props.getProperty("year") != null) yearField.setText(props.getProperty("year"));
+            if (props.getProperty("notes") != null) notesArea.setText(props.getProperty("notes"));
+
+            statusLabel.setText("Dati importati da: " + file.getName());
+
+        } catch (Exception e) {
+            showError("Errore durante la lettura del file: " + e.getMessage());
+            statusLabel.setText("Errore importazione.");
+        }
     }
 
     private void closeWindow() {
