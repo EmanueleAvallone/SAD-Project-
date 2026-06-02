@@ -1,15 +1,11 @@
-
 package com.musicplayer.controller;
 
-import com.musicplayer.command.Command;
 import com.musicplayer.command.CommandManager;
-import com.musicplayer.command.RemoveTrackPCommand;
 import com.musicplayer.model.Playlist;
 import com.musicplayer.model.Track;
 import com.musicplayer.service.PlaylistService;
 import com.musicplayer.service.TrackService;
 
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -23,7 +19,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
@@ -35,18 +30,22 @@ import java.util.Optional;
 /**
  * Controller principale dell'applicazione Music Playlist Manager.
  *
- * Questa classe coordina la schermata principale e gestisce gli eventi generati
- * dalla UI. Per rispettare la separazione delle responsabilità, la business logic
- * viene delegata ai service:
- * - TrackService per le operazioni sulle tracce;
- * - PlaylistService per le operazioni sulle playlist;
- * - CommandManager per le operazioni annullabili.
+ * Questa classe coordina la schermata principale dell'applicazione.
+ * Per rispettare la separazione delle responsabilità, MainController non contiene
+ * tutta la logica applicativa, ma delega:
  *
- * Il controller si occupa principalmente di:
- * - leggere selezioni da TableView e ListView;
- * - aprire finestre FXML secondarie;
- * - mostrare dialog e messaggi di errore;
- * - aggiornare la UI dopo le operazioni sul model.
+ * - a TrackService la logica sulle tracce;
+ * - a PlaylistService la logica sulle playlist;
+ * - a PlaylistController la gestione della sezione playlist della UI;
+ * - a PlayerController la gestione della sezione player;
+ * - a CommandManager la gestione delle operazioni annullabili.
+ *
+ * MainController resta quindi responsabile soprattutto di:
+ * - inizializzare la schermata principale;
+ * - collegare le tabelle principali;
+ * - aprire finestre secondarie;
+ * - coordinare i controller di sezione;
+ * - mostrare messaggi di stato o errore.
  */
 public class MainController {
 
@@ -104,50 +103,74 @@ public class MainController {
     /**
      * Catalogo principale delle tracce.
      *
-     * ObservableList permette l'aggiornamento automatico della TableView quando
-     * vengono aggiunte o rimosse tracce.
+     * È una ObservableList perché la TableView viene aggiornata automaticamente
+     * quando una traccia viene aggiunta o rimossa.
      */
     private final ObservableList<Track> tracks = FXCollections.observableArrayList();
 
     /**
-     * Lista principale delle playlist create dall'utente.
+     * Lista principale delle playlist.
      */
     private final ObservableList<Playlist> playlists = FXCollections.observableArrayList();
 
     /**
-     * Lista osservabile usata per mostrare le tracce della playlist attualmente selezionata.
+     * Lista osservabile delle tracce della playlist attualmente selezionata.
      */
     private final ObservableList<Track> selectedPlaylistTracks = FXCollections.observableArrayList();
 
     /**
-     * Service per la logica applicativa sulle tracce.
+     * Service dedicato alla logica applicativa sulle tracce.
      */
     private final TrackService trackService = new TrackService();
 
     /**
-     * Service per la logica applicativa sulle playlist.
+     * Service dedicato alla logica applicativa sulle playlist.
      */
     private final PlaylistService playlistService = new PlaylistService();
 
     /**
      * Gestore dei comandi annullabili.
      *
-     * È usato per predisporre Undo/Redo secondo il Command Pattern.
+     * Viene passato anche al PlaylistController per supportare il Command Pattern
+     * nella rimozione di tracce da playlist.
      */
     private final CommandManager commandManager = new CommandManager();
 
     /**
+     * Controller di sezione dedicato alle playlist.
+     *
+     * Non è collegato direttamente a un FXML separato: viene inizializzato da
+     * MainController passandogli i riferimenti ai componenti grafici della sezione
+     * playlist presenti nella schermata principale.
+     */
+    private final PlaylistController playlistSectionController =
+            new PlaylistController(playlistService, commandManager);
+
+    /**
      * Inizializza la schermata principale.
      *
-     * Collega le liste osservabili alle componenti grafiche, configura le colonne
-     * delle tabelle e imposta i listener per aggiornare la UI quando l'utente
-     * seleziona tracce o playlist.
+     * Configura la Track Library e delega la configurazione della sezione playlist
+     * al PlaylistController. In questo modo MainController resta più leggero e
+     * mantiene il ruolo di coordinatore generale.
      */
     @FXML
     private void initialize() {
-        configurePlaylistListView();
         configureTrackLibraryTable();
-        configureSelectedPlaylistTable();
+
+        playlistSectionController.initializeSection(
+                playlistListView,
+                trackTableView,
+                playlistTrackTableView,
+                playlistTrackOrderColumn,
+                playlistTrackTitleColumn,
+                playlistTrackAuthorColumn,
+                playlistTrackLengthColumn,
+                playlistTrackGenreColumn,
+                statusLabel,
+                playlists,
+                selectedPlaylistTracks,
+                playerControlController
+        );
 
         if (statusLabel != null) {
             statusLabel.setText("Applicazione avviata correttamente.");
@@ -158,19 +181,11 @@ public class MainController {
     }
 
     /**
-     * Configura la ListView delle playlist.
-     */
-    private void configurePlaylistListView() {
-        playlistListView.setItems(playlists);
-        playlistListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
-        playlistListView.getSelectionModel()
-                .selectedItemProperty()
-                .addListener((observable, oldPlaylist, newPlaylist) -> updateSelectedPlaylistView(newPlaylist));
-    }
-
-    /**
      * Configura la tabella principale della Track Library.
+     *
+     * La Track Library mostra tutte le tracce importate nel catalogo principale.
+     * Quando l'utente seleziona una traccia, questa viene comunicata anche al
+     * PlayerController.
      */
     private void configureTrackLibraryTable() {
         trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -185,7 +200,10 @@ public class MainController {
 
                     if (statusLabel != null && newTrack != null) {
                         statusLabel.setText(
-                                "Traccia selezionata: " + newTrack.getTitle() + " - " + newTrack.getAuthor()
+                                "Traccia selezionata: "
+                                        + newTrack.getTitle()
+                                        + " - "
+                                        + newTrack.getAuthor()
                         );
                     }
                 });
@@ -201,47 +219,10 @@ public class MainController {
     }
 
     /**
-     * Configura la tabella che mostra le tracce della playlist selezionata.
-     */
-    private void configureSelectedPlaylistTable() {
-        playlistTrackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
-        playlistTrackTableView.getSelectionModel()
-                .selectedItemProperty()
-                .addListener((observable, oldTrack, newTrack) -> {
-                    if (playerControlController != null) {
-                        playerControlController.setSelectedTrack(newTrack);
-                        playerControlController.setCurrentPlaylist(playlistTrackTableView.getItems());
-                    }
-
-                    if (statusLabel != null && newTrack != null) {
-                        statusLabel.setText(
-                                "Traccia selezionata nella playlist: "
-                                        + newTrack.getTitle()
-                                        + " - "
-                                        + newTrack.getAuthor()
-                        );
-                    }
-                });
-
-        playlistTrackTableView.setItems(selectedPlaylistTracks);
-
-        playlistTrackOrderColumn.setCellValueFactory(cellData ->
-                new SimpleIntegerProperty(
-                        playlistTrackTableView.getItems().indexOf(cellData.getValue()) + 1
-                ).asObject()
-        );
-
-        playlistTrackTitleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
-        playlistTrackAuthorColumn.setCellValueFactory(new PropertyValueFactory<>("author"));
-        playlistTrackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
-        playlistTrackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
-    }
-
-    /**
      * Gestisce la pulizia del campo di ricerca globale.
      *
-     * La logica completa di ricerca/filtro verrà integrata nella relativa User Story.
+     * La logica completa di ricerca/filtro è predisposta per una User Story
+     * successiva.
      */
     @FXML
     private void handleClearSearch() {
@@ -249,136 +230,33 @@ public class MainController {
     }
 
     /**
-     * Gestisce la creazione di una nuova playlist.
-     *
-     * Il controller raccoglie il nome tramite dialog, mentre PlaylistService
-     * valida il nome, controlla eventuali duplicati e crea la playlist.
+     * Delega al PlaylistController la creazione di una nuova playlist.
      */
     @FXML
     private void handleNewPlaylist() {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("New playlist");
-        dialog.setHeaderText("Crea una nuova playlist");
-        dialog.setContentText("Nome playlist:");
-
-        Optional<String> result = dialog.showAndWait();
-
-        if (result.isEmpty()) {
-            return;
-        }
-
-        try {
-            Playlist playlist = playlistService.createPlaylist(playlists, result.get());
-
-            playlistListView.getSelectionModel().select(playlist);
-            updateSelectedPlaylistView(playlist);
-
-            if (statusLabel != null) {
-                statusLabel.setText("Playlist creata: " + playlist.getName());
-            }
-
-        } catch (IllegalArgumentException exception) {
-            showError(exception.getMessage());
-        }
+        playlistSectionController.createPlaylist();
     }
 
     /**
-     * Gestisce la rinomina della playlist selezionata.
-     *
-     * Il controller recupera la playlist selezionata e il nuovo nome inserito
-     * dall'utente. La validazione e la modifica effettiva vengono delegate
-     * a PlaylistService.
+     * Delega al PlaylistController la rinomina della playlist selezionata.
      */
     @FXML
     private void handleRenamePlaylist() {
-        Playlist selectedPlaylist = getSelectedPlaylist();
-
-        if (selectedPlaylist == null) {
-            showError("Seleziona una playlist da rinominare.");
-            return;
-        }
-
-        TextInputDialog dialog = new TextInputDialog(selectedPlaylist.getName());
-        dialog.setTitle("Rename playlist");
-        dialog.setHeaderText("Rinomina playlist");
-        dialog.setContentText("Nuovo nome:");
-
-        Optional<String> result = dialog.showAndWait();
-
-        if (result.isEmpty()) {
-            return;
-        }
-
-        try {
-            playlistService.renamePlaylist(playlists, selectedPlaylist, result.get());
-
-            playlistListView.refresh();
-            updateSelectedPlaylistView(selectedPlaylist);
-
-            if (statusLabel != null) {
-                statusLabel.setText("Playlist rinominata: " + selectedPlaylist.getName());
-            }
-
-        } catch (IllegalArgumentException exception) {
-            showError(exception.getMessage());
-        }
+        playlistSectionController.renamePlaylist();
     }
 
     /**
-     * Gestisce l'eliminazione della playlist selezionata.
-     *
-     * Il controller mostra un pop-up di conferma e delega la rimozione effettiva
-     * a PlaylistService.
+     * Delega al PlaylistController l'eliminazione della playlist selezionata.
      */
     @FXML
     private void handleDeletePlaylist() {
-        Playlist selectedPlaylist = getSelectedPlaylist();
-
-        if (selectedPlaylist == null) {
-            showError("Seleziona una playlist da eliminare.");
-            return;
-        }
-
-        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmationAlert.setTitle("Delete playlist");
-        confirmationAlert.setHeaderText("Conferma eliminazione");
-        confirmationAlert.setContentText(
-                "Vuoi eliminare la playlist \"" + selectedPlaylist.getName() + "\"?"
-        );
-
-        ButtonType cancelButton = new ButtonType("Cancel");
-        ButtonType deleteButton = new ButtonType("Delete");
-
-        confirmationAlert.getButtonTypes().setAll(cancelButton, deleteButton);
-
-        Optional<ButtonType> result = confirmationAlert.showAndWait();
-
-        if (result.isEmpty() || result.get() == cancelButton) {
-            if (statusLabel != null) {
-                statusLabel.setText("Eliminazione playlist annullata.");
-            }
-            return;
-        }
-
-        try {
-            playlistService.deletePlaylist(playlists, selectedPlaylist);
-
-            selectedPlaylistTracks.clear();
-            playlistListView.getSelectionModel().clearSelection();
-
-            if (statusLabel != null) {
-                statusLabel.setText("Playlist eliminata: " + selectedPlaylist.getName());
-            }
-
-        } catch (IllegalArgumentException exception) {
-            showError(exception.getMessage());
-        }
+        playlistSectionController.deletePlaylist();
     }
 
     /**
      * Genera una playlist automatica filtrando per genere.
      *
-     * La logica completa sarà collegata alla factory delle smart playlist.
+     * Funzionalità predisposta per il collegamento con PlaylistFactory.
      */
     @FXML
     private void handleGenerateByGenre() {
@@ -388,7 +266,7 @@ public class MainController {
     /**
      * Genera una playlist automatica filtrando per anno.
      *
-     * La logica completa sarà collegata alla factory delle smart playlist.
+     * Funzionalità predisposta per il collegamento con PlaylistFactory.
      */
     @FXML
     private void handleGenerateByYear() {
@@ -398,7 +276,7 @@ public class MainController {
     /**
      * Genera una playlist automatica filtrando per tag.
      *
-     * La logica completa sarà collegata alla factory delle smart playlist.
+     * Funzionalità predisposta per il collegamento con PlaylistFactory.
      */
     @FXML
     private void handleGenerateByTag() {
@@ -408,8 +286,8 @@ public class MainController {
     /**
      * Apre la schermata Add Track e aggiunge al catalogo la traccia creata.
      *
-     * La creazione della traccia viene gestita da AddTrackController, mentre
-     * MainController aggiorna la Track Library delegando l'aggiunta a TrackService.
+     * La form viene gestita da AddTrackController, mentre l'aggiunta al catalogo
+     * viene delegata a TrackService.
      */
     @FXML
     private void handleAddTrack() {
@@ -442,11 +320,11 @@ public class MainController {
     }
 
     /**
-     * Apre la schermata AddTrackView in modalità modifica.
+     * Apre AddTrackView in modalità modifica.
      *
-     * La stessa view viene riutilizzata per evitare duplicazione dell'interfaccia.
-     * I dati della traccia selezionata vengono precompilati e, al salvataggio,
-     * vengono aggiornati solo i campi modificabili tramite TrackService.
+     * La stessa view viene riutilizzata sia per Add Track sia per Edit Track,
+     * rispettando il principio DRY. Al salvataggio vengono aggiornati solo i
+     * campi modificabili della traccia tramite TrackService.
      */
     @FXML
     private void handleEditTrack() {
@@ -474,6 +352,7 @@ public class MainController {
 
             if (editedTrack != null) {
                 trackService.updateEditableFields(selectedTrack, editedTrack);
+
                 trackTableView.refresh();
                 playlistTrackTableView.refresh();
 
@@ -506,10 +385,11 @@ public class MainController {
     }
 
     /**
-     * Gestisce il click sul pulsante Delete della Track Library.
+     * Gestisce l'eliminazione di una traccia dal catalogo principale.
      *
-     * Recupera la traccia selezionata, mostra un pop-up di conferma e,
-     * in caso di conferma, delega la rimozione a TrackService.
+     * Il controller mostra il pop-up di conferma, poi delega la rimozione a
+     * TrackService. Dopo la rimozione aggiorna anche la sezione playlist tramite
+     * PlaylistController.
      */
     @FXML
     private void handleDeleteTrack() {
@@ -553,8 +433,9 @@ public class MainController {
     /**
      * Rimuove una traccia dal catalogo principale e da tutte le playlist.
      *
-     * Il controller delega la logica applicativa a TrackService e aggiorna solo
-     * la selezione e le tabelle della UI.
+     * La logica di rimozione viene delegata a TrackService.
+     * L'aggiornamento della tabella della playlist selezionata viene delegato
+     * a PlaylistController.
      *
      * @param track traccia da eliminare
      */
@@ -567,100 +448,8 @@ public class MainController {
 
         trackTableView.getSelectionModel().clearSelection();
 
-        Playlist selectedPlaylist = getSelectedPlaylist();
-        updateSelectedPlaylistView(selectedPlaylist);
-    }
-
-    /**
-     * Aggiorna la tabella della playlist selezionata.
-     *
-     * @param playlist playlist attualmente selezionata
-     */
-    private void updateSelectedPlaylistView(Playlist playlist) {
-        selectedPlaylistTracks.clear();
-
-        if (playlist == null) {
-            if (statusLabel != null) {
-                statusLabel.setText("Nessuna playlist selezionata.");
-            }
-            return;
-        }
-
-        selectedPlaylistTracks.addAll(playlist.getTracks());
-
-        if (statusLabel != null) {
-            if (playlist.getTracks().isEmpty()) {
-                statusLabel.setText(
-                        "Playlist selezionata: " + playlist.getName() + " - nessuna traccia presente."
-                );
-            } else {
-                statusLabel.setText(
-                        "Playlist selezionata: "
-                                + playlist.getName()
-                                + " - "
-                                + playlist.getTracks().size()
-                                + " tracce"
-                );
-            }
-        }
-    }
-
-    /**
-     * Gestisce il caso in cui venga rimossa dalla playlist una traccia attualmente in riproduzione.
-     *
-     * Se la playlist diventa vuota, la riproduzione viene fermata.
-     * Altrimenti viene scelta una traccia successiva coerente con la posizione della traccia rimossa.
-     *
-     * @param playlist playlist da cui è stata rimossa la traccia
-     * @param removedTrack traccia rimossa
-     * @param removedIndex indice originale della traccia rimossa
-     */
-    private void handleRemovedTrackPlayback(Playlist playlist, Track removedTrack, int removedIndex) {
-        if (playlist == null || removedTrack == null || playerControlController == null) {
-            return;
-        }
-
-        Track currentTrack = playerControlController.getCurrentTrack();
-
-        if (currentTrack == null || !currentTrack.equals(removedTrack)) {
-            return;
-        }
-
-        if (playlist.getTracks().isEmpty()) {
-            playerControlController.stopPlayback();
-
-            if (statusLabel != null) {
-                statusLabel.setText("La playlist è vuota: riproduzione fermata.");
-            }
-
-            return;
-        }
-
-        Track nextTrack;
-
-        if (removedIndex < playlist.getTracks().size()) {
-            nextTrack = playlist.getTracks().get(removedIndex);
-        } else {
-            nextTrack = playlist.getTracks().get(playlist.getTracks().size() - 1);
-        }
-
-        playerControlController.playTrackFromPlaylist(nextTrack);
-
-        if (statusLabel != null) {
-            statusLabel.setText(
-                    "Traccia rimossa durante la riproduzione. Ora in riproduzione: "
-                            + nextTrack.getTitle()
-            );
-        }
-    }
-
-    /**
-     * Restituisce la playlist attualmente selezionata nella ListView.
-     *
-     * @return playlist selezionata, oppure null
-     */
-    private Playlist getSelectedPlaylist() {
-        return playlistListView.getSelectionModel().getSelectedItem();
+        Playlist selectedPlaylist = playlistSectionController.getSelectedPlaylist();
+        playlistSectionController.updateSelectedPlaylistView(selectedPlaylist);
     }
 
     /**
@@ -673,116 +462,25 @@ public class MainController {
     }
 
     /**
-     * Restituisce la traccia selezionata nella tabella della playlist.
-     *
-     * @return traccia selezionata nella playlist, oppure null
-     */
-    private Track getSelectedTrackFromPlaylist() {
-        return playlistTrackTableView.getSelectionModel().getSelectedItem();
-    }
-
-    /**
-     * Aggiunge la traccia selezionata dalla libreria alla playlist selezionata.
-     *
-     * La validazione e l'aggiunta vengono delegate a PlaylistService.
+     * Delega al PlaylistController l'aggiunta della traccia selezionata
+     * alla playlist selezionata.
      */
     @FXML
     private void handleAddToPlaylist() {
-        Playlist selectedPlaylist = getSelectedPlaylist();
-        Track selectedTrack = getSelectedTrackFromLibrary();
-
-        try {
-            playlistService.addTrackToPlaylist(selectedPlaylist, selectedTrack);
-            updateSelectedPlaylistView(selectedPlaylist);
-
-            if (statusLabel != null) {
-                statusLabel.setText(
-                        "Traccia aggiunta alla playlist: "
-                                + selectedTrack.getTitle()
-                                + " → "
-                                + selectedPlaylist.getName()
-                );
-            }
-
-        } catch (IllegalArgumentException exception) {
-            showError(exception.getMessage());
-        }
+        playlistSectionController.addSelectedTrackToPlaylist();
     }
 
     /**
-     * Rimuove dalla playlist la traccia selezionata.
-     *
-     * L'operazione viene eseguita tramite Command Pattern, così da predisporre
-     * Undo/Redo. Il controller gestisce il pop-up di conferma e l'aggiornamento
-     * della UI.
+     * Delega al PlaylistController la rimozione della traccia selezionata
+     * dalla playlist selezionata.
      */
     @FXML
     private void handleRemoveFromPlaylist() {
-        Playlist selectedPlaylist = getSelectedPlaylist();
-        Track selectedTrack = getSelectedTrackFromPlaylist();
-
-        try {
-            playlistService.validateTrackRemovalSelection(selectedPlaylist, selectedTrack);
-
-            Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
-            confirmationAlert.setTitle("Remove track");
-            confirmationAlert.setHeaderText("Conferma rimozione");
-            confirmationAlert.setContentText(
-                    "Vuoi rimuovere la traccia \""
-                            + selectedTrack.getTitle()
-                            + "\" dalla playlist \""
-                            + selectedPlaylist.getName()
-                            + "\"?"
-            );
-
-            ButtonType cancelButton = new ButtonType("Cancel");
-            ButtonType removeButton = new ButtonType("Remove");
-
-            confirmationAlert.getButtonTypes().setAll(cancelButton, removeButton);
-
-            Optional<ButtonType> result = confirmationAlert.showAndWait();
-
-            if (result.isEmpty() || result.get() == cancelButton) {
-                if (statusLabel != null) {
-                    statusLabel.setText("Rimozione annullata.");
-                }
-                return;
-            }
-
-            int removedIndex = selectedPlaylist.getTracks().indexOf(selectedTrack);
-            boolean removedTrackWasPlaying = playerControlController != null
-                    && playerControlController.getCurrentTrack() != null
-                    && playerControlController.getCurrentTrack().equals(selectedTrack);
-
-            Command removeCommand = new RemoveTrackPCommand(
-                    playlistService,
-                    selectedPlaylist,
-                    selectedTrack
-            );
-
-            commandManager.executeCommand(removeCommand);
-
-            handleRemovedTrackPlayback(selectedPlaylist, selectedTrack, removedIndex);
-
-            updateSelectedPlaylistView(selectedPlaylist);
-            playlistTrackTableView.getSelectionModel().clearSelection();
-
-            if (statusLabel != null && !removedTrackWasPlaying) {
-                statusLabel.setText(
-                        "Traccia rimossa dalla playlist: "
-                                + selectedTrack.getTitle()
-                                + " ← "
-                                + selectedPlaylist.getName()
-                );
-            }
-
-        } catch (IllegalArgumentException exception) {
-            showError(exception.getMessage());
-        }
+        playlistSectionController.removeSelectedTrackFromPlaylist();
     }
 
     /**
-     * Sposta verso l'alto la traccia selezionata nella playlist.
+     * Sposta verso l'alto una traccia nella playlist.
      *
      * Funzionalità predisposta per una User Story successiva.
      */
@@ -792,7 +490,7 @@ public class MainController {
     }
 
     /**
-     * Sposta verso il basso la traccia selezionata nella playlist.
+     * Sposta verso il basso una traccia nella playlist.
      *
      * Funzionalità predisposta per una User Story successiva.
      */
@@ -802,7 +500,7 @@ public class MainController {
     }
 
     /**
-     * Applica i filtri avanzati alla Track Library.
+     * Applica i filtri avanzati alla libreria.
      *
      * Funzionalità predisposta per una User Story successiva.
      */
@@ -844,9 +542,9 @@ public class MainController {
     }
 
     /**
-     * Mostra un messaggio di errore all'utente.
+     * Mostra un messaggio di errore.
      *
-     * @param message messaggio da visualizzare nel pop-up
+     * @param message messaggio da visualizzare
      */
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
