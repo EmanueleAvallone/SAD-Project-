@@ -322,7 +322,16 @@ public class PlaylistController {
 
         try {
             playlistService.addTrackToPlaylist(selectedPlaylist, selectedTrack);
-            updateSelectedPlaylistView(selectedPlaylist);
+
+            selectedPlaylistTracks.add(selectedTrack);
+            playlistTrackTableView.getSelectionModel().select(selectedTrack);
+            playlistTrackTableView.scrollTo(selectedTrack);
+
+            if (playerControlController != null) {
+                playerControlController.setCurrentPlaylist(selectedPlaylistTracks);
+            }
+
+            playlistTrackTableView.refresh();
 
             setStatus(
                     "Traccia aggiunta alla playlist: "
@@ -387,8 +396,14 @@ public class PlaylistController {
 
             handleRemovedTrackPlayback(selectedPlaylist, selectedTrack, removedIndex);
 
-            updateSelectedPlaylistView(selectedPlaylist);
+            selectedPlaylistTracks.remove(selectedTrack);
+
+            if (playerControlController != null) {
+                playerControlController.setCurrentPlaylist(selectedPlaylistTracks);
+            }
+
             playlistTrackTableView.getSelectionModel().clearSelection();
+            playlistTrackTableView.refresh();
 
             if (!removedTrackWasPlaying) {
                 setStatus(
