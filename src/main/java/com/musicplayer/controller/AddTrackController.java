@@ -8,6 +8,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javafx.scene.control.Button;
+import javafx.stage.FileChooser;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
+
+import com.musicplayer.service.TrackService;
 
 public class AddTrackController {
 
@@ -40,9 +47,17 @@ public class AddTrackController {
 
     @FXML
     private Label statusLabel;
+    @FXML
+    private Label formTitleLabel;
+
+    @FXML
+    private Button submitButton;
 
     private Track createdTrack;
+    private Track trackToEdit;
+    private boolean editMode;
 
+    private final TrackService trackService = new TrackService();
     public Track getCreatedTrack() {
         return createdTrack;
     }
@@ -52,54 +67,70 @@ public class AddTrackController {
         statusLabel.setText("Ready");
     }
 
+    /**
+     * Gestisce il salvataggio della traccia.
+     *
+     * In modalità Add crea una nuova traccia usando i dati inseriti.
+     * In modalità Edit crea una traccia temporanea con i nuovi dati,
+     * mantenendo invariata la durata originale.
+     */
     @FXML
     private void handleAddTrack() {
-        String title = titleField.getText().trim();
-        String author = authorField.getText().trim();
-        String length = lengthField.getText().trim();
-        String genre = genreField.getText().trim();
-        String yearText = yearField.getText().trim();
+        String title = titleField.getText();
+        String author = authorField.getText();
+        String length = lengthField.getText();
+        String genre = genreField.getText();
+        String yearText = yearField.getText();
 
-        if (title.isEmpty()) {
-            showError("Il titolo della traccia è obbligatorio.");
-            return;
-        }
-
-        if (author.isEmpty()) {
-            showError("L'autore della traccia è obbligatorio.");
-            return;
-        }
-
-        if (length.isEmpty()) {
-            showError("La durata della traccia è obbligatoria.");
-            return;
-        }
-
-        if (genre.isEmpty()) {
-            showError("Il genere della traccia è obbligatorio.");
-            return;
-        }
-
-        int year;
-        
-        if (yearText.isEmpty()) {
-            showError("L'anno della traccia è obbligatorio.");
-            return;
-        }
         try {
-            year = Integer.parseInt(yearText);
-        } catch (NumberFormatException exception) {
-            showError("L'anno deve essere un numero valido.");
-            return;
+            if (editMode && trackToEdit != null) {
+                createdTrack = trackService.createTrack(
+                        title,
+                        author,
+                        trackToEdit.getLength(),
+                        genre,
+                        yearText
+                );
+            } else {
+                createdTrack = trackService.createTrack(
+                        title,
+                        author,
+                        length,
+                        genre,
+                        yearText
+                );
+            }
+
+            closeWindow();
+
+        } catch (IllegalArgumentException exception) {
+            showError(exception.getMessage());
         }
-
-        createdTrack = new Track(title, author, length, genre, year);
-
-        closeWindow();
     }
 
+    /**
+     * Ripristina i campi della schermata.
+     *
+     * In modalità Add svuota i campi.
+     * In modalità Edit ripristina i valori originali della traccia selezionata.
+     */
     @FXML
     private void handleReset() {
+        if (editMode && trackToEdit != null) {
+            titleField.setText(trackToEdit.getTitle());
+            authorField.setText(trackToEdit.getAuthor());
+            lengthField.setText(trackToEdit.getLength());
+            genreField.setText(trackToEdit.getGenre());
+            yearField.setText(String.valueOf(trackToEdit.getYear()));
+
+            favouriteCheckBox.setSelected(false);
+            explicitCheckBox.setSelected(false);
+            newReleaseCheckBox.setSelected(false);
+
+            statusLabel.setText("Valori originali ripristinati.");
+            return;
+        }
+
         titleField.clear();
         authorField.clear();
         lengthField.clear();
@@ -118,6 +149,75 @@ public class AddTrackController {
     private void handleCancel() {
         createdTrack = null;
         closeWindow();
+    }
+
+    /**
+     * Configura la schermata in modalità modifica.
+     *
+     * I campi vengono precompilati con i valori della traccia selezionata.
+     * La durata viene mostrata ma non resa modificabile.
+     *
+     * @param track traccia da modificare
+     * @throws IllegalArgumentException se la traccia è null
+     */
+    public void setTrackToEdit(Track track) {
+        if (track == null) {
+            throw new IllegalArgumentException("La traccia da modificare non può essere null.");
+        }
+
+        this.trackToEdit = track;
+        this.editMode = true;
+
+        formTitleLabel.setText("Edit track");
+        submitButton.setText("Save");
+
+        titleField.setText(track.getTitle());
+        authorField.setText(track.getAuthor());
+        lengthField.setText(track.getLength());
+        genreField.setText(track.getGenre());
+        yearField.setText(String.valueOf(track.getYear()));
+
+        lengthField.setDisable(true);
+
+        statusLabel.setText("Editing track: " + track.getTitle());
+    }
+
+    @FXML
+    private void handleImport() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Importa dati traccia");
+
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Text Files (*.txt)", "*.txt")
+        );
+
+        Stage stage = (Stage) titleField.getScene().getWindow();
+        File file = fileChooser.showOpenDialog(stage);
+
+        if (file != null) {
+            importDataFromFile(file);
+        }
+    }
+
+    private void importDataFromFile(File file) {
+        Properties props = new Properties();
+
+        try (FileInputStream fis = new FileInputStream(file)) {
+            props.load(fis);
+
+            if (props.getProperty("title") != null) titleField.setText(props.getProperty("title"));
+            if (props.getProperty("author") != null) authorField.setText(props.getProperty("author"));
+            if (props.getProperty("length") != null) lengthField.setText(props.getProperty("length"));
+            if (props.getProperty("genre") != null) genreField.setText(props.getProperty("genre"));
+            if (props.getProperty("year") != null) yearField.setText(props.getProperty("year"));
+            if (props.getProperty("notes") != null) notesArea.setText(props.getProperty("notes"));
+
+            statusLabel.setText("Dati importati da: " + file.getName());
+
+        } catch (Exception e) {
+            showError("Errore durante la lettura del file: " + e.getMessage());
+            statusLabel.setText("Errore importazione.");
+        }
     }
 
     private void closeWindow() {

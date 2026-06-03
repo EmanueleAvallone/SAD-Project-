@@ -25,11 +25,39 @@ public class Playlist {
         return tracks;
     }
 
+    //posso aggiungere solo tracce valide
     public void addTrack(Track track) {
+        if (track == null) { //se aggiungo una traccia null
+            throw new IllegalArgumentException("La traccia non può essere nulla.");
+        }
+
+        if (tracks.contains(track)) { //se aggiungo una traccia già presente
+            throw new IllegalArgumentException("La traccia è già presente in questa playlist.");
+        }
+
         tracks.add(track);
     }
 
+    // Posso rimuovere solo tracce valide e presenti nella playlist
+    /**
+     * Rimuove una traccia dalla playlist.
+     *
+     * Se la traccia non è presente, il metodo non produce errori.
+     * Questa scelta permette al TrackService di scorrere tutte le playlist
+     * quando una traccia viene eliminata dal catalogo principale.
+     *
+     * @param track traccia da rimuovere
+     * @throws IllegalArgumentException se la traccia è null
+     */
     public void removeTrack(Track track) {
+        if (track == null) {
+            throw new IllegalArgumentException("La traccia da rimuovere non può essere nulla.");
+        }
+
+        if (!tracks.contains(track)) {
+            throw new IllegalArgumentException("La traccia non è presente in questa playlist.");
+        }
+
         tracks.remove(track);
     }
 

@@ -1,34 +1,61 @@
 package com.musicplayer.controller;
 
+import com.musicplayer.command.CommandManager;
 import com.musicplayer.model.Playlist;
+import com.musicplayer.model.Track;
+import com.musicplayer.service.PlaylistService;
+import com.musicplayer.service.TrackService;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.Alert;
-import com.musicplayer.model.Track;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.TableRow;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
 import java.io.IOException;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.ButtonType;
 import java.util.Optional;
+
+/**
+ * Controller principale dell'applicazione Music Playlist Manager.
+ *
+ * Questa classe coordina la schermata principale dell'applicazione.
+ * Per rispettare la separazione delle responsabilità, MainController non contiene
+ * tutta la logica applicativa, ma delega:
+ *
+ * - a TrackService la logica sulle tracce;
+ * - a PlaylistService la logica sulle playlist;
+ * - a PlaylistController la gestione della sezione playlist della UI;
+ * - a PlayerController la gestione della sezione player;
+ * - a CommandManager la gestione delle operazioni annullabili.
+ *
+ * MainController resta quindi responsabile soprattutto di:
+ * - inizializzare la schermata principale;
+ * - collegare le tabelle principali;
+ * - aprire finestre secondarie;
+ * - coordinare i controller di sezione;
+ * - mostrare messaggi di stato o errore.
+ */
 public class MainController {
 
     @FXML
     private Label statusLabel;
+
     @FXML
     private ListView<Playlist> playlistListView;
+
     @FXML
     private TableView<Track> trackTableView;
 
@@ -51,21 +78,143 @@ public class MainController {
     private TableColumn<Track, Integer> trackPlayCountColumn;
 
     @FXML
-    private RadioButton sequentialModeRadio;
+    private TableView<Track> playlistTrackTableView;
 
     @FXML
-    private RadioButton shuffleModeRadio;
+    private TableColumn<Track, Integer> playlistTrackOrderColumn;
 
     @FXML
-    private RadioButton loopModeRadio;
+    private TableColumn<Track, String> playlistTrackTitleColumn;
 
-    private final ObservableList<Track> tracks = FXCollections.observableArrayList(); //lista delle tracce
-    private final ObservableList<Playlist> playlists = FXCollections.observableArrayList(); //lista delle playlist
+    @FXML
+    private TableColumn<Track, String> playlistTrackAuthorColumn;
+
+    @FXML
+    private TableColumn<Track, String> playlistTrackLengthColumn;
+
+    @FXML
+    private TableColumn<Track, String> playlistTrackGenreColumn;
+
+    @FXML
+    private BorderPane rootPane;
+
+    @FXML
+    private PlayerController playerControlController;
+
+    /**
+     * Catalogo principale delle tracce.
+     *
+     * È una ObservableList perché la TableView viene aggiornata automaticamente
+     * quando una traccia viene aggiunta o rimossa.
+     */
+    private final ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+    /**
+     * Lista principale delle playlist.
+     */
+    private final ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+
+    /**
+     * Lista osservabile delle tracce della playlist attualmente selezionata.
+     */
+    private final ObservableList<Track> selectedPlaylistTracks = FXCollections.observableArrayList();
+
+    /**
+     * Service dedicato alla logica applicativa sulle tracce.
+     */
+    private final TrackService trackService = new TrackService();
+
+    /**
+     * Service dedicato alla logica applicativa sulle playlist.
+     */
+    private final PlaylistService playlistService = new PlaylistService();
+
+    /**
+     * Gestore dei comandi annullabili.
+     *
+     * Viene passato anche al PlaylistController per supportare il Command Pattern
+     * nella rimozione di tracce da playlist.
+     */
+    private final CommandManager commandManager = new CommandManager();
+
+    /**
+     * Controller di sezione dedicato alle playlist.
+     *
+     * Non è collegato direttamente a un FXML separato: viene inizializzato da
+     * MainController passandogli i riferimenti ai componenti grafici della sezione
+     * playlist presenti nella schermata principale.
+     */
+    private final PlaylistController playlistSectionController =
+            new PlaylistController(playlistService, commandManager);
+
+    /**
+     * Inizializza la schermata principale.
+     *
+     * Configura la Track Library e delega la configurazione della sezione playlist
+     * al PlaylistController. In questo modo MainController resta più leggero e
+     * mantiene il ruolo di coordinatore generale.
+     */
     @FXML
     private void initialize() {
-        playlistListView.setItems(playlists);
+        configureTrackLibraryTable();
 
-        trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE); //gestisce la selezione di una riga nella tabella track library
+        playlistSectionController.initializeSection(
+                playlistListView,
+                trackTableView,
+                playlistTrackTableView,
+                playlistTrackOrderColumn,
+                playlistTrackTitleColumn,
+                playlistTrackAuthorColumn,
+                playlistTrackLengthColumn,
+                playlistTrackGenreColumn,
+                statusLabel,
+                playlists,
+                selectedPlaylistTracks,
+                playerControlController
+        );
+
+        if (playerControlController != null) {
+            playerControlController.setPlaybackChangeListener(() -> {
+                trackTableView.refresh();
+                playlistSectionController.refreshSelectedPlaylistTable();
+            });
+        }
+
+        if (statusLabel != null) {
+            statusLabel.setText("Applicazione avviata correttamente.");
+        }
+
+        System.out.println("FXML collegato correttamente al MainController.");
+        System.out.println("playerControlController = " + playerControlController);
+    }
+
+    /**
+     * Configura la tabella principale della Track Library.
+     *
+     * La Track Library mostra tutte le tracce importate nel catalogo principale.
+     * Quando l'utente seleziona una traccia, questa viene comunicata anche al
+     * PlayerController.
+     */
+    private void configureTrackLibraryTable() {
+        trackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+        trackTableView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldTrack, newTrack) -> {
+                    if (playerControlController != null) {
+                        playerControlController.setSelectedTrack(newTrack);
+                        playerControlController.setCurrentPlaylist(trackTableView.getItems());
+                    }
+
+                    if (statusLabel != null && newTrack != null) {
+                        statusLabel.setText(
+                                "Traccia selezionata: "
+                                        + newTrack.getTitle()
+                                        + " - "
+                                        + newTrack.getAuthor()
+                        );
+                    }
+                });
 
         trackTitleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
         trackAuthorColumn.setCellValueFactory(new PropertyValueFactory<>("author"));
@@ -76,81 +225,95 @@ public class MainController {
 
         trackTableView.setItems(tracks);
 
-        ToggleGroup playbackModeGroup = new ToggleGroup();
-        sequentialModeRadio.setToggleGroup(playbackModeGroup);
-        shuffleModeRadio.setToggleGroup(playbackModeGroup);
-        loopModeRadio.setToggleGroup(playbackModeGroup);
-
-        if (statusLabel != null) {
-            statusLabel.setText("Applicazione avviata correttamente.");
-        }
-
-        System.out.println("FXML collegato correttamente al MainController.");
+        trackTableView.setRowFactory(tableView -> new TableRow<>() {
+            @Override
+            protected void updateItem(Track track, boolean empty) {
+                super.updateItem(track, empty);
+                if (empty || track == null || playerControlController == null) {
+                    setStyle("");
+                    return;
+                }
+                Track currentTrack = playerControlController.getCurrentTrack();
+                if (currentTrack != null && currentTrack.equals(track) && playerControlController.isPlaying()) {
+                    setStyle("-fx-font-weight: bold; -fx-background-color: #fff3b0;");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
     }
 
+    /**
+     * Gestisce la pulizia del campo di ricerca globale.
+     *
+     * La logica completa di ricerca/filtro è predisposta per una User Story
+     * successiva.
+     */
     @FXML
     private void handleClearSearch() {
         System.out.println("Clear search");
     }
 
+    /**
+     * Delega al PlaylistController la creazione di una nuova playlist.
+     */
     @FXML
     private void handleNewPlaylist() {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("New playlist");
-        dialog.setHeaderText("Crea una nuova playlist");
-        dialog.setContentText("Nome playlist:");
-
-        Optional<String> result = dialog.showAndWait();
-
-        if (result.isPresent()) {
-            String playlistName = result.get().trim();
-
-            if (playlistName.isEmpty()) {
-                showError("Il nome della playlist non può essere vuoto.");
-                return;
-            }
-
-            boolean alreadyExists = playlists.stream()
-                    .anyMatch(p -> p.getName().equalsIgnoreCase(playlistName));
-
-            if (alreadyExists) {
-                showError("Esiste già una playlist con questo nome.");
-                return;
-            }
-
-            Playlist playlist = new Playlist(playlistName);
-            playlists.add(playlist);
-            playlistListView.getSelectionModel().select(playlist);
-
-            statusLabel.setText("Playlist creata: " + playlistName);
-        }
+        playlistSectionController.createPlaylist();
     }
 
+    /**
+     * Delega al PlaylistController la rinomina della playlist selezionata.
+     */
     @FXML
     private void handleRenamePlaylist() {
-        System.out.println("Rename playlist");
+        playlistSectionController.renamePlaylist();
     }
 
+    /**
+     * Delega al PlaylistController l'eliminazione della playlist selezionata.
+     */
     @FXML
     private void handleDeletePlaylist() {
-        System.out.println("Delete playlist");
+        playlistSectionController.deletePlaylist();
     }
 
+    /**
+     * Genera una playlist automatica filtrando per genere.
+     *
+     * Funzionalità predisposta per il collegamento con PlaylistFactory.
+     */
     @FXML
     private void handleGenerateByGenre() {
         System.out.println("Generate by genre");
     }
 
+    /**
+     * Genera una playlist automatica filtrando per anno.
+     *
+     * Funzionalità predisposta per il collegamento con PlaylistFactory.
+     */
     @FXML
     private void handleGenerateByYear() {
         System.out.println("Generate by year");
     }
 
+    /**
+     * Genera una playlist automatica filtrando per tag.
+     *
+     * Funzionalità predisposta per il collegamento con PlaylistFactory.
+     */
     @FXML
     private void handleGenerateByTag() {
         System.out.println("Generate by tag");
     }
 
+    /**
+     * Apre la schermata Add Track e aggiunge al catalogo la traccia creata.
+     *
+     * La form viene gestita da AddTrackController, mentre l'aggiunta al catalogo
+     * viene delegata a TrackService.
+     */
     @FXML
     private void handleAddTrack() {
         try {
@@ -159,22 +322,15 @@ public class MainController {
             );
 
             Parent root = loader.load();
-
             AddTrackController controller = loader.getController();
 
-            Stage stage = new Stage();
-            stage.setTitle("Add track");
-            stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initOwner(trackTableView.getScene().getWindow());
-            stage.setResizable(false);
-
+            Stage stage = createModalStage("Add track", root);
             stage.showAndWait();
 
             Track createdTrack = controller.getCreatedTrack();
 
             if (createdTrack != null) {
-                tracks.add(createdTrack);
+                trackService.addTrack(tracks, createdTrack);
                 trackTableView.getSelectionModel().select(createdTrack);
 
                 if (statusLabel != null) {
@@ -188,14 +344,81 @@ public class MainController {
         }
     }
 
+    /**
+     * Apre AddTrackView in modalità modifica.
+     *
+     * La stessa view viene riutilizzata sia per Add Track sia per Edit Track,
+     * rispettando il principio DRY. Al salvataggio vengono aggiornati solo i
+     * campi modificabili della traccia tramite TrackService.
+     */
     @FXML
     private void handleEditTrack() {
-        System.out.println("Edit track");
+        Track selectedTrack = getSelectedTrackFromLibrary();
+
+        if (selectedTrack == null) {
+            showError("Seleziona una traccia da modificare.");
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/musicplayer/view/AddTrackView.fxml")
+            );
+
+            Parent root = loader.load();
+
+            AddTrackController controller = loader.getController();
+            controller.setTrackToEdit(selectedTrack);
+
+            Stage stage = createModalStage("Edit track", root);
+            stage.showAndWait();
+
+            Track editedTrack = controller.getCreatedTrack();
+
+            if (editedTrack != null) {
+                trackService.updateEditableFields(selectedTrack, editedTrack);
+
+                trackTableView.refresh();
+                playlistTrackTableView.refresh();
+
+                if (statusLabel != null) {
+                    statusLabel.setText("Traccia modificata: " + selectedTrack.getTitle());
+                }
+            }
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            showError("Impossibile aprire la schermata di modifica traccia.");
+        }
     }
 
+    /**
+     * Crea uno stage modale riutilizzabile per le schermate secondarie.
+     *
+     * @param title titolo della finestra
+     * @param root nodo radice della scena
+     * @return stage configurato
+     */
+    private Stage createModalStage(String title, Parent root) {
+        Stage stage = new Stage();
+        stage.setTitle(title);
+        stage.setScene(new Scene(root));
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initOwner(trackTableView.getScene().getWindow());
+        stage.setResizable(false);
+        return stage;
+    }
+
+    /**
+     * Gestisce l'eliminazione di una traccia dal catalogo principale.
+     *
+     * Il controller mostra il pop-up di conferma, poi delega la rimozione a
+     * TrackService. Dopo la rimozione aggiorna anche la sezione playlist tramite
+     * PlaylistController.
+     */
     @FXML
     private void handleDeleteTrack() {
-        Track selectedTrack = trackTableView.getSelectionModel().getSelectedItem();
+        Track selectedTrack = getSelectedTrackFromLibrary();
 
         if (selectedTrack == null) {
             showError("Seleziona una traccia da eliminare.");
@@ -232,83 +455,127 @@ public class MainController {
         }
     }
 
-
-    /*
-    Questo metodo permette alla traccia di essere rimossa dal catalogo
-    principale e da tutte le playlist in cui è presente.
+    /**
+     * Rimuove una traccia dal catalogo principale e da tutte le playlist.
+     *
+     * La logica di rimozione viene delegata a TrackService.
+     * L'aggiornamento della tabella della playlist selezionata viene delegato
+     * a PlaylistController.
+     *
+     * @param track traccia da eliminare
      */
     private void removeTrackFromCatalog(Track track) {
         if (track == null) {
             return;
         }
 
-        tracks.remove(track);
-
-        for (Playlist playlist : playlists) {
-            playlist.removeTrack(track);
-        }
+        trackService.removeTrack(tracks, playlists, track);
 
         trackTableView.getSelectionModel().clearSelection();
+
+        Playlist selectedPlaylist = playlistSectionController.getSelectedPlaylist();
+        playlistSectionController.updateSelectedPlaylistView(selectedPlaylist);
     }
 
+    /**
+     * Restituisce la traccia selezionata nella Track Library.
+     *
+     * @return traccia selezionata, oppure null
+     */
+    private Track getSelectedTrackFromLibrary() {
+        return trackTableView.getSelectionModel().getSelectedItem();
+    }
+
+    /**
+     * Delega al PlaylistController l'aggiunta della traccia selezionata
+     * alla playlist selezionata.
+     */
     @FXML
     private void handleAddToPlaylist() {
-        System.out.println("Add selected track to playlist");
+        playlistSectionController.addSelectedTrackToPlaylist();
     }
 
+    /**
+     * Delega al PlaylistController la rimozione della traccia selezionata
+     * dalla playlist selezionata.
+     */
     @FXML
     private void handleRemoveFromPlaylist() {
-        System.out.println("Remove from playlist");
+        playlistSectionController.removeSelectedTrackFromPlaylist();
     }
 
+    /**
+     * Sposta verso l'alto una traccia nella playlist.
+     *
+     * Funzionalità predisposta per una User Story successiva.
+     */
     @FXML
     private void handleMoveTrackUp() {
         System.out.println("Move track up");
     }
 
+    /**
+     * Sposta verso il basso una traccia nella playlist.
+     *
+     * Funzionalità predisposta per una User Story successiva.
+     */
     @FXML
     private void handleMoveTrackDown() {
         System.out.println("Move track down");
     }
 
-    @FXML
-    private void handlePlay() {
-        System.out.println("Play");
-    }
-
-    @FXML
-    private void handlePause() {
-        System.out.println("Pause");
-    }
-
-    @FXML
-    private void handleSkip() {
-        System.out.println("Skip");
-    }
-
+    /**
+     * Applica i filtri avanzati alla libreria.
+     *
+     * Funzionalità predisposta per una User Story successiva.
+     */
     @FXML
     private void handleApplyFilters() {
         System.out.println("Apply filters");
     }
 
+    /**
+     * Ripristina i filtri avanzati.
+     *
+     * Funzionalità predisposta per una User Story successiva.
+     */
     @FXML
     private void handleResetFilters() {
         System.out.println("Reset filters");
     }
 
+    /**
+     * Esegue l'undo dell'ultima operazione annullabile.
+     *
+     * Il CommandManager è già presente, ma il collegamento completo con la UI
+     * verrà completato nelle User Story dedicate.
+     */
     @FXML
     private void handleUndo() {
         System.out.println("Undo");
     }
 
+    /**
+     * Esegue il redo dell'ultima operazione annullata.
+     *
+     * Il CommandManager è già presente, ma il collegamento completo con la UI
+     * verrà completato nelle User Story dedicate.
+     */
     @FXML
     private void handleRedo() {
         System.out.println("Redo");
     }
+
+    /**
+     * Mostra un messaggio di errore.
+     *
+     * @param message messaggio da visualizzare
+     */
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Errore");
-        alert.setHeaderText(message);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
         alert.showAndWait();
     }
 }
