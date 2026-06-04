@@ -24,6 +24,8 @@ import javafx.scene.control.TableRow;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -101,6 +103,22 @@ public class MainController {
     @FXML
     private PlayerController playerControlController;
 
+    @FXML
+    private ScrollPane mostPlayedScrollPane;
+
+    @FXML
+    private VBox topTracksContainer;
+
+    @FXML
+    private VBox emptyMostPlayedView;
+
+    /**
+     * Controller di sezione dedicato alla libreria (Most Played).
+     */
+    private final LibraryController librarySectionController = new LibraryController();
+
+    private int lastTotalPlays = -1;
+
     /**
      * Catalogo principale delle tracce.
      *
@@ -173,10 +191,29 @@ public class MainController {
                 playerControlController
         );
 
+        librarySectionController.initializeSection(
+                mostPlayedScrollPane,
+                topTracksContainer,
+                emptyMostPlayedView,
+                trackService,
+                tracks,
+                playerControlController
+        );
+
         if (playerControlController != null) {
             playerControlController.setPlaybackChangeListener(() -> {
                 trackTableView.refresh();
                 playlistSectionController.refreshSelectedPlaylistTable();
+
+                int currentTotalPlays = tracks.stream()
+                        .mapToInt(Track::getPlayedCount)
+                        .sum();
+
+                if (currentTotalPlays != lastTotalPlays) {
+                    librarySectionController.updateMostPlayedSection();
+                    lastTotalPlays = currentTotalPlays;
+                }
+
             });
         }
 

@@ -181,4 +181,25 @@ public class TrackService {
 
         throw new IllegalArgumentException("La durata deve essere nel formato mm:ss oppure in secondi.");
     }
+
+    /**
+     * Estrae la classifica delle tracce più ascoltate.
+     * Ordina le tracce in base al playedCount in modo decrescente e restituisce
+     * solo le prime "limit" tracce. Esclude le tracce mai ascoltate (playedCount == 0).
+     *
+     * @param tracks la lista principale delle tracce
+     * @param limit numero massimo di tracce da restituire (es. 10)
+     * @return lista delle tracce più ascoltate
+     */
+    public java.util.List<Track> getTopPlayedTracks(ObservableList<Track> tracks, int limit) {
+        if (tracks == null) {
+            throw new IllegalArgumentException("Il catalogo delle tracce non può essere null.");
+        }
+
+        return tracks.stream()
+                .filter(track -> track.getPlayedCount() > 0)
+                .sorted((t1, t2) -> Integer.compare(t2.getPlayedCount(), t1.getPlayedCount()))
+                .limit(limit)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

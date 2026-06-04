@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.List;
 
 class TrackServiceTest {
 
@@ -140,5 +141,28 @@ class TrackServiceTest {
                         "2024"
                 )
         );
+    }
+
+    @Test
+    void getTopPlayedTracksShouldReturnOrderedListAndExcludeZeroPlays() {
+        ObservableList<Track> mockTracks = FXCollections.observableArrayList();
+
+        Track t1 = new Track("Canzone Poco Ascoltata", "Autore A", "3:00", "Pop", 2020);
+        Track t2 = new Track("Hit dell'Anno", "Autore B", "4:00", "Rock", 2021);
+        Track t3 = new Track("Mai Ascoltata", "Autore C", "2:30", "Jazz", 2019);
+        Track t4 = new Track("Canzone Media", "Autore D", "3:15", "Pop", 2022);
+
+        t1.setPlayedCount(5);
+        t2.setPlayedCount(150);
+        t3.setPlayedCount(0);
+        t4.setPlayedCount(20);
+
+        mockTracks.addAll(t1, t2, t3, t4);
+
+        List<Track> topTracks = trackService.getTopPlayedTracks(mockTracks, 2);
+
+        assertEquals(2, topTracks.size(), "La dimensione della classifica deve essere esattamente 2");
+        assertEquals("Hit dell'Anno", topTracks.get(0).getTitle(), "Il brano più ascoltato deve essere primo");
+        assertEquals("Canzone Media", topTracks.get(1).getTitle(), "Il secondo brano più ascoltato deve essere secondo");
     }
 }

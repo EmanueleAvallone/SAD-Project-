@@ -289,6 +289,9 @@ public class PlaybackService {
             this.currentTime = 0;
             this.duration = parseDuration(nextTrack.getLength());
             this.playing = true;
+
+            nextTrack.incrementPlayedCount();
+
             return;
         }
 
@@ -299,6 +302,9 @@ public class PlaybackService {
             this.currentTime = 0;
             this.duration = parseDuration(firstTrack.getLength());
             this.playing = true;
+
+            firstTrack.incrementPlayedCount();
+
         } else {
             this.currentTrackIndex = index;
             this.currentTime = 0;
@@ -343,6 +349,9 @@ public class PlaybackService {
         this.currentTime = 0;
         this.duration = parseDuration(previousTrack.getLength());
         this.playing = true;
+
+        previousTrack.incrementPlayedCount();
+
     }
     /**
      * Riorganizza in ordine casuale le tracce rimanenti della coda corrente,
