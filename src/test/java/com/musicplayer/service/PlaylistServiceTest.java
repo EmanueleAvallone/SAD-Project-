@@ -183,5 +183,107 @@ public class PlaylistServiceTest {
         assertTrue(playlists.isEmpty());
     }
 
+    @Test
+    void softDeleteTrackFromPlaylistsShouldRemoveTrackFromAllPlaylists() {
+        PlaylistService playlistService = new PlaylistService();
+
+        ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+
+        Track firstTrack = new Track("Song A", "Artist A", "3:45", "Pop", 2024);
+        Track secondTrack = new Track("Song B", "Artist B", "4:10", "Rock", 2023);
+
+        Playlist playlistOne = new Playlist("Playlist one");
+        Playlist playlistTwo = new Playlist("Playlist two");
+
+        playlistOne.addTrack(firstTrack);
+        playlistOne.addTrack(secondTrack);
+
+        playlistTwo.addTrack(secondTrack);
+        playlistTwo.addTrack(firstTrack);
+
+        playlists.add(playlistOne);
+        playlists.add(playlistTwo);
+
+        playlistService.softDeleteTrackFromPlaylists(playlists, secondTrack);
+
+        assertFalse(playlistOne.getTracks().contains(secondTrack));
+        assertFalse(playlistTwo.getTracks().contains(secondTrack));
+
+        assertEquals(1, playlistOne.getTracks().size());
+        assertEquals(1, playlistTwo.getTracks().size());
+
+        assertEquals(firstTrack, playlistOne.getTracks().get(0));
+        assertEquals(firstTrack, playlistTwo.getTracks().get(0));
+    }
+
+    @Test
+    void restorePendingDeletedTrackInPlaylistsShouldRestoreTrackAtOriginalPositions() {
+        PlaylistService playlistService = new PlaylistService();
+
+        ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+
+        Track firstTrack = new Track("Song A", "Artist A", "3:45", "Pop", 2024);
+        Track secondTrack = new Track("Song B", "Artist B", "4:10", "Rock", 2023);
+        Track thirdTrack = new Track("Song C", "Artist C", "2:50", "Jazz", 2022);
+
+        Playlist playlistOne = new Playlist("Playlist one");
+        Playlist playlistTwo = new Playlist("Playlist two");
+
+        playlistOne.addTrack(firstTrack);
+        playlistOne.addTrack(secondTrack);
+        playlistOne.addTrack(thirdTrack);
+
+        playlistTwo.addTrack(secondTrack);
+        playlistTwo.addTrack(thirdTrack);
+
+        playlists.add(playlistOne);
+        playlists.add(playlistTwo);
+
+        playlistService.softDeleteTrackFromPlaylists(playlists, secondTrack);
+        playlistService.restorePendingDeletedTrackInPlaylists(secondTrack);
+
+        assertEquals(3, playlistOne.getTracks().size());
+        assertEquals(firstTrack, playlistOne.getTracks().get(0));
+        assertEquals(secondTrack, playlistOne.getTracks().get(1));
+        assertEquals(thirdTrack, playlistOne.getTracks().get(2));
+
+        assertEquals(2, playlistTwo.getTracks().size());
+        assertEquals(secondTrack, playlistTwo.getTracks().get(0));
+        assertEquals(thirdTrack, playlistTwo.getTracks().get(1));
+    }
+
+    @Test
+    void softDeleteTrackFromPlaylistsShouldRejectNullPlaylistList() {
+        PlaylistService playlistService = new PlaylistService();
+
+        Track track = new Track("Song A", "Artist A", "3:45", "Pop", 2024);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> playlistService.softDeleteTrackFromPlaylists(null, track)
+        );
+    }
+
+    @Test
+    void softDeleteTrackFromPlaylistsShouldRejectNullTrack() {
+        PlaylistService playlistService = new PlaylistService();
+
+        ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> playlistService.softDeleteTrackFromPlaylists(playlists, null)
+        );
+    }
+
+    @Test
+    void restorePendingDeletedTrackInPlaylistsShouldRejectNullTrack() {
+        PlaylistService playlistService = new PlaylistService();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> playlistService.restorePendingDeletedTrackInPlaylists(null)
+        );
+    }
 
 }

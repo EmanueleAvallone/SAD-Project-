@@ -21,6 +21,15 @@ import javafx.collections.ObservableList;
 public class PlaylistService {
 
     /**
+     * Posizioni originali della traccia rimossa temporaneamente dalle playlist.
+     *
+     * La chiave rappresenta la playlist da cui la traccia è stata rimossa,
+     * mentre il valore rappresenta la posizione originale della traccia
+     * all'interno di quella playlist.
+     */
+    private final java.util.Map<Playlist, Integer> pendingDeletedTrackPlaylistIndexes = new java.util.LinkedHashMap<>();
+
+    /**
      * Crea una nuova playlist e la aggiunge alla lista principale delle playlist.
      *
      * Questo metodo centralizza la validazione del nome della playlist,
@@ -174,6 +183,85 @@ public class PlaylistService {
     public void removeTrackFromPlaylist(Playlist playlist, Track track) {
         validateTrackRemovalSelection(playlist, track);
         playlist.removeTrack(track);
+    }
+
+    /**
+     * Rimuove temporaneamente una traccia da tutte le playlist in cui è presente.
+     * <p>
+     * Questo metodo viene usato insieme alla soft delete della Track Library:
+     * quando una traccia viene rimossa temporaneamente dal catalogo principale,
+     * deve sparire anche dalle playlist visualizzate nell'interfaccia.
+     * </p>
+     * <p>
+     * La traccia non viene persa definitivamente: per ogni playlist in cui era
+     * presente viene salvata la posizione originale, così da poterla reinserire
+     * correttamente se l'utente preme "Annulla" nello snackbar.
+     * </p>
+     *
+     * @param playlists lista principale delle playlist
+     * @param track traccia da rimuovere temporaneamente dalle playlist
+     * @throws IllegalArgumentException se la lista delle playlist o la traccia sono null
+     */
+    public void softDeleteTrackFromPlaylists(ObservableList<Playlist> playlists, Track track) {
+        if (playlists == null) {
+            throw new IllegalArgumentException("La lista delle playlist non può essere null.");
+        }
+
+        if (track == null) {
+            throw new IllegalArgumentException("La traccia non può essere null.");
+        }
+
+        pendingDeletedTrackPlaylistIndexes.clear();
+
+        for (Playlist playlist : playlists) {
+            int trackIndex = playlist.getTracks().indexOf(track);
+
+            if (trackIndex >= 0) {
+                pendingDeletedTrackPlaylistIndexes.put(playlist, trackIndex);
+                playlist.removeTrack(track);
+            }
+        }
+    }
+
+    /**
+     * Ripristina nelle playlist la traccia rimossa temporaneamente.
+     * <p>
+     * Se la traccia era presente in una o più playlist prima della soft delete,
+     * viene reinserita nelle stesse playlist e nella stessa posizione originale.
+     * </p>
+     * <p>
+     * Dopo il ripristino, la memoria temporanea delle posizioni viene svuotata,
+     * perché non esiste più alcuna eliminazione pendente da annullare.
+     * </p>
+     *
+     * @param track traccia da ripristinare nelle playlist
+     * @throws IllegalArgumentException se la traccia è null
+     */
+    public void restorePendingDeletedTrackInPlaylists(Track track) {
+        if (track == null) {
+            throw new IllegalArgumentException("La traccia non può essere null.");
+        }
+
+        for (java.util.Map.Entry<Playlist, Integer> entry : pendingDeletedTrackPlaylistIndexes.entrySet()) {
+            Playlist playlist = entry.getKey();
+            int originalIndex = entry.getValue();
+
+            if (originalIndex < 0 || originalIndex > playlist.getTracks().size()) {
+                originalIndex = playlist.getTracks().size();
+            }
+
+            playlist.getTracks().add(originalIndex, track);
+        }
+
+        clearPendingDeletedTrackFromPlaylists();
+    }
+
+    /**
+     * Svuota la memoria temporanea relativa alle playlist coinvolte
+     * nella soft delete di una traccia.
+     */
+    public void clearPendingDeletedTrackFromPlaylists() {
+        pendingDeletedTrackPlaylistIndexes.clear();
     }
 
 }

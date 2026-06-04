@@ -351,4 +351,21 @@ class PlaybackServiceTest {
         assertEquals(0, service.getCurrentTime());
         assertFalse(service.isPlaying());
     }
+
+    @Test
+    void resetTrackShouldClearCurrentTrackAndResetPlaybackState() {
+        PlaybackService playbackService = new PlaybackService();
+
+        Track track = new Track("Song A", "Artist A", "3:45", "Pop", 2024);
+
+        playbackService.playTrack(track);
+        playbackService.advanceOneSecond();
+
+        playbackService.resetTrack();
+
+        assertNull(playbackService.getCurrentTrack());
+        assertEquals(0, playbackService.getCurrentTime());
+        assertEquals(0, playbackService.getDuration());
+        assertFalse(playbackService.isPlaying());
+    }
 }

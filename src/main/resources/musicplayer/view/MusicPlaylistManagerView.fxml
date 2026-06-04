@@ -181,19 +181,35 @@
     </right>
 
     <bottom>
-        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="footer">
-            <padding>
-                <Insets bottom="12.0" left="18.0" right="18.0" top="12.0" />
-            </padding>
-            <Label fx:id="statusLabel" text="Ready" />
-            <Region HBox.hgrow="ALWAYS" />
-            <Button fx:id="undoButton" onAction="#handleUndo" text="Undo">
-                <tooltip>
-                    <Tooltip text="Undo add/remove operations" />
-                </tooltip>
-            </Button>
-            <Button fx:id="redoButton" onAction="#handleRedo" text="Redo" />
-        </HBox>
+        <VBox spacing="6.0">
+            <HBox fx:id="undoSnackbar"
+                  alignment="CENTER_LEFT"
+                  managed="false"
+                  visible="false"
+                  spacing="12.0"
+                  style="-fx-background-color: #323232; -fx-padding: 10 18 10 18;">
+                <Label fx:id="snackbarMessageLabel"
+                       text="Elemento rimosso"
+                       textFill="WHITE" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="snackbarUndoButton"
+                        onAction="#handleSnackbarUndo"
+                        text="Annulla" />
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="footer">
+                <padding>
+                    <Insets bottom="12.0" left="18.0" right="18.0" top="12.0" />
+                </padding>
+                <Label fx:id="statusLabel" text="Ready" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="undoButton" onAction="#handleUndo" text="Undo">
+                    <tooltip>
+                        <Tooltip text="Undo add/remove operations" />
+                    </tooltip>
+                </Button>
+                <Button fx:id="redoButton" onAction="#handleRedo" text="Redo" />
+            </HBox>
+        </VBox>
     </bottom>
 
 </BorderPane>

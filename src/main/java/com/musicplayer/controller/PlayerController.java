@@ -343,6 +343,41 @@ public class PlayerController implements PlayerObserver {
     }
 
     /**
+     * Interrompe la riproduzione se la traccia rimossa coincide con quella
+     * attualmente riprodotta.
+     * <p>
+     * Questo metodo viene chiamato quando una traccia viene eliminata dalla
+     * libreria. Se la traccia rimossa è quella corrente, la riproduzione viene
+     * fermata, la timeline viene arrestata e l'interfaccia del player viene
+     * riportata allo stato iniziale.
+     * </p>
+     *
+     * @param removedTrack traccia rimossa dalla libreria
+     */
+    public void stopPlaybackIfCurrentTrackWasRemoved(Track removedTrack) {
+        if (removedTrack == null) {
+            return;
+        }
+
+        Track currentTrack = getCurrentTrack();
+
+        if (currentTrack == null || !currentTrack.equals(removedTrack)) {
+            return;
+        }
+
+        if (playbackTimeline != null) {
+            playbackTimeline.stop();
+        }
+
+        playbackService.resetTrack();
+
+        setSelectedTrack(null);
+        refreshPlaybackView();
+
+        updateStatus("Riproduzione interrotta: la traccia è stata rimossa.");
+    }
+
+    /**
      * Restituisce il PlaybackService usato dal controller.
      *
      * @return service della riproduzione simulata

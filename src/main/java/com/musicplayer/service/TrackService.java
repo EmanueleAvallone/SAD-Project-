@@ -10,8 +10,30 @@ import javafx.collections.ObservableList;
  * Questa classe separa la business logic dai controller JavaFX.
  * Il controller gestisce gli eventi della UI, mentre il service valida,
  * crea, aggiorna e rimuove gli oggetti del model.
+ *
+ * In particolare, il service supporta anche una logica di eliminazione
+ * temporanea: una traccia può essere rimossa dalla lista visibile senza essere
+ * cancellata immediatamente dal sistema, così da permettere all'utente di
+ * annullare l'operazione entro un breve intervallo di tempo.
  */
 public class TrackService {
+    /**
+     * Traccia attualmente in attesa di conferma dell'eliminazione.
+     *
+     * Quando l'utente elimina una traccia, questa viene rimossa dalla lista
+     * visibile, ma viene conservata temporaneamente in questo campo. In questo
+     * modo l'applicazione può ancora ripristinarla se l'utente preme "Annulla"
+     * prima della scadenza dello snackbar.
+     */
+    private Track pendingDeletedTrack;
+
+    /**
+     * Posizione originale della traccia rimossa temporaneamente.
+     *
+     * Questo indice consente di reinserire la traccia nella stessa posizione
+     * in cui si trovava prima dell'eliminazione temporanea.
+     */
+    private int pendingDeletedTrackIndex = -1;
 
     /**
      * Crea una nuova traccia validando prima tutti i dati inseriti dall'utente.
@@ -96,6 +118,121 @@ public class TrackService {
                 playlist.removeTrack(track);
             }
         }
+    }
+
+    /**
+     * Rimuove temporaneamente una traccia dal catalogo visibile.
+     * <p>
+     * Questo metodo realizza la logica di soft delete: la traccia viene rimossa
+     * dalla lista osservabile mostrata nell'interfaccia, quindi scompare dalla
+     * tabella, ma non viene ancora cancellata definitivamente dal sistema.
+     * </p>
+     * <p>
+     * La traccia e la sua posizione originale vengono salvate temporaneamente,
+     * così da poter essere recuperate se l'utente sceglie di annullare
+     * l'eliminazione tramite lo snackbar.
+     * </p>
+     *
+     * @param tracks catalogo visibile delle tracce
+     * @param track traccia da rimuovere temporaneamente
+     * @throws IllegalArgumentException se il catalogo è null
+     * @throws IllegalArgumentException se la traccia è null
+     * @throws IllegalArgumentException se la traccia non è presente nel catalogo
+     */
+    public void softDeleteTrack(ObservableList<Track> tracks, Track track) {
+        if (tracks == null) {
+            throw new IllegalArgumentException("Il catalogo delle tracce non può essere null.");
+        }
+
+        if (track == null) {
+            throw new IllegalArgumentException("La traccia non può essere null.");
+        }
+
+        int trackIndex = tracks.indexOf(track);
+
+        if (trackIndex < 0) {
+            throw new IllegalArgumentException("La traccia non è presente nella libreria.");
+        }
+
+        pendingDeletedTrack = track;
+        pendingDeletedTrackIndex = trackIndex;
+
+        tracks.remove(track);
+    }
+
+    /**
+     * Verifica se esiste una traccia rimossa temporaneamente e non ancora
+     * confermata o annullata.
+     *
+     * @return true se esiste una rimozione temporanea pendente, false altrimenti
+     */
+    public boolean hasPendingDeletedTrack() {
+        return pendingDeletedTrack != null;
+    }
+
+    /**
+     * Restituisce la traccia rimossa temporaneamente.
+     *
+     * @return traccia in attesa di conferma dell'eliminazione, oppure null
+     */
+    public Track getPendingDeletedTrack() {
+        return pendingDeletedTrack;
+    }
+
+    /**
+     * Restituisce la posizione originale della traccia rimossa temporaneamente.
+     *
+     * @return indice originale della traccia, oppure -1 se non esiste una
+     *         rimozione temporanea pendente
+     */
+    public int getPendingDeletedTrackIndex() {
+        return pendingDeletedTrackIndex;
+    }
+
+    /**
+     * Svuota lo stato temporaneo relativo all'eliminazione pendente.
+     * <p>
+     * Questo metodo verrà usato quando l'eliminazione viene annullata
+     * oppure quando diventa definitiva.
+     * </p>
+     */
+    public void clearPendingDeletedTrack() {
+        pendingDeletedTrack = null;
+        pendingDeletedTrackIndex = -1;
+    }
+
+    /**
+     * Ripristina nel catalogo visibile la traccia rimossa temporaneamente.
+     * <p>
+     * Se esiste una traccia in attesa di conferma dell'eliminazione, questa viene
+     * reinserita nella lista principale nella posizione in cui si trovava prima
+     * della rimozione temporanea.
+     * </p>
+     * <p>
+     * Dopo il ripristino, lo stato temporaneo dell'eliminazione viene svuotato,
+     * perché non esiste più alcuna operazione pendente da confermare o annullare.
+     * </p>
+     *
+     * @param tracks catalogo visibile delle tracce
+     * @throws IllegalArgumentException se il catalogo è null
+     */
+    public void restorePendingDeletedTrack(ObservableList<Track> tracks) {
+        if (tracks == null) {
+            throw new IllegalArgumentException("Il catalogo delle tracce non può essere null.");
+        }
+
+        if (!hasPendingDeletedTrack()) {
+            return;
+        }
+
+        int restoreIndex = pendingDeletedTrackIndex;
+
+        if (restoreIndex < 0 || restoreIndex > tracks.size()) {
+            restoreIndex = tracks.size();
+        }
+
+        tracks.add(restoreIndex, pendingDeletedTrack);
+        clearPendingDeletedTrack();
     }
 
     /**

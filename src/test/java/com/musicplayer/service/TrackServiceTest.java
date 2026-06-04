@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
 import java.util.List;
 
 class TrackServiceTest {
@@ -164,5 +167,102 @@ class TrackServiceTest {
         assertEquals(2, topTracks.size(), "La dimensione della classifica deve essere esattamente 2");
         assertEquals("Hit dell'Anno", topTracks.get(0).getTitle(), "Il brano più ascoltato deve essere primo");
         assertEquals("Canzone Media", topTracks.get(1).getTitle(), "Il secondo brano più ascoltato deve essere secondo");
+    }
+
+    @Test
+    void softDeleteTrackShouldRemoveTrackFromVisibleListButKeepItPending() {
+        ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+        Track firstTrack = new Track("Song A", "Artist A", "3:45", "Pop", 2024);
+        Track secondTrack = new Track("Song B", "Artist B", "4:10", "Rock", 2023);
+
+        tracks.add(firstTrack);
+        tracks.add(secondTrack);
+
+        trackService.softDeleteTrack(tracks, firstTrack);
+
+        assertFalse(tracks.contains(firstTrack));
+        assertEquals(1, tracks.size());
+        assertEquals(secondTrack, tracks.get(0));
+
+        assertTrue(trackService.hasPendingDeletedTrack());
+        assertSame(firstTrack, trackService.getPendingDeletedTrack());
+        assertEquals(0, trackService.getPendingDeletedTrackIndex());
+    }
+
+    @Test
+    void softDeleteTrackShouldRejectNullTrackList() {
+        Track track = new Track("Song A", "Artist A", "3:45", "Pop", 2024);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> trackService.softDeleteTrack(null, track)
+        );
+    }
+
+    @Test
+    void softDeleteTrackShouldRejectNullTrack() {
+        ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> trackService.softDeleteTrack(tracks, null)
+        );
+    }
+
+    @Test
+    void softDeleteTrackShouldRejectTrackNotInList() {
+        ObservableList<Track> tracks = FXCollections.observableArrayList();
+        Track track = new Track("Song A", "Artist A", "3:45", "Pop", 2024);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> trackService.softDeleteTrack(tracks, track)
+        );
+    }
+
+    @Test
+    void restorePendingDeletedTrackShouldRestoreTrackAtOriginalIndex() {
+        ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+        Track firstTrack = new Track("Song A", "Artist A", "3:45", "Pop", 2024);
+        Track secondTrack = new Track("Song B", "Artist B", "4:10", "Rock", 2023);
+        Track thirdTrack = new Track("Song C", "Artist C", "2:50", "Jazz", 2022);
+
+        tracks.add(firstTrack);
+        tracks.add(secondTrack);
+        tracks.add(thirdTrack);
+
+        trackService.softDeleteTrack(tracks, secondTrack);
+        trackService.restorePendingDeletedTrack(tracks);
+
+        assertEquals(3, tracks.size());
+        assertEquals(firstTrack, tracks.get(0));
+        assertEquals(secondTrack, tracks.get(1));
+        assertEquals(thirdTrack, tracks.get(2));
+
+        assertFalse(trackService.hasPendingDeletedTrack());
+    }
+
+    @Test
+    void restorePendingDeletedTrackShouldDoNothingWhenThereIsNoPendingDeletion() {
+        ObservableList<Track> tracks = FXCollections.observableArrayList();
+
+        Track track = new Track("Song A", "Artist A", "3:45", "Pop", 2024);
+        tracks.add(track);
+
+        trackService.restorePendingDeletedTrack(tracks);
+
+        assertEquals(1, tracks.size());
+        assertEquals(track, tracks.get(0));
+        assertFalse(trackService.hasPendingDeletedTrack());
+    }
+
+    @Test
+    void restorePendingDeletedTrackShouldRejectNullTrackList() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> trackService.restorePendingDeletedTrack(null)
+        );
     }
 }
