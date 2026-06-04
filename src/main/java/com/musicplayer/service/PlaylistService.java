@@ -30,6 +30,26 @@ public class PlaylistService {
     private final java.util.Map<Playlist, Integer> pendingDeletedTrackPlaylistIndexes = new java.util.LinkedHashMap<>();
 
     /**
+     * Playlist attualmente in attesa di conferma dell'eliminazione.
+     *
+     * Quando l'utente elimina una playlist, questa viene rimossa dalla lista
+     * visibile, ma viene conservata temporaneamente. In questo modo può essere
+     * ripristinata tramite il pulsante "Annulla" dello snackbar.
+     *
+     * Poiché viene conservato l'oggetto Playlist completo, vengono mantenute
+     * anche tutte le tracce contenute al suo interno.
+     */
+    private Playlist pendingDeletedPlaylist;
+
+    /**
+     * Posizione originale della playlist rimossa temporaneamente.
+     *
+     * Questo indice consente di reinserire la playlist nella stessa posizione
+     * in cui si trovava prima dell'eliminazione temporanea.
+     */
+    private int pendingDeletedPlaylistIndex = -1;
+
+    /**
      * Crea una nuova playlist e la aggiunge alla lista principale delle playlist.
      *
      * Questo metodo centralizza la validazione del nome della playlist,
@@ -264,4 +284,113 @@ public class PlaylistService {
         pendingDeletedTrackPlaylistIndexes.clear();
     }
 
+    /**
+     * Rimuove temporaneamente una playlist dalla lista visibile.
+     * <p>
+     * Questo metodo realizza la logica di soft delete per le playlist:
+     * la playlist viene rimossa dalla lista osservabile mostrata
+     * nell'interfaccia, quindi sparisce dalla sidebar, ma non viene ancora
+     * cancellata definitivamente dal sistema.
+     * </p>
+     * <p>
+     * La playlist viene conservata interamente in memoria temporanea insieme
+     * alla sua posizione originale. In questo modo, se l'utente preme
+     * "Annulla", la playlist può essere ripristinata nello stesso punto e
+     * con tutte le tracce che conteneva prima dell'eliminazione.
+     * </p>
+     *
+     * @param playlists lista principale delle playlist
+     * @param playlist playlist da rimuovere temporaneamente
+     * @throws IllegalArgumentException se la lista o la playlist sono null
+     * @throws IllegalArgumentException se la playlist non è presente nella lista
+     */
+    public void softDeletePlaylist(ObservableList<Playlist> playlists, Playlist playlist) {
+        if (playlists == null) {
+            throw new IllegalArgumentException("La lista delle playlist non può essere null.");
+        }
+
+        if (playlist == null) {
+            throw new IllegalArgumentException("Seleziona una playlist da eliminare.");
+        }
+
+        int playlistIndex = playlists.indexOf(playlist);
+
+        if (playlistIndex < 0) {
+            throw new IllegalArgumentException("La playlist non è presente nella lista.");
+        }
+
+        pendingDeletedPlaylist = playlist;
+        pendingDeletedPlaylistIndex = playlistIndex;
+
+        playlists.remove(playlist);
+    }
+
+    /**
+     * Verifica se esiste una playlist rimossa temporaneamente e non ancora
+     * confermata o annullata.
+     *
+     * @return true se esiste una playlist in attesa di conferma o annullamento,
+     *         false altrimenti
+     */
+    public boolean hasPendingDeletedPlaylist() {
+        return pendingDeletedPlaylist != null;
+    }
+
+    /**
+     * Restituisce la playlist rimossa temporaneamente.
+     *
+     * @return playlist in attesa di conferma dell'eliminazione, oppure null
+     */
+    public Playlist getPendingDeletedPlaylist() {
+        return pendingDeletedPlaylist;
+    }
+
+    /**
+     * Ripristina nella lista visibile la playlist rimossa temporaneamente.
+     * <p>
+     * Se esiste una playlist in attesa di conferma dell'eliminazione, questa
+     * viene reinserita nella lista principale nella posizione in cui si trovava
+     * prima della rimozione temporanea.
+     * </p>
+     * <p>
+     * La playlist viene ripristinata come oggetto completo, quindi conserva
+     * anche tutte le tracce che erano state aggiunte al suo interno.
+     * Dopo il ripristino, lo stato temporaneo viene svuotato.
+     * </p>
+     *
+     * @param playlists lista principale delle playlist
+     * @throws IllegalArgumentException se la lista è null
+     */
+    public void restorePendingDeletedPlaylist(ObservableList<Playlist> playlists) {
+        if (playlists == null) {
+            throw new IllegalArgumentException("La lista delle playlist non può essere null.");
+        }
+
+        if (!hasPendingDeletedPlaylist()) {
+            return;
+        }
+
+        int restoreIndex = pendingDeletedPlaylistIndex;
+
+        if (restoreIndex < 0 || restoreIndex > playlists.size()) {
+            restoreIndex = playlists.size();
+        }
+
+        playlists.add(restoreIndex, pendingDeletedPlaylist);
+
+        clearPendingDeletedPlaylist();
+    }
+
+    /**
+     * Svuota lo stato temporaneo relativo all'eliminazione pendente
+     * di una playlist.
+     * <p>
+     * Questo metodo viene usato quando l'eliminazione viene annullata
+     * oppure quando diventa definitiva alla scadenza dello snackbar.
+     * </p>
+     */
+    public void clearPendingDeletedPlaylist() {
+        pendingDeletedPlaylist = null;
+        pendingDeletedPlaylistIndex = -1;
+    }
 }

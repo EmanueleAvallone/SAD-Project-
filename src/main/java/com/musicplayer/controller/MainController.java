@@ -329,11 +329,53 @@ public class MainController {
     }
 
     /**
-     * Delega al PlaylistController l'eliminazione della playlist selezionata.
+     * Gestisce l'eliminazione temporanea della playlist selezionata.
+     * <p>
+     * La playlist non viene cancellata definitivamente subito: viene rimossa
+     * dalla sidebar e salvata temporaneamente dal service delle playlist,
+     * così da poter essere ripristinata tramite il pulsante "Annulla"
+     * dello snackbar.
+     * </p>
      */
     @FXML
     private void handleDeletePlaylist() {
-        playlistSectionController.deletePlaylist();
+        Playlist selectedPlaylist = playlistSectionController.getSelectedPlaylist();
+
+        if (selectedPlaylist == null) {
+            showError("Seleziona una playlist da eliminare.");
+            return;
+        }
+
+        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmationAlert.setTitle("Delete playlist");
+        confirmationAlert.setHeaderText("Conferma eliminazione");
+        confirmationAlert.setContentText(
+                "Vuoi eliminare la playlist \""
+                        + selectedPlaylist.getName()
+                        + "\"?"
+        );
+
+        ButtonType cancelButton = new ButtonType("Cancel");
+        ButtonType deleteButton = new ButtonType("Delete");
+
+        confirmationAlert.getButtonTypes().setAll(cancelButton, deleteButton);
+
+        Optional<ButtonType> result = confirmationAlert.showAndWait();
+
+        if (result.isEmpty() || result.get() == cancelButton) {
+            if (statusLabel != null) {
+                statusLabel.setText("Eliminazione playlist annullata.");
+            }
+            return;
+        }
+
+        softDeletePlaylist(selectedPlaylist);
+
+        showUndoSnackbar("Elemento rimosso");
+
+        if (statusLabel != null) {
+            statusLabel.setText("Playlist rimossa temporaneamente: " + selectedPlaylist.getName());
+        }
     }
 
     /**
@@ -575,6 +617,32 @@ public class MainController {
     }
 
     /**
+     * Rimuove temporaneamente una playlist dalla lista visibile.
+     * <p>
+     * La playlist sparisce dalla sidebar, ma non viene cancellata definitivamente.
+     * La rimozione temporanea viene delegata al service delle playlist, che
+     * conserva la playlist e la sua posizione originale in memoria temporanea.
+     * </p>
+     * <p>
+     * Poiché viene mantenuto l'oggetto Playlist completo, se l'utente preme
+     * "Annulla" verranno ripristinate anche tutte le tracce contenute nella
+     * playlist al momento dell'eliminazione.
+     * </p>
+     *
+     * @param playlist playlist da rimuovere temporaneamente
+     */
+    private void softDeletePlaylist(Playlist playlist) {
+        if (playlist == null) {
+            return;
+        }
+
+        playlistService.softDeletePlaylist(playlists, playlist);
+
+        playlistListView.getSelectionModel().clearSelection();
+        playlistSectionController.updateSelectedPlaylistView(null);
+    }
+
+    /**
      * Interrompe la riproduzione se la traccia rimossa è quella attualmente
      * in esecuzione nel player.
      * <p>
@@ -630,35 +698,93 @@ public class MainController {
     }
 
     /**
-     * Conferma definitivamente l'eliminazione temporanea quando scade lo snackbar.
+     * Ripristina l'eventuale elemento rimosso temporaneamente.
      * <p>
-     * Se l'utente non preme "Annulla" entro il tempo disponibile, la traccia
-     * rimossa temporaneamente viene considerata eliminata in modo definitivo.
-     * La traccia è già stata rimossa dalla Track Library e dalle playlist durante
-     * la soft delete; quindi in questa fase è sufficiente svuotare le memorie
-     * temporanee mantenute dai service.
-     * </p>
-     * <p>
-     * Dopo la conferma, lo snackbar viene nascosto e lo stato dell'interfaccia
-     * viene aggiornato.
+     * Lo snackbar è condiviso tra eliminazione di tracce ed eliminazione di
+     * playlist. Per questo motivo il metodo controlla quale tipo di elemento
+     * è attualmente in attesa di annullamento e invoca il ripristino corretto.
      * </p>
      */
-    private void confirmPendingDeletion() {
-        if (!trackService.hasPendingDeletedTrack()) {
-            hideUndoSnackbar();
+    private void restorePendingDeletion() {
+        if (trackService.hasPendingDeletedTrack()) {
+            restorePendingDeletedTrackFromCatalog();
             return;
         }
 
-        Track deletedTrack = trackService.getPendingDeletedTrack();
+        if (playlistService.hasPendingDeletedPlaylist()) {
+            restorePendingDeletedPlaylist();
+        }
+    }
 
-        trackService.clearPendingDeletedTrack();
-        playlistService.clearPendingDeletedTrackFromPlaylists();
+    /**
+     * Ripristina nella sidebar la playlist rimossa temporaneamente.
+     * <p>
+     * Il metodo viene invocato quando l'utente preme "Annulla" dopo aver
+     * eliminato una playlist. Il ripristino viene delegato al service delle
+     * playlist, poi la playlist ripristinata viene selezionata e la vista
+     * centrale viene aggiornata.
+     * </p>
+     * <p>
+     * La playlist viene ripristinata come oggetto completo, quindi mantiene
+     * anche tutte le tracce che conteneva prima dell'eliminazione.
+     * </p>
+     */
+    private void restorePendingDeletedPlaylist() {
+        if (!playlistService.hasPendingDeletedPlaylist()) {
+            return;
+        }
 
-        hideUndoSnackbar();
+        Playlist restoredPlaylist = playlistService.getPendingDeletedPlaylist();
+
+        playlistService.restorePendingDeletedPlaylist(playlists);
+
+        playlistListView.getSelectionModel().select(restoredPlaylist);
+        playlistSectionController.updateSelectedPlaylistView(restoredPlaylist);
 
         if (statusLabel != null) {
-            statusLabel.setText("Traccia eliminata definitivamente: " + deletedTrack.getTitle());
+            statusLabel.setText("Eliminazione playlist annullata: " + restoredPlaylist.getName());
         }
+    }
+
+    /**
+     * Conferma definitivamente l'eliminazione temporanea quando scade lo snackbar.
+     * <p>
+     * Se l'utente non preme "Annulla" entro il tempo disponibile, l'elemento
+     * rimosso temporaneamente viene considerato eliminato in modo definitivo.
+     * L'elemento può essere una traccia oppure una playlist.
+     * </p>
+     */
+    private void confirmPendingDeletion() {
+        if (trackService.hasPendingDeletedTrack()) {
+            Track deletedTrack = trackService.getPendingDeletedTrack();
+
+            trackService.clearPendingDeletedTrack();
+            playlistService.clearPendingDeletedTrackFromPlaylists();
+
+            hideUndoSnackbar();
+
+            if (statusLabel != null) {
+                statusLabel.setText("Traccia eliminata definitivamente: " + deletedTrack.getTitle());
+            }
+
+            return;
+        }
+
+        if (playlistService.hasPendingDeletedPlaylist()) {
+            Playlist deletedPlaylist = playlistService.getPendingDeletedPlaylist();
+
+            playlistService.clearPendingDeletedPlaylist();
+
+            hideUndoSnackbar();
+
+            if (statusLabel != null) {
+                statusLabel.setText("Playlist eliminata definitivamente: " + deletedPlaylist.getName());
+            }
+
+            return;
+        }
+
+        hideUndoSnackbar();
     }
 
     /**
@@ -808,12 +934,9 @@ public class MainController {
      * Gestisce il click sul pulsante "Annulla" del banner.
      * <p>
      * Quando l'utente preme "Annulla", il timer dello snackbar viene fermato
-     * e l'eventuale traccia rimossa temporaneamente viene ripristinata nel
-     * catalogo visibile tramite il service delle tracce.
-     * </p>
-     * <p>
-     * Dopo il ripristino, la Track Library e la vista della playlist selezionata
-     * vengono aggiornate per mostrare nuovamente la traccia.
+     * e l'eventuale elemento rimosso temporaneamente viene ripristinato.
+     * Lo snackbar è condiviso sia per l'eliminazione delle tracce sia per
+     * l'eliminazione delle playlist.
      * </p>
      */
     @FXML
@@ -822,7 +945,10 @@ public class MainController {
             snackbarTimer.stop();
         }
 
-        restorePendingDeletedTrackFromCatalog();
+        restorePendingDeletion();
+
         hideUndoSnackbar();
     }
+
+
 }
