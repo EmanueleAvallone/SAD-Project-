@@ -38,7 +38,7 @@ import javafx.scene.layout.VBox;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.CheckBox;
-
+import javafx.scene.control.ChoiceDialog;
 
 import javafx.animation.PauseTransition;
 
@@ -431,12 +431,32 @@ public class MainController {
 
     /**
      * Genera una playlist automatica filtrando per tag.
-     *
-     * Funzionalità predisposta per il collegamento con PlaylistFactory.
+     * Mostra un ChoiceDialog per far scegliere il tag all'utente.
      */
     @FXML
     private void handleGenerateByTag() {
-        System.out.println("Generate by tag");
+
+        ChoiceDialog<Tag> dialog = new ChoiceDialog<>(Tag.FAV, Tag.values());
+        dialog.setTitle("Generate Smart Playlist");
+        dialog.setHeaderText("Genera una playlist casuale");
+        dialog.setContentText("Seleziona il Tag desiderato:");
+
+        Optional<Tag> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            try {
+
+                Playlist generated = playlistService.generatePlaylistByTag(playlists, tracks, result.get());
+
+                playlistListView.getSelectionModel().select(generated);
+
+                if (statusLabel != null) {
+                    statusLabel.setText("Smart playlist creata: " + generated.getName());
+                }
+            } catch (IllegalArgumentException e) {
+                showError(e.getMessage());
+            }
+        }
     }
 
     /**

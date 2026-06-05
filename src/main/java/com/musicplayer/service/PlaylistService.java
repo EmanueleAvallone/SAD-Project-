@@ -3,6 +3,8 @@ package com.musicplayer.service;
 import com.musicplayer.model.Playlist;
 import com.musicplayer.model.Track;
 import javafx.collections.ObservableList;
+import com.musicplayer.model.Tag;
+import com.musicplayer.model.PlaylistFactory;
 
 /**
  * Service che contiene la logica applicativa relativa alla gestione delle playlist.
@@ -392,5 +394,43 @@ public class PlaylistService {
     public void clearPendingDeletedPlaylist() {
         pendingDeletedPlaylist = null;
         pendingDeletedPlaylistIndex = -1;
+    }
+
+    /**
+     * Genera una playlist casuale basata su un Tag e la aggiunge alla lista.
+     *
+     * @param playlists La lista osservabile delle playlist
+     * @param allTracks La lista di tutte le tracce della libreria
+     * @param tag Il tag selezionato per il filtro
+     * @return La playlist generata
+     * @throws IllegalArgumentException se non ci sono tracce con quel tag
+     */
+    public Playlist generatePlaylistByTag(ObservableList<Playlist> playlists, java.util.List<Track> allTracks, Tag tag) {
+        if (allTracks == null || allTracks.isEmpty()) {
+            throw new IllegalArgumentException("La libreria è vuota, impossibile generare la playlist.");
+        }
+
+        PlaylistFactory factory = new PlaylistFactory();
+
+        String baseName = "Mix " + tag.name();
+        String finalName = baseName;
+        int counter = 1;
+        while (true) {
+            String checkName = finalName;
+            boolean exists = playlists.stream().anyMatch(p -> p.getName().equalsIgnoreCase(checkName));
+            if (!exists) break;
+            finalName = baseName + " (" + counter + ")";
+            counter++;
+        }
+
+        Playlist generatedPlaylist = factory.createPlaylistByTag(allTracks, tag, finalName);
+
+        if (generatedPlaylist.getTracks().isEmpty()) {
+            throw new IllegalArgumentException("Non ci sono tracce con il tag " + tag.name() + ".");
+        }
+        
+        playlists.add(generatedPlaylist);
+
+        return generatedPlaylist;
     }
 }
