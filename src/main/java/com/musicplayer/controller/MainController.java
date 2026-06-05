@@ -39,6 +39,8 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceDialog;
+import javafx.beans.property.SimpleStringProperty;
+import java.util.stream.Collectors;
 
 import javafx.animation.PauseTransition;
 
@@ -148,6 +150,9 @@ public class MainController {
 
     @FXML
     private CheckBox newReleaseTagCheckBox;
+
+    @FXML
+    private TableColumn<Track, String> trackTagsColumn;
 
     private FilteredList<Track> filteredTracks;
 
@@ -303,6 +308,21 @@ public class MainController {
         trackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
         trackYearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
         trackPlayCountColumn.setCellValueFactory(new PropertyValueFactory<>("playedCount"));
+
+        // Configurazione della colonna dei Tag
+        trackTagsColumn.setCellValueFactory(cellData -> {
+            Set<Tag> tags = cellData.getValue().getTags();
+
+            if (tags == null || tags.isEmpty()) {
+                return new SimpleStringProperty("");
+            }
+
+            String tagsString = tags.stream()
+                    .map(Tag::name)
+                    .collect(Collectors.joining(", "));
+
+            return new SimpleStringProperty(tagsString);
+        });
 
         // Inizializza la FilteredList (di default mostra tutte le tracce)
         filteredTracks = new FilteredList<>(tracks, p -> true);
