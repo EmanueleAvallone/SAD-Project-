@@ -1,6 +1,8 @@
 package com.musicplayer.model;
 
 import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Rappresenta una traccia audio nella libreria.
@@ -13,6 +15,7 @@ public class Track {
     private String genre;
     private int year;
     private int playedCount;
+    private Set<Tag> tags;
 
     public Track(String title, String author, String length, String genre, int year) {
         this.title = title;
@@ -21,6 +24,7 @@ public class Track {
         this.genre = genre;
         this.year = year;
         this.playedCount = 0;
+        this.tags = new HashSet<>();
     }
 
     public String getTitle() {
@@ -74,6 +78,26 @@ public class Track {
 
     public void setPlayedCount(int playedCount) {
         this.playedCount = playedCount;
+    }
+
+    public Set<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public void addTag(Tag tag) {
+        this.tags.add(tag);
+    }
+
+    public void removeTag(Tag tag) {
+        this.tags.remove(tag);
+    }
+    
+    public boolean hasTag(Tag tag) {
+        return this.tags.contains(tag);
     }
 
     //per controllare se due tracce sono duplicate (titolo e autore uguali)

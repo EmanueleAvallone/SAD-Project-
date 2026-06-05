@@ -1,6 +1,7 @@
 package com.musicplayer.controller;
 
 import com.musicplayer.model.Track;
+import com.musicplayer.model.Tag;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
@@ -13,6 +14,8 @@ import javafx.stage.FileChooser;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.musicplayer.service.TrackService;
 
@@ -82,6 +85,11 @@ public class AddTrackController {
         String genre = genreField.getText();
         String yearText = yearField.getText();
 
+        Set<Tag> selectedTags = new HashSet<>();
+        if (favouriteCheckBox.isSelected()) selectedTags.add(Tag.FAV);
+        if (explicitCheckBox.isSelected()) selectedTags.add(Tag.EXPLICIT);
+        if (newReleaseCheckBox.isSelected()) selectedTags.add(Tag.NEW);
+
         try {
             if (editMode && trackToEdit != null) {
                 createdTrack = trackService.createTrack(
@@ -99,6 +107,10 @@ public class AddTrackController {
                         genre,
                         yearText
                 );
+            }
+
+            if (createdTrack != null) {
+                createdTrack.setTags(selectedTags);
             }
 
             closeWindow();
@@ -176,6 +188,10 @@ public class AddTrackController {
         lengthField.setText(track.getLength());
         genreField.setText(track.getGenre());
         yearField.setText(String.valueOf(track.getYear()));
+
+        favouriteCheckBox.setSelected(track.hasTag(Tag.FAV));
+        explicitCheckBox.setSelected(track.hasTag(Tag.EXPLICIT));
+        newReleaseCheckBox.setSelected(track.hasTag(Tag.NEW));
 
         lengthField.setDisable(true);
 
