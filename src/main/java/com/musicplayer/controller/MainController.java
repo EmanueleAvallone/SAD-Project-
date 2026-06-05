@@ -429,24 +429,68 @@ public class MainController {
         }
     }
 
-    /**
-     * Genera una playlist automatica filtrando per genere.
-     *
-     * Funzionalità predisposta per il collegamento con PlaylistFactory.
-     */
     @FXML
     private void handleGenerateByGenre() {
-        System.out.println("Generate by genre");
+        java.util.List<String> uniqueGenres = tracks.stream()
+                .map(Track::getGenre)
+                .filter(g -> g != null && !g.trim().isEmpty())
+                .map(g -> g.trim().toLowerCase())
+                .map(g -> g.substring(0, 1).toUpperCase() + g.substring(1)) // Capitalizza la prima lettera
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        if (uniqueGenres.isEmpty()) {
+            showError("Nessun genere presente nella libreria.");
+            return;
+        }
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(uniqueGenres.get(0), uniqueGenres);
+        dialog.setTitle("Generate Smart Playlist");
+        dialog.setHeaderText("Filtra per Genere");
+        dialog.setContentText("Seleziona il genere desiderato:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            try {
+                Playlist generated = playlistService.generatePlaylistByGenre(playlists, tracks, result.get());
+                playlistListView.getSelectionModel().select(generated);
+                if (statusLabel != null) statusLabel.setText("Smart playlist creata: " + generated.getName());
+            } catch (IllegalArgumentException e) {
+                showError(e.getMessage());
+            }
+        }
     }
 
-    /**
-     * Genera una playlist automatica filtrando per anno.
-     *
-     * Funzionalità predisposta per il collegamento con PlaylistFactory.
-     */
     @FXML
     private void handleGenerateByYear() {
-        System.out.println("Generate by year");
+        java.util.List<Integer> uniqueYears = tracks.stream()
+                .map(Track::getYear)
+                .filter(y -> y != null && y > 0)
+                .distinct()
+                .sorted(java.util.Comparator.reverseOrder()) 
+                .collect(Collectors.toList());
+
+        if (uniqueYears.isEmpty()) {
+            showError("Nessun anno presente nella libreria.");
+            return;
+        }
+
+        ChoiceDialog<Integer> dialog = new ChoiceDialog<>(uniqueYears.get(0), uniqueYears);
+        dialog.setTitle("Generate Smart Playlist");
+        dialog.setHeaderText("Filtra per Anno");
+        dialog.setContentText("Seleziona l'anno desiderato:");
+
+        Optional<Integer> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            try {
+                Playlist generated = playlistService.generatePlaylistByYear(playlists, tracks, result.get());
+                playlistListView.getSelectionModel().select(generated);
+                if (statusLabel != null) statusLabel.setText("Smart playlist creata: " + generated.getName());
+            } catch (IllegalArgumentException e) {
+                showError(e.getMessage());
+            }
+        }
     }
 
     /**

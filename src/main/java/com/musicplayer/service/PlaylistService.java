@@ -433,4 +433,48 @@ public class PlaylistService {
 
         return generatedPlaylist;
     }
+
+    public Playlist generatePlaylistByGenre(ObservableList<Playlist> playlists, java.util.List<Track> allTracks, String genre) {
+        if (allTracks == null || allTracks.isEmpty()) throw new IllegalArgumentException("La libreria è vuota.");
+
+        PlaylistFactory factory = new PlaylistFactory();
+        String baseName = "Mix " + (genre.substring(0, 1).toUpperCase() + genre.substring(1).toLowerCase());
+
+        String finalName = baseName;
+        int counter = 1;
+        while (true) {
+            String checkName = finalName;
+            if (playlists.stream().noneMatch(p -> p.getName().equalsIgnoreCase(checkName))) break;
+            finalName = baseName + " (" + counter + ")";
+            counter++;
+        }
+
+        Playlist generatedPlaylist = factory.createPlaylistByGenre(allTracks, genre, finalName);
+        if (generatedPlaylist.getTracks().isEmpty()) throw new IllegalArgumentException("Nessun brano trovato per il genere: " + genre);
+
+        playlists.add(generatedPlaylist);
+        return generatedPlaylist;
+    }
+
+    public Playlist generatePlaylistByYear(ObservableList<Playlist> playlists, java.util.List<Track> allTracks, int year) {
+        if (allTracks == null || allTracks.isEmpty()) throw new IllegalArgumentException("La libreria è vuota.");
+
+        PlaylistFactory factory = new PlaylistFactory();
+        String baseName = "Classics " + year;
+        
+        String finalName = baseName;
+        int counter = 1;
+        while (true) {
+            String checkName = finalName;
+            if (playlists.stream().noneMatch(p -> p.getName().equalsIgnoreCase(checkName))) break;
+            finalName = baseName + " (" + counter + ")";
+            counter++;
+        }
+
+        Playlist generatedPlaylist = factory.createPlaylistByYear(allTracks, year, finalName);
+        if (generatedPlaylist.getTracks().isEmpty()) throw new IllegalArgumentException("Nessun brano trovato per l'anno: " + year);
+
+        playlists.add(generatedPlaylist);
+        return generatedPlaylist;
+    }
 }

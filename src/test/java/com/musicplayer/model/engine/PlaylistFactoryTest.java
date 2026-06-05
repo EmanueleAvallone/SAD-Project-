@@ -81,4 +81,31 @@ public class PlaylistFactoryTest {
         // La lista dei brani dentro la playlist deve essere vuota
         assertTrue(playlist.getTracks().isEmpty(), "La playlist dovrebbe essere vuota se nessun brano ha quel tag");
     }
+
+    @Test
+    public void testCreatePlaylistByGenre_CaseInsensitiveMatches() {
+        // Setup per test genere
+        Track t1 = new Track("Song 1", "Artist A", "3:00", "rock", 2020);
+        Track t2 = new Track("Song 2", "Artist B", "3:30", " ROCK ", 2021); // Spazi e maiuscole
+        Track t3 = new Track("Song 3", "Artist C", "4:00", "Pop", 2022);
+        testTracks.clear();
+        testTracks.add(t1); testTracks.add(t2); testTracks.add(t3);
+
+        Playlist playlist = factory.createPlaylistByGenre(testTracks, "Rock", "Mix Rock");
+
+        assertEquals(2, playlist.getTracks().size(), "Deve trovare 2 brani Rock ignorando il case");
+    }
+
+    @Test
+    public void testCreatePlaylistByYear_MatchesCorrectly() {
+        Track t1 = new Track("Song 1", "A", "3:00", "Pop", 1999);
+        Track t2 = new Track("Song 2", "B", "3:30", "Rock", 1999);
+        Track t3 = new Track("Song 3", "C", "4:00", "Jazz", 2005);
+        testTracks.clear();
+        testTracks.add(t1); testTracks.add(t2); testTracks.add(t3);
+
+        Playlist playlist = factory.createPlaylistByYear(testTracks, 1999, "Mix 1999");
+
+        assertEquals(2, playlist.getTracks().size(), "Deve trovare 2 brani del 1999");
+    }
 }

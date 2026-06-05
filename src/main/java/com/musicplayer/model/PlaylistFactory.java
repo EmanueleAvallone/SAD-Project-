@@ -1,6 +1,9 @@
 package com.musicplayer.model;
 
+import com.musicplayer.model.filter.GenreFilterStrategy;
 import com.musicplayer.model.filter.TagFilterStrategy;
+import com.musicplayer.model.filter.TrackFilterStrategy;
+import com.musicplayer.model.filter.YearFilterStrategy;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,21 +13,7 @@ import java.util.Set;
 
 public class PlaylistFactory {
 
-    /**
-     * Genera una playlist casuale filtrata per uno specifico Tag.
-     *
-     * @param allTracks La lista di tutte le tracce disponibili
-     * @param tag Il tag richiesto (es. FAV, NEW)
-     * @param playlistName Il nome da assegnare alla nuova playlist
-     * @return Una nuova Playlist popolata con un massimo di 10 tracce casuali
-     */
-    public Playlist createPlaylistByTag(List<Track> allTracks, Tag tag, String playlistName) {
-
-        Set<Tag> requiredTags = new HashSet<>();
-        requiredTags.add(tag);
-
-
-        TagFilterStrategy strategy = new TagFilterStrategy(requiredTags);
+    private Playlist createRandomPlaylist(List<Track> allTracks, TrackFilterStrategy strategy, String playlistName) {
         List<Track> filteredTracks = new ArrayList<>();
 
         for (Track track : allTracks) {
@@ -34,15 +23,27 @@ public class PlaylistFactory {
         }
 
         Collections.shuffle(filteredTracks);
-
         int maxTracks = Math.min(10, filteredTracks.size());
-        List<Track> selectedTracks = filteredTracks.subList(0, maxTracks);
 
         Playlist generatedPlaylist = new Playlist(playlistName);
-        for (Track track : selectedTracks) {
+        for (Track track : filteredTracks.subList(0, maxTracks)) {
             generatedPlaylist.addTrack(track);
         }
 
         return generatedPlaylist;
+    }
+
+    public Playlist createPlaylistByTag(List<Track> allTracks, Tag tag, String playlistName) {
+        Set<Tag> requiredTags = new HashSet<>();
+        requiredTags.add(tag);
+        return createRandomPlaylist(allTracks, new TagFilterStrategy(requiredTags), playlistName);
+    }
+
+    public Playlist createPlaylistByGenre(List<Track> allTracks, String genre, String playlistName) {
+        return createRandomPlaylist(allTracks, new GenreFilterStrategy(genre), playlistName);
+    }
+
+    public Playlist createPlaylistByYear(List<Track> allTracks, int year, String playlistName) {
+        return createRandomPlaylist(allTracks, new YearFilterStrategy(year), playlistName);
     }
 }
