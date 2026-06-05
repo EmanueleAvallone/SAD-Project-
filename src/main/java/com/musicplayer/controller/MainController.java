@@ -5,6 +5,12 @@ import com.musicplayer.model.Playlist;
 import com.musicplayer.model.Track;
 import com.musicplayer.service.PlaylistService;
 import com.musicplayer.service.TrackService;
+import com.musicplayer.model.Tag;
+import com.musicplayer.model.filter.TrackFilterStrategy;
+import com.musicplayer.model.filter.TagFilterStrategy;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -27,6 +33,12 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
+
+
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+import javafx.scene.control.CheckBox;
+
 
 import javafx.animation.PauseTransition;
 
@@ -127,6 +139,17 @@ public class MainController {
 
     @FXML
     private Button snackbarUndoButton;
+
+    @FXML
+    private CheckBox favouriteTagCheckBox;
+
+    @FXML
+    private CheckBox explicitTagCheckBox;
+
+    @FXML
+    private CheckBox newReleaseTagCheckBox;
+
+    private FilteredList<Track> filteredTracks;
 
     /**
      * Controller di sezione dedicato alla libreria (Most Played).
@@ -281,7 +304,15 @@ public class MainController {
         trackYearColumn.setCellValueFactory(new PropertyValueFactory<>("year"));
         trackPlayCountColumn.setCellValueFactory(new PropertyValueFactory<>("playedCount"));
 
-        trackTableView.setItems(tracks);
+        // Inizializza la FilteredList (di default mostra tutte le tracce)
+        filteredTracks = new FilteredList<>(tracks, p -> true);
+
+        // Wrapper SortedList per mantenere l'ordinamento cliccando sulle colonne
+        SortedList<Track> sortedTracks = new SortedList<>(filteredTracks);
+        sortedTracks.comparatorProperty().bind(trackTableView.comparatorProperty());
+
+        // Imposta la lista filtrata e ordinata nella tabella
+        trackTableView.setItems(sortedTracks);
 
         trackTableView.setRowFactory(tableView -> new TableRow<>() {
             @Override
@@ -835,31 +866,45 @@ public class MainController {
     }
 
     /**
-     * Applica i filtri avanzati alla libreria.
-     *
-     * Funzionalità predisposta per una User Story successiva.
+     * Applica i filtri avanzati alla libreria usando il Pattern Strategy.
      */
     @FXML
     private void handleApplyFilters() {
-        System.out.println("Apply filters");
+        Set<Tag> selectedTags = new HashSet<>();
+
+        if (favouriteTagCheckBox.isSelected()) selectedTags.add(Tag.FAV);
+        if (explicitTagCheckBox.isSelected()) selectedTags.add(Tag.EXPLICIT);
+        if (newReleaseTagCheckBox.isSelected()) selectedTags.add(Tag.NEW);
+
+        // Applica il Pattern Strategy
+        TrackFilterStrategy strategy = new TagFilterStrategy(selectedTags);
+
+        // Applica il filtro alla lista visibile
+        filteredTracks.setPredicate(track -> strategy.matches(track));
+
+        if (statusLabel != null) {
+            statusLabel.setText("Filtri applicati. Mostrate solo le tracce corrispondenti.");
+        }
     }
 
     /**
      * Ripristina i filtri avanzati.
-     *
-     * Funzionalità predisposta per una User Story successiva.
      */
     @FXML
     private void handleResetFilters() {
-        System.out.println("Reset filters");
-    }
+        // Deseleziona le checkbox
+        if (favouriteTagCheckBox != null) favouriteTagCheckBox.setSelected(false);
+        if (explicitTagCheckBox != null) explicitTagCheckBox.setSelected(false);
+        if (newReleaseTagCheckBox != null) newReleaseTagCheckBox.setSelected(false);
 
-    /**
-     * Esegue l'undo dell'ultima operazione annullabile.
-     *
-     * Il CommandManager è già presente, ma il collegamento completo con la UI
-     * verrà completato nelle User Story dedicate.
-     */
+        // Rimuove il filtro (mostra tutto)
+        filteredTracks.setPredicate(p -> true);
+
+        if (statusLabel != null) {
+            statusLabel.setText("Filtri rimossi. Mostro tutte le tracce.");
+        }
+    }
+    
     @FXML
     private void handleUndo() {
         System.out.println("Undo");
