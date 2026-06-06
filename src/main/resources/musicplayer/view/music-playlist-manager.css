@@ -1,0 +1,735 @@
+
+
+.root,
+.app-root {
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-background-color: #181818;
+    -fx-text-fill: #F2F2F2;
+
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-accent: #5A5A5A;
+}
+
+/* =========================================================
+   scrittura
+   ========================================================= */
+
+.label {
+    -fx-text-fill: #EDEDED;
+}
+
+.app-title {
+    -fx-font-size: 21px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #FFFFFF;
+}
+
+.subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #CFCFCF;
+}
+
+.section-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #FFFFFF;
+}
+
+.field-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #CFCFCF;
+}
+
+.status-label {
+    -fx-text-fill: #CFCFCF;
+    -fx-font-size: 12px;
+}
+
+
+/* =========================================================
+   LAYOUT AREAS
+   ========================================================= */
+
+.header {
+    -fx-background-color: #181818;
+    -fx-border-color: transparent transparent #2B2B2B transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 14 20 12 20;
+}
+
+.sidebar {
+    -fx-background-color: #1D1D1D;
+    -fx-border-color: transparent #2B2B2B transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 14 14 12 14;
+}
+
+.right-panel {
+    -fx-background-color: #1D1D1D;
+    -fx-border-color: transparent transparent transparent #2B2B2B;
+    -fx-border-width: 0 0 0 1;
+    -fx-padding: 12 12 12 12;
+}
+
+.footer {
+    -fx-background-color: #1D1D1D;
+    -fx-border-color: #2B2B2B transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 6 12 6 12;
+}
+
+.card {
+    -fx-background-color: #232323;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2D2D2D;
+    -fx-border-width: 1;
+    -fx-padding: 12;
+}
+
+
+/* =========================================================
+   SPLIT PANE
+   ========================================================= */
+
+.split-pane,
+.content-split {
+    -fx-background-color: #181818;
+    -fx-padding: 0;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-background-color: #2B2B2B;
+    -fx-padding: 1;
+}
+
+.split-pane:focused {
+    -fx-background-color: #181818;
+}
+
+
+/* =========================================================
+   bottoni
+   ========================================================= */
+
+.button {
+    -fx-background-color: #3A3A3A;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #454545;
+    -fx-border-width: 1;
+
+    -fx-padding: 7 12 7 12;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #474747;
+    -fx-border-color: #555555;
+}
+
+.button:pressed {
+    -fx-background-color: #303030;
+    -fx-border-color: #303030;
+}
+
+.button:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: #686868;
+}
+
+/* Bottoni principali neutri */
+#addTrackButton,
+#addToPlaylistButton,
+#applyFiltersButton,
+#newPlaylistButton {
+    -fx-background-color: #4B4B4B;
+    -fx-border-color: #5A5A5A;
+    -fx-text-fill: #FFFFFF;
+}
+
+#addTrackButton:hover,
+#addToPlaylistButton:hover,
+#applyFiltersButton:hover,
+#newPlaylistButton:hover {
+    -fx-background-color: #5A5A5A;
+}
+
+/* Bottoni distruttivi */
+.danger-button,
+#deleteTrackButton,
+#deletePlaylistButton {
+    -fx-background-color: #D00019;
+    -fx-border-color: #D00019;
+    -fx-text-fill: #FFFFFF;
+}
+
+.danger-button:hover,
+#deleteTrackButton:hover,
+#deletePlaylistButton:hover {
+    -fx-background-color: #B00015;
+    -fx-border-color: #B00015;
+}
+
+/* Bottoni secondari */
+#editTrackButton,
+#renamePlaylistButton,
+#removeFromPlaylistButton,
+#moveTrackUpButton,
+#moveTrackDownButton,
+#resetFiltersButton,
+#undoButton,
+#redoButton,
+#clearSearchButton {
+    -fx-background-color: #3A3A3A;
+    -fx-border-color: #454545;
+    -fx-text-fill: #FFFFFF;
+}
+
+#editTrackButton:hover,
+#renamePlaylistButton:hover,
+#removeFromPlaylistButton:hover,
+#moveTrackUpButton:hover,
+#moveTrackDownButton:hover,
+#resetFiltersButton:hover,
+#undoButton:hover,
+#redoButton:hover,
+#clearSearchButton:hover {
+    -fx-background-color: #474747;
+}
+
+
+/* =========================================================
+   textfield
+   ========================================================= */
+
+.text-field {
+    -fx-background-color: #282828;
+    -fx-text-fill: #FFFFFF;
+    -fx-prompt-text-fill: #9F9F9F;
+
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #373737;
+    -fx-border-width: 1;
+
+    -fx-padding: 7 11 7 11;
+    -fx-font-size: 12px;
+}
+
+.text-field:hover {
+    -fx-border-color: #4A4A4A;
+}
+
+.text-field:focused {
+    -fx-border-color: #777777;
+    -fx-border-width: 1;
+    -fx-background-insets: 0;
+}
+
+.combo-box {
+    -fx-background-color: #282828;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #373737;
+    -fx-border-width: 1;
+    -fx-padding: 2 8 2 8;
+}
+
+.combo-box:hover {
+    -fx-border-color: #4A4A4A;
+}
+
+.combo-box:focused {
+    -fx-border-color: #777777;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 12px;
+}
+
+.combo-box .arrow {
+    -fx-background-color: #CFCFCF;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #282828;
+    -fx-control-inner-background: #282828;
+    -fx-border-color: #3A3A3A;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #282828;
+    -fx-text-fill: #FFFFFF;
+    -fx-padding: 7 10 7 10;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #3A3A3A;
+}
+
+
+/* =========================================================
+   playlist view
+   ========================================================= */
+
+.list-view {
+    -fx-background-color: #232323;
+    -fx-control-inner-background: #232323;
+    -fx-background-insets: 0;
+    -fx-background-radius: 10;
+
+    -fx-border-radius: 10;
+    -fx-border-color: #303030;
+    -fx-border-width: 1;
+
+    -fx-padding: 5;
+}
+
+.list-view:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: #3A3A3A;
+}
+
+.list-view .viewport {
+    -fx-background-color: #232323;
+}
+
+.list-view .virtual-flow,
+.list-view .clipped-container,
+.list-view .sheet {
+    -fx-background-color: #232323;
+}
+
+.list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #EDEDED;
+    -fx-font-size: 13px;
+    -fx-padding: 8 10 8 10;
+    -fx-background-radius: 7;
+}
+
+.list-view .list-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.list-view .list-cell:hover {
+    -fx-background-color: #303030;
+    -fx-text-fill: #FFFFFF;
+}
+
+.list-view .list-cell:selected {
+    -fx-background-color: #555555;
+    -fx-text-fill: #FFFFFF;
+}
+
+.list-view .list-cell:selected:focused {
+    -fx-background-color: #626262;
+    -fx-text-fill: #FFFFFF;
+}
+
+
+/* =========================================================
+   table view
+   ========================================================= */
+
+.table-view {
+    -fx-background-color: #222222;
+    -fx-control-inner-background: #222222;
+    -fx-background-insets: 0;
+    -fx-background-radius: 10;
+
+    -fx-border-radius: 10;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+
+    -fx-table-cell-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.table-view:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+}
+
+/* Header */
+.table-view .column-header-background {
+    -fx-background-color: #2C2C2C;
+    -fx-background-radius: 10 10 0 0;
+    -fx-border-color: transparent transparent #333333 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-size: 34;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-alignment: CENTER_LEFT;
+}
+
+
+.table-view .table-row-cell {
+    -fx-background-color: #222222;
+    -fx-border-color: transparent;
+    -fx-cell-size: 34;
+}
+
+.table-view .table-row-cell:odd {
+    -fx-background-color: #252525;
+}
+
+.table-view .table-row-cell:hover {
+    -fx-background-color: #333333;
+}
+
+
+.table-view .table-row-cell:selected,
+.table-view .table-row-cell:selected:focused {
+    -fx-background-color: #5A5A5A;
+}
+
+/* Celle */
+.table-view .table-cell {
+    -fx-text-fill: #EDEDED;
+    -fx-font-size: 12px;
+    -fx-padding: 7 10 7 10;
+    -fx-border-color: transparent;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-view .table-row-cell:selected .table-cell,
+.table-view .table-row-cell:selected:focused .table-cell {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: 600;
+}
+
+
+.table-view .placeholder .label {
+    -fx-text-fill: #BFBFBF;
+    -fx-font-size: 12px;
+}
+
+
+.table-cell:focused {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+
+/* =========================================================
+   scrollbar
+   ========================================================= */
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #4A4A4A;
+    -fx-background-radius: 10;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #5A5A5A;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+
+/* =========================================================
+   Sscrolll pane
+   ========================================================= */
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane:focused {
+    -fx-background-insets: 0;
+}
+
+
+/* =========================================================
+   linee
+   ========================================================= */
+
+.separator .line {
+    -fx-border-color: #303030;
+    -fx-border-width: 1 0 0 0;
+}
+
+
+/* =========================================================
+   checkbox
+   ========================================================= */
+
+.check-box {
+    -fx-text-fill: #EDEDED;
+    -fx-font-size: 12px;
+}
+
+.check-box .box {
+    -fx-background-color: #282828;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-border-color: #555555;
+    -fx-border-width: 1;
+}
+
+.check-box:hover .box {
+    -fx-border-color: #777777;
+}
+
+.check-box:selected .box {
+    -fx-background-color: #666666;
+    -fx-border-color: #777777;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #FFFFFF;
+}
+
+
+/* =========================================================
+   radio button
+   ========================================================= */
+
+.radio-button {
+    -fx-text-fill: #EDEDED;
+    -fx-font-size: 12px;
+}
+
+.radio-button .radio {
+    -fx-background-color: #282828;
+    -fx-background-radius: 50%;
+    -fx-border-radius: 50%;
+    -fx-border-color: #555555;
+    -fx-border-width: 1;
+}
+
+.radio-button:hover .radio {
+    -fx-border-color: #777777;
+}
+
+.radio-button:selected .radio {
+    -fx-border-color: #CFCFCF;
+}
+
+.radio-button:selected .dot {
+    -fx-background-color: #FFFFFF;
+}
+
+.radio-button:disabled {
+    -fx-opacity: 0.75;
+}
+
+.radio-button:disabled .text {
+    -fx-fill: #AFAFAF;
+}
+
+
+/* =========================================================
+   progress bar e slider
+   ========================================================= */
+
+.slider .track {
+    -fx-background-color: #4A4A4A;
+    -fx-background-radius: 10;
+    -fx-pref-height: 4;
+}
+
+.slider .thumb {
+    -fx-background-color: #F5F5F5;
+    -fx-background-radius: 50%;
+    -fx-pref-width: 12;
+    -fx-pref-height: 12;
+}
+
+.slider .thumb:hover {
+    -fx-background-color: #FFFFFF;
+}
+
+.progress-bar {
+    -fx-background-color: transparent;
+}
+
+.progress-bar .track {
+    -fx-background-color: #4A4A4A;
+    -fx-background-radius: 8;
+}
+
+.progress-bar .bar {
+    -fx-background-color: #CFCFCF;
+    -fx-background-radius: 8;
+    -fx-background-insets: 0;
+}
+
+
+/* =========================================================
+   player section
+   ========================================================= */
+
+#playerControl {
+    -fx-background-color: transparent;
+}
+
+#playerControlController,
+.player-panel {
+    -fx-background-color: #232323;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2D2D2D;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+}
+
+#currentTrackLabel,
+#nowPlayingLabel {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: 700;
+    -fx-font-size: 12px;
+}
+
+#currentArtistLabel {
+    -fx-text-fill: #CFCFCF;
+    -fx-font-size: 12px;
+}
+
+
+/* =========================================================
+   più ascoltate
+   ========================================================= */
+
+#topTracksContainer {
+    -fx-background-color: transparent;
+}
+
+#emptyMostPlayedView .label {
+    -fx-text-fill: #AFAFAF;
+}
+
+
+/* =========================================================
+   snackbar
+   ========================================================= */
+
+#undoSnackbar {
+    -fx-background-color: #232323;
+    -fx-border-color: #303030;
+    -fx-border-width: 1 0 0 0;
+}
+
+#snackbarMessageLabel {
+    -fx-text-fill: #FFFFFF;
+}
+
+#snackbarUndoButton {
+    -fx-background-color: transparent;
+    -fx-text-fill: #EDEDED;
+    -fx-font-weight: 700;
+}
+
+#snackbarUndoButton:hover {
+    -fx-background-color: #333333;
+}
+
+
+.dialog-pane {
+    -fx-background-color: #232323;
+    -fx-border-color: #303030;
+    -fx-border-width: 1;
+}
+
+.dialog-pane .label {
+    -fx-text-fill: #EDEDED;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #2C2C2C;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: 700;
+}
+
+.dialog-pane .content {
+    -fx-text-fill: #EDEDED;
+}
+
+.dialog-pane .button {
+    -fx-background-color: #3A3A3A;
+    -fx-text-fill: #FFFFFF;
+}
+
+.dialog-pane .button:hover {
+    -fx-background-color: #474747;
+}
+.tooltip {
+    -fx-background-color: #232323;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 8;
+    -fx-border-color: #303030;
+    -fx-border-radius: 8;
+    -fx-padding: 7 10 7 10;
+}
+
+.corner {
+    -fx-background-color: transparent;
+}
+
+.virtual-flow,
+.virtual-flow .clipped-container,
+.virtual-flow .sheet {
+    -fx-background-color: transparent;
+}
+
+.table-view .virtual-flow .scroll-bar:vertical,
+.table-view .virtual-flow .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.list-view .virtual-flow .scroll-bar:vertical,
+.list-view .virtual-flow .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+

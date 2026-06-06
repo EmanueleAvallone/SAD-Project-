@@ -24,7 +24,14 @@
 <?import javafx.scene.control.ScrollPane?>
 
 
-<BorderPane fx:id="rootPane" prefHeight="760.0" prefWidth="1280.0" styleClass="app-root" stylesheets="@music-playlist-manager.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.musicplayer.controller.MainController">
+<BorderPane fx:id="rootPane"
+            prefHeight="760.0"
+            prefWidth="1280.0"
+            styleClass="app-root"
+            stylesheets="@music-playlist-manager.css"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.musicplayer.controller.MainController">
 
     <top>
         <VBox spacing="8.0" styleClass="header">

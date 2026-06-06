@@ -338,15 +338,22 @@ public class MainController {
             @Override
             protected void updateItem(Track track, boolean empty) {
                 super.updateItem(track, empty);
+
+                getStyleClass().remove("playing-row");
+
                 if (empty || track == null || playerControlController == null) {
-                    setStyle("");
                     return;
                 }
+
                 Track currentTrack = playerControlController.getCurrentTrack();
-                if (currentTrack != null && currentTrack.equals(track) && playerControlController.isPlaying()) {
-                    setStyle("-fx-font-weight: bold; -fx-background-color: #fff3b0;");
-                } else {
-                    setStyle("");
+
+                if (currentTrack != null
+                        && currentTrack.equals(track)
+                        && playerControlController.isPlaying()) {
+
+                    if (!getStyleClass().contains("playing-row")) {
+                        getStyleClass().add("playing-row");
+                    }
                 }
             }
         });
