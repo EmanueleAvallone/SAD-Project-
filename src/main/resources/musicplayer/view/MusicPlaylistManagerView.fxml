@@ -169,7 +169,12 @@
                 <padding>
                     <Insets bottom="14.0" left="14.0" right="14.0" top="14.0" />
                 </padding>
-                <Label styleClass="section-title" text="Most played tracks" />
+
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <Label styleClass="section-title" text="Most played tracks" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button fx:id="playMostPlayedButton" onAction="#handlePlayMostPlayed" text="Play all" />
+                </HBox>
 
                 <StackPane prefHeight="280.0" VBox.vgrow="ALWAYS">
                     <ScrollPane fx:id="mostPlayedScrollPane" fitToWidth="true" vbarPolicy="AS_NEEDED" hbarPolicy="NEVER" style="-fx-background-color: transparent;">

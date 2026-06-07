@@ -154,6 +154,18 @@ public class MainController {
     @FXML
     private TableColumn<Track, String> trackTagsColumn;
 
+    /**
+     * Delega al LibraryController la riproduzione in sequenza della classifica "Most played".
+     */
+    @FXML
+    private void handlePlayMostPlayed() {
+        librarySectionController.playAllMostPlayed();
+
+        if (statusLabel != null) {
+            statusLabel.setText("Top Tracks chart playback started.");
+        }
+    }
+
     private FilteredList<Track> filteredTracks;
 
     /**
@@ -254,6 +266,8 @@ public class MainController {
                 trackTableView.refresh();
                 playlistSectionController.refreshSelectedPlaylistTable();
 
+                librarySectionController.refreshHighlights();
+
                 int currentTotalPlays = tracks.stream()
                         .mapToInt(Track::getPlayedCount)
                         .sum();
@@ -262,7 +276,6 @@ public class MainController {
                     librarySectionController.updateMostPlayedSection();
                     lastTotalPlays = currentTotalPlays;
                 }
-
             });
         }
 
@@ -338,22 +351,17 @@ public class MainController {
             @Override
             protected void updateItem(Track track, boolean empty) {
                 super.updateItem(track, empty);
-
-                getStyleClass().remove("playing-row");
-
                 if (empty || track == null || playerControlController == null) {
+                    getStyleClass().remove("playing-track");
                     return;
                 }
-
                 Track currentTrack = playerControlController.getCurrentTrack();
-
-                if (currentTrack != null
-                        && currentTrack.equals(track)
-                        && playerControlController.isPlaying()) {
-
-                    if (!getStyleClass().contains("playing-row")) {
-                        getStyleClass().add("playing-row");
+                if (currentTrack != null && currentTrack.equals(track) && playerControlController.isPlaying()) {
+                    if (!getStyleClass().contains("playing-track")) {
+                        getStyleClass().add("playing-track");
                     }
+                } else {
+                    getStyleClass().remove("playing-track");
                 }
             }
         });

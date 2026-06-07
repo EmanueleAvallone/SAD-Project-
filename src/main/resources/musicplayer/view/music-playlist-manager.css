@@ -733,3 +733,29 @@
     -fx-background-color: transparent;
 }
 
+/* =========================================================
+   TRACCIA IN RIPRODUZIONE (PLAYING TRACK)
+   ========================================================= */
+
+.top-track-card {
+    -fx-padding: 8;
+    -fx-alignment: center-left;
+    -fx-background-radius: 8;
+    -fx-background-color: transparent;
+}
+
+.playing-track {
+    -fx-background-color: #4A4A4A !important;
+}
+
+
+.playing-track .table-cell {
+    -fx-text-fill: #FFFFFF !important;
+    -fx-font-weight: 700;
+}
+
+
+.playing-track .label {
+    -fx-text-fill: #FFFFFF !important;
+}
+

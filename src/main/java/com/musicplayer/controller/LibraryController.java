@@ -64,11 +64,21 @@ public class LibraryController {
     }
 
     /**
-     * Crea una Card orizzontale senza stili invasivi.
+     * Crea una Card orizzontale. Se la traccia è in riproduzione, la evidenzia.
      */
     private HBox createTrackCard(Track track) {
         HBox card = new HBox(10);
-        card.setStyle("-fx-padding: 8; -fx-alignment: center-left;");
+        card.setUserData(track);
+
+        card.getStyleClass().add("top-track-card");
+
+        boolean isPlaying = playerController != null &&
+                playerController.isPlaying() &&
+                track.equals(playerController.getCurrentTrack());
+
+        if (isPlaying) {
+            card.getStyleClass().add("playing-track");
+        }
 
         VBox infoBox = new VBox(2);
         Label titleLabel = new Label(track.getTitle());
@@ -87,11 +97,58 @@ public class LibraryController {
                 playerController.playTrackFromPlaylist(track);
                 playerController.setCurrentPlaylist(allTracks);
             }
-
             updateMostPlayedSection();
         });
 
         card.getChildren().addAll(infoBox, spacer, playButton);
         return card;
+    }
+
+    /**
+     * Riproduce in sequenza l'intera classifica delle tracce più ascoltate.
+     */
+    public void playAllMostPlayed() {
+        if (playerController == null) {
+            return;
+        }
+
+        List<Track> topTracks = trackService.getTopPlayedTracks(allTracks, 10);
+
+        if (topTracks == null || topTracks.isEmpty()) {
+            return;
+        }
+
+        playerController.setCurrentPlaylist(topTracks);
+
+        playerController.playTrackFromPlaylist(topTracks.get(0));
+    }
+
+    /**
+     * Scorre le card della classifica e accende/spegne l'evidenziazione
+     * in base alla traccia attualmente in riproduzione nel player.
+     */
+    public void refreshHighlights() {
+        if (topTracksContainer == null) return;
+
+        for (javafx.scene.Node node : topTracksContainer.getChildren()) {
+            if (node instanceof HBox) {
+                HBox card = (HBox) node;
+                Track track = (Track) card.getUserData();
+
+                if (track != null) {
+                    boolean isPlaying = playerController != null &&
+                            playerController.isPlaying() &&
+                            track.equals(playerController.getCurrentTrack());
+
+                    if (isPlaying) {
+                        if (!card.getStyleClass().contains("playing-track")) {
+                            card.getStyleClass().add("playing-track");
+                        }
+                    } else {
+                        card.getStyleClass().remove("playing-track");
+                    }
+                }
+            }
+        }
     }
 }

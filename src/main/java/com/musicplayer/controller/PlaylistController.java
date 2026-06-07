@@ -191,14 +191,16 @@ public class PlaylistController {
             protected void updateItem(Track track, boolean empty) {
                 super.updateItem(track, empty);
                 if (empty || track == null || playerControlController == null) {
-                    setStyle("");
+                    getStyleClass().remove("playing-track");
                     return;
                 }
                 Track currentTrack = playerControlController.getCurrentTrack();
                 if (currentTrack != null && currentTrack.equals(track) && playerControlController.isPlaying()) {
-                    setStyle("-fx-font-weight: bold; -fx-background-color: #fff3b0;");
+                    if (!getStyleClass().contains("playing-track")) {
+                        getStyleClass().add("playing-track");
+                    }
                 } else {
-                    setStyle("");
+                    getStyleClass().remove("playing-track");
                 }
             }
         });
