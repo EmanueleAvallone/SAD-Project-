@@ -440,4 +440,53 @@ public class PlaylistServiceTest {
         );
     }
 
+    @Test
+    void moveTrackInPlaylistShouldUpdateOrderCorrectly() {
+        PlaylistService service = new PlaylistService();
+        Playlist playlist = new Playlist("My Playlist");
+
+        Track t1 = new Track("Song A", "Artist A", "3:00","Pop",2020);
+        Track t2 = new Track("Song B", "Artist B", "3:10","rock",2000);
+        Track t3 = new Track("Song C", "Artist C", "3:20","Pop",2020);
+        Track t4 = new Track("Song D", "Artist D", "3:30","Rap",2023);
+
+        playlist.addTrack(t1); // index 0
+        playlist.addTrack(t2); // index 1
+        playlist.addTrack(t3); // index 2
+        playlist.addTrack(t4); // index 3
+
+        // Spostiamo "Song D" dall'indice 3 all'indice 1
+        service.moveTrackInPlaylist(playlist, 3, 1);
+
+        assertEquals(t1, playlist.getTracks().get(0));
+        assertEquals(t4, playlist.getTracks().get(1));
+        assertEquals(t2, playlist.getTracks().get(2));
+        assertEquals(t3, playlist.getTracks().get(3));
+    }
+
+    @Test
+    void moveTrackInPlaylistShouldRejectOutOfBoundsIndices() {
+        PlaylistService service = new PlaylistService();
+        Playlist playlist = new Playlist("My Playlist");
+
+        Track t1 = new Track("Song A", "Artist A", "3:00","Pop",2020);
+        Track t2 = new Track("Song B", "Artist B", "3:10","rock",2000);
+        playlist.addTrack(t1);
+        playlist.addTrack(t2);
+
+        assertThrows(
+                IndexOutOfBoundsException.class,
+                () -> service.moveTrackInPlaylist(playlist, 1, -1)
+        );
+
+        assertThrows(
+                IndexOutOfBoundsException.class,
+                () -> service.moveTrackInPlaylist(playlist, 1, 1000)
+        );
+
+        // L'ordine originale non deve cambiare
+        assertEquals(t1, playlist.getTracks().get(0));
+        assertEquals(t2, playlist.getTracks().get(1));
+    }
+
 }

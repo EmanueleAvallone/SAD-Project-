@@ -61,6 +61,28 @@ public class Playlist {
         tracks.remove(track);
     }
 
+    /**
+     * Sposta una traccia da una posizione all'altra all'interno della playlist.
+     * * @param oldIndex l'indice di partenza della traccia
+     * @param newIndex l'indice di destinazione in cui posizionarla
+     * @throws IndexOutOfBoundsException se uno dei due indici non è valido
+     */
+    public void moveTrack(int oldIndex, int newIndex) {
+        if (oldIndex < 0 || oldIndex >= tracks.size()) {
+            throw new IndexOutOfBoundsException("Indice di partenza non valido: " + oldIndex);
+        }
+        if (newIndex < 0 || newIndex >= tracks.size()) {
+            throw new IndexOutOfBoundsException("Indice di destinazione non valido: " + newIndex);
+        }
+
+        if (oldIndex == newIndex) {
+            return;
+        }
+
+        Track trackToMove = tracks.remove(oldIndex);
+        tracks.add(newIndex, trackToMove);
+    }
+
     @Override
     public String toString() {
         return name;

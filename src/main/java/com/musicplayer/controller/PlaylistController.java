@@ -420,6 +420,76 @@ public class PlaylistController {
     }
 
     /**
+     * Sposta la traccia selezionata verso l'alto di una posizione.
+     */
+    public void moveSelectedTrackUp() {
+        Playlist selectedPlaylist = getSelectedPlaylist();
+        Track selectedTrack = getSelectedTrackFromPlaylist();
+
+        if (selectedPlaylist == null || selectedTrack == null) {
+            return;
+        }
+
+        int currentIndex = selectedPlaylist.getTracks().indexOf(selectedTrack);
+        if (currentIndex <= 0) {
+            return;
+        }
+
+        int targetIndex = currentIndex - 1;
+
+        try {
+            playlistService.moveTrackInPlaylist(selectedPlaylist, currentIndex, targetIndex);
+
+            updateSelectedPlaylistView(selectedPlaylist);
+
+            playlistTrackTableView.getSelectionModel().select(targetIndex);
+
+            if (playerControlController != null) {
+                playerControlController.syncQueueWithoutInterrupting(selectedPlaylist.getTracks());
+            }
+
+            setStatus("Traccia spostata su: " + selectedTrack.getTitle());
+        } catch (Exception exception) {
+            showError(exception.getMessage());
+        }
+    }
+
+    /**
+     * Sposta la traccia selezionata verso il basso di una posizione.
+     */
+    public void moveSelectedTrackDown() {
+        Playlist selectedPlaylist = getSelectedPlaylist();
+        Track selectedTrack = getSelectedTrackFromPlaylist();
+
+        if (selectedPlaylist == null || selectedTrack == null) {
+            return;
+        }
+
+        int currentIndex = selectedPlaylist.getTracks().indexOf(selectedTrack);
+        if (currentIndex == -1 || currentIndex >= selectedPlaylist.getTracks().size() - 1) {
+            return;
+        }
+
+        int targetIndex = currentIndex + 1;
+
+        try {
+            playlistService.moveTrackInPlaylist(selectedPlaylist, currentIndex, targetIndex);
+
+            updateSelectedPlaylistView(selectedPlaylist);
+
+            playlistTrackTableView.getSelectionModel().select(targetIndex);
+
+            if (playerControlController != null) {
+                playerControlController.syncQueueWithoutInterrupting(selectedPlaylist.getTracks());
+            }
+
+            setStatus("Traccia spostata giù: " + selectedTrack.getTitle());
+        } catch (Exception exception) {
+            showError(exception.getMessage());
+        }
+    }
+
+    /**
      * Aggiorna la tabella della playlist selezionata.
      *
      * @param playlist playlist selezionata

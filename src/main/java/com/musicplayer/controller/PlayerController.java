@@ -791,4 +791,32 @@ public class PlayerController implements PlayerObserver {
     public void update(MediaPlayerEngine engine) {
         updateStatus("Stato player: " + engine.getCurrentStateName());
     }
+
+    /**
+     * Sincronizza la coda di riproduzione corrente con l'ordine aggiornato
+     * di una playlist, assicurandosi che il brano in esecuzione non salti.
+     * * Questo metodo viene chiamato dai controller visivi quando l'utente
+     * sposta una traccia su o giù.
+     *
+     * @param updatedPlaylist la lista di tracce riordinata
+     */
+    public void syncQueueWithoutInterrupting(List<Track> updatedPlaylist) {
+        if (updatedPlaylist == null || updatedPlaylist.isEmpty()) {
+            return;
+        }
+
+        boolean isEditingCurrentPlaylist = false;
+
+        if (this.currentPlaylist != null && this.currentPlaylist.size() == updatedPlaylist.size()
+                && this.currentPlaylist.containsAll(updatedPlaylist)) {
+            isEditingCurrentPlaylist = true;
+        }
+
+        if (isEditingCurrentPlaylist) {
+            this.originalPlaylist = List.copyOf(updatedPlaylist);
+            this.currentPlaylist = List.copyOf(updatedPlaylist);
+            playbackService.setCurrentQueue(this.currentPlaylist);
+            System.out.println("Coda di riproduzione aggiornata al nuovo ordine.");
+        }
+    }
 }

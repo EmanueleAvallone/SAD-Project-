@@ -943,7 +943,7 @@ public class MainController {
      */
     @FXML
     private void handleMoveTrackUp() {
-        System.out.println("Move track up");
+        playlistSectionController.moveSelectedTrackUp();
     }
 
     /**
@@ -953,7 +953,7 @@ public class MainController {
      */
     @FXML
     private void handleMoveTrackDown() {
-        System.out.println("Move track down");
+        playlistSectionController.moveSelectedTrackDown();
     }
 
     /**

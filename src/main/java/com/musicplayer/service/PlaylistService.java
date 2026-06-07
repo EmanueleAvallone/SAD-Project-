@@ -477,4 +477,32 @@ public class PlaylistService {
         playlists.add(generatedPlaylist);
         return generatedPlaylist;
     }
+
+    /**
+     * Sposta una traccia all'interno della playlist selezionata.
+     * * Il service si assicura che gli indici siano validi e che la playlist non sia nulla.
+     * Questo soddisfa i requisiti di sicurezza del Task 16.4.
+     *
+     * @param playlist la playlist in cui effettuare lo spostamento
+     * @param currentIndex la posizione attuale della traccia
+     * @param targetIndex la nuova posizione desiderata
+     * @throws IllegalArgumentException se la playlist è nulla
+     * @throws IndexOutOfBoundsException se gli indici forniti sono fuori dal range della playlist
+     */
+    public void moveTrackInPlaylist(Playlist playlist, int currentIndex, int targetIndex) {
+        if (playlist == null) {
+            throw new IllegalArgumentException("Nessuna playlist selezionata per lo spostamento.");
+        }
+
+        int size = playlist.getTracks().size();
+        
+        if (currentIndex < 0 || currentIndex >= size) {
+            throw new IndexOutOfBoundsException("Impossibile spostare: l'indice di partenza " + currentIndex + " è fuori limite.");
+        }
+        if (targetIndex < 0 || targetIndex >= size) {
+            throw new IndexOutOfBoundsException("Impossibile spostare: l'indice di destinazione " + targetIndex + " è fuori limite.");
+        }
+
+        playlist.moveTrack(currentIndex, targetIndex);
+    }
 }
