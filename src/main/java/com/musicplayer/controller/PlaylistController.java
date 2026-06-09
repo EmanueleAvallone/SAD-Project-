@@ -8,19 +8,12 @@ import com.musicplayer.model.Tag;
 import com.musicplayer.model.Track;
 import com.musicplayer.service.PlaylistService;
 
+import com.musicplayer.service.SearchService;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ChoiceDialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.util.List;
@@ -73,6 +66,7 @@ public class PlaylistController {
     @FXML
     private ListView<Playlist> playlistListView;
 
+
     private TableView<Track> trackTableView;
 
     private TableView<Track> playlistTrackTableView;
@@ -101,12 +95,8 @@ public class PlaylistController {
 
     private UndoSnackbarHandler undoSnackbarHandler;
 
-    /**
-     * Costruttore vuoto richiesto da JavaFX quando il controller è collegato
-     * direttamente a un file FXML.
-     */
-    public PlaylistController() {
-    }
+    private SearchService searchService;
+
 
     /**
      * Imposta il gestore dello snackbar globale.
@@ -137,8 +127,8 @@ public class PlaylistController {
             ObservableList<Track> selectedPlaylistTracks,
             PlayerController playerControlController,
             PlaylistService playlistService,
-            CommandManager commandManager
-    ) {
+            CommandManager commandManager,
+            SearchService searchService) {
         this.trackTableView = trackTableView;
         this.playlistTrackTableView = playlistTrackTableView;
         this.playlistTrackOrderColumn = playlistTrackOrderColumn;
@@ -152,6 +142,7 @@ public class PlaylistController {
         this.playerControlController = playerControlController;
         this.playlistService = playlistService;
         this.commandManager = commandManager;
+        this.searchService = searchService;
 
         configurePlaylistListView();
         configureSelectedPlaylistTable();
@@ -841,5 +832,28 @@ public class PlaylistController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+    /**
+     * Applica il filtro di ricerca alla lista delle playlist visibili.
+     * <p>
+     * Il metodo aggiorna gli elementi mostrati nella {@code ListView} mantenendo
+     * solo le playlist che corrispondono alla query tramite {@link SearchService}.
+     * Se i riferimenti grafici o i dati necessari non sono disponibili,
+     * il metodo non esegue alcuna operazione.
+     * </p>
+     *
+     * @param query testo da cercare; se {@code null} o vuoto, vengono mostrate
+     *              tutte le playlist disponibili
+     */
+    public void applySearch(String query) {
+        if (playlistListView == null || searchService == null || playlists == null) {
+            return;
+        }
+
+        playlistListView.setItems(FXCollections.observableArrayList(
+                playlists.stream()
+                        .filter(playlist -> searchService.matchesPlaylist(playlist, query))
+                        .toList()
+        ));
     }
 }

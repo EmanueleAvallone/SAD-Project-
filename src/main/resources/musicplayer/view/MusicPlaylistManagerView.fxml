@@ -42,7 +42,7 @@
 
                 <Region HBox.hgrow="ALWAYS"/>
 
-                <TextField fx:id="globalSearchField"
+                <TextField fx:id="searchField"
                            prefWidth="340.0"
                            promptText="Search tracks, artists, playlists..."/>
 

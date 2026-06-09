@@ -6,9 +6,11 @@ import com.musicplayer.model.Track;
 import com.musicplayer.model.filter.TagFilterStrategy;
 import com.musicplayer.model.filter.TrackFilterStrategy;
 import com.musicplayer.service.PlaylistService;
+import com.musicplayer.service.SearchService;
 import com.musicplayer.service.TrackService;
 
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -83,7 +85,7 @@ public class LibraryController {
     private TableColumn<Track, Integer> trackYearColumn;
     private TableColumn<Track, String> trackTagsColumn;
     private TableColumn<Track, Integer> trackPlayCountColumn;
-
+    private SearchService searchService;
     private CheckBox favouriteTagCheckBox;
     private CheckBox explicitTagCheckBox;
     private CheckBox newReleaseTagCheckBox;
@@ -106,6 +108,7 @@ public class LibraryController {
     private UndoSnackbarHandler undoSnackbarHandler;
 
     private FilteredList<Track> filteredTracks;
+    private String currentSearchQuery = "";
 
     private int lastTotalPlays = -1;
 
@@ -134,8 +137,8 @@ public class LibraryController {
             ObservableList<Playlist> playlists,
             PlayerController playerController,
             PlaylistController playlistController,
-            UndoSnackbarHandler undoSnackbarHandler
-    ) {
+            UndoSnackbarHandler undoSnackbarHandler,
+            SearchService searchService) {
         this.trackTableView = trackTableView;
         this.trackTitleColumn = trackTitleColumn;
         this.trackAuthorColumn = trackAuthorColumn;
@@ -163,6 +166,8 @@ public class LibraryController {
 
         this.playerController = playerController;
         this.playlistController = playlistController;
+
+        this.searchService = searchService;
 
         this.undoSnackbarHandler = undoSnackbarHandler;
 
@@ -471,26 +476,7 @@ public class LibraryController {
      * Applica i filtri avanzati usando il Pattern Strategy.
      */
     public void applyFilters() {
-        if (filteredTracks == null) {
-            return;
-        }
-
-        Set<Tag> selectedTags = new HashSet<>();
-
-        if (favouriteTagCheckBox != null && favouriteTagCheckBox.isSelected()) {
-            selectedTags.add(Tag.FAV);
-        }
-
-        if (explicitTagCheckBox != null && explicitTagCheckBox.isSelected()) {
-            selectedTags.add(Tag.EXPLICIT);
-        }
-
-        if (newReleaseTagCheckBox != null && newReleaseTagCheckBox.isSelected()) {
-            selectedTags.add(Tag.NEW);
-        }
-
-        TrackFilterStrategy strategy = new TagFilterStrategy(selectedTags);
-        filteredTracks.setPredicate(strategy::matches);
+        updateCombinedFilter();
 
         setStatus("Filtri applicati.");
     }
@@ -511,19 +497,16 @@ public class LibraryController {
             newReleaseTagCheckBox.setSelected(false);
         }
 
-        if (filteredTracks != null) {
-            filteredTracks.setPredicate(track -> true);
-        }
-
+        updateCombinedFilter();
         setStatus("Filtri rimossi.");
     }
 
     /**
      * Predisposizione per la ricerca globale.
      */
-    public void clearSearch() {
-        resetFilters();
-    }
+    //public void clearSearch() {
+      //  resetFilters();
+    //}
 
     /**
      * Aggiorna la sezione Most Played solo se cambia il totale delle riproduzioni.
@@ -731,5 +714,69 @@ public class LibraryController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+    /**
+     * Applica il testo di ricerca corrente al filtro combinato della libreria.
+     * <p>
+     * Il valore passato viene normalizzato rimuovendo gli spazi iniziali e finali.
+     * Dopo l'aggiornamento della query, il metodo ricalcola il predicato combinato
+     * che tiene conto sia dei tag selezionati sia della ricerca testuale.
+     * </p>
+     *
+     * @param query testo da usare per la ricerca; se {@code null}, viene trattato
+     *              come stringa vuota
+     */
+    public void applySearch(String query) {
+        this.currentSearchQuery = query == null ? "" : query.trim();
+        updateCombinedFilter();
+    }
+    /**
+     * Ricalcola il filtro combinato della libreria in base ai tag selezionati
+     * e alla query di ricerca corrente.
+     * <p>
+     * Il filtro risultante mantiene solo le tracce che soddisfano sia i tag
+     * selezionati sia il testo di ricerca. Se non sono presenti elementi filtrabili,
+     * il metodo termina senza eseguire alcuna operazione.
+     * </p>
+     * <p>
+     * Se non è attivo alcun filtro e la query di ricerca è vuota, viene mostrato
+     * un messaggio di stato che indica l'assenza di filtri attivi; negli altri casi
+     * viene indicato che filtri e ricerca sono stati applicati.
+     * </p>
+     */
+    private void updateCombinedFilter() {
+        if (filteredTracks == null) {
+            return;
+        }
+
+        Set<Tag> selectedTags = new HashSet<>();
+
+        if (favouriteTagCheckBox != null && favouriteTagCheckBox.isSelected()) {
+            selectedTags.add(Tag.FAV);
+        }
+
+        if (explicitTagCheckBox != null && explicitTagCheckBox.isSelected()) {
+            selectedTags.add(Tag.EXPLICIT);
+        }
+
+        if (newReleaseTagCheckBox != null && newReleaseTagCheckBox.isSelected()) {
+            selectedTags.add(Tag.NEW);
+        }
+
+        TrackFilterStrategy tagStrategy = new TagFilterStrategy(selectedTags);
+
+        filteredTracks.setPredicate(track -> {
+            boolean matchesTags = tagStrategy.matches(track);
+            boolean matchesSearch = searchService == null
+                    || searchService.matchesTrack(track, currentSearchQuery);
+
+            return matchesTags && matchesSearch;
+        });
+
+        if (currentSearchQuery.isBlank() && selectedTags.isEmpty()) {
+            setStatus("Nessun filtro attivo.");
+        } else {
+            setStatus("Filtri e ricerca applicati.");
+        }
     }
 }

@@ -4,18 +4,14 @@ import com.musicplayer.command.CommandManager;
 import com.musicplayer.model.Playlist;
 import com.musicplayer.model.Track;
 import com.musicplayer.service.PlaylistService;
+import com.musicplayer.service.SearchService;
 import com.musicplayer.service.TrackService;
 
 import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -23,16 +19,13 @@ import javafx.util.Duration;
 
 /**
  * Controller principale dell'applicazione Music Playlist Manager.
- *
  * Questa classe coordina la schermata principale dell'applicazione.
  * Per rispettare la separazione delle responsabilità, MainController non contiene
  * la logica specifica delle singole sezioni, ma delega:
- *
  * - a LibraryController la gestione della Track Library, dei filtri e della sezione Most Played;
  * - a PlaylistController la gestione della sidebar playlist e della selected playlist;
  * - a PlayerController la gestione della riproduzione simulata;
  * - ai service la business logic vera e propria.
- *
  * MainController mantiene invece la responsabilità dello snackbar globale,
  * perché è un componente trasversale della schermata principale.
  */
@@ -91,9 +84,7 @@ public class MainController {
 
     /**
      * Controller della sidebar playlist inclusa tramite:
-     *
      * <fx:include fx:id="playlistSection" source="PlaylistView.fxml"/>
-     *
      * JavaFX crea automaticamente questo campo aggiungendo "Controller"
      * all'fx:id dell'include.
      */
@@ -126,6 +117,8 @@ public class MainController {
 
     @FXML
     private Button snackbarUndoButton;
+    @FXML
+    private TextField searchField;
 
     /**
      * Catalogo principale delle tracce.
@@ -176,6 +169,10 @@ public class MainController {
      * Azione da eseguire se lo snackbar scade senza Undo.
      */
     private Runnable pendingConfirmAction;
+    /**
+     * Gestore di Ricerca.
+     */
+    private final SearchService searchService = new SearchService();
 
     /**
      * Inizializza la schermata principale e collega i controller di sezione.
@@ -191,11 +188,14 @@ public class MainController {
         if (statusLabel != null) {
             statusLabel.setText("Applicazione avviata correttamente.");
         }
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            librarySectionController.applySearch(newValue);
+            playlistSectionController.applySearch(newValue);
+        });
     }
 
     /**
      * Inizializza la sezione playlist delegando a PlaylistController.
-     *
      * La sidebar delle playlist è ora definita in PlaylistView.fxml, mentre
      * la tabella "Selected playlist" rimane nella view principale. Per questo
      * motivo MainController passa al PlaylistController solo i riferimenti
@@ -215,7 +215,8 @@ public class MainController {
                 selectedPlaylistTracks,
                 playerControlController,
                 playlistService,
-                commandManager
+                commandManager,
+                searchService
         );
 
         playlistSectionController.setUndoSnackbarHandler(this::showUndoSnackbar);
@@ -247,13 +248,13 @@ public class MainController {
                 playlists,
                 playerControlController,
                 playlistSectionController,
-                this::showUndoSnackbar
+                this::showUndoSnackbar,
+                searchService
         );
     }
 
     /**
      * Collega il player ai controller di sezione.
-     *
      * Quando cambia lo stato della riproduzione, vengono aggiornate la Track Library,
      * la tabella della selected playlist e la sezione Most Played.
      */
@@ -275,7 +276,9 @@ public class MainController {
      */
     @FXML
     private void handleClearSearch() {
-        librarySectionController.clearSearch();
+        if (searchField != null) {
+            searchField.clear();
+        }
     }
 
     /**
@@ -304,7 +307,6 @@ public class MainController {
 
     /**
      * Aggiunge la traccia selezionata alla playlist selezionata.
-     *
      * Questo metodo resta nel MainController perché il pulsante si trova ancora
      * nella sezione centrale "Selected playlist" della view principale.
      */
@@ -379,7 +381,6 @@ public class MainController {
 
     /**
      * Mostra lo snackbar globale.
-     *
      * Lo snackbar resta nel MainController perché è un componente globale della
      * schermata. I controller di sezione forniscono però le azioni da eseguire
      * in caso di Undo o di conferma definitiva.
