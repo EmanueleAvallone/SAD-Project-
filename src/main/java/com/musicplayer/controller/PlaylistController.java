@@ -4,30 +4,35 @@ import com.musicplayer.command.Command;
 import com.musicplayer.command.CommandManager;
 import com.musicplayer.command.RemoveTrackPCommand;
 import com.musicplayer.model.Playlist;
+import com.musicplayer.model.Tag;
 import com.musicplayer.model.Track;
 import com.musicplayer.service.PlaylistService;
 
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.TableRow;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Controller di sezione dedicato alla gestione delle playlist.
  *
- * Questa classe non è collegata direttamente a un file FXML separato.
- * Viene inizializzata dal MainController, che le passa i riferimenti alle
- * componenti grafiche presenti nella schermata principale.
+ * Questo controller è collegato direttamente a PlaylistView.fxml per la sidebar
+ * delle playlist. Inoltre riceve dal MainController i riferimenti alla tabella
+ * "Selected playlist", che rimane nella schermata principale.
  *
  * In questo modo MainController resta il coordinatore generale della view,
  * mentre PlaylistController gestisce tutte le interazioni specifiche della
@@ -37,15 +42,35 @@ import java.util.Optional;
  * - creazione playlist;
  * - rinomina playlist;
  * - eliminazione playlist;
+ * - generazione smart playlist;
  * - visualizzazione tracce della playlist selezionata;
  * - aggiunta di una traccia dalla libreria alla playlist;
  * - rimozione di una traccia dalla playlist;
+ * - spostamento delle tracce dentro una playlist;
  * - aggiornamento della UI relativa alla playlist selezionata.
  *
  * La business logic viene comunque delegata a PlaylistService.
  */
 public class PlaylistController {
 
+    /**
+     * Interfaccia funzionale usata per richiedere al MainController
+     * la visualizzazione dello snackbar globale.
+     */
+    @FunctionalInterface
+    public interface UndoSnackbarHandler {
+
+        /**
+         * Mostra lo snackbar con azione di undo e azione di conferma.
+         *
+         * @param message messaggio da visualizzare
+         * @param undoAction azione da eseguire se l'utente annulla
+         * @param confirmAction azione da eseguire se lo snackbar scade
+         */
+        void showUndoSnackbar(String message, Runnable undoAction, Runnable confirmAction);
+    }
+
+    @FXML
     private ListView<Playlist> playlistListView;
 
     private TableView<Track> trackTableView;
@@ -70,42 +95,36 @@ public class PlaylistController {
 
     private PlayerController playerControlController;
 
-    private final PlaylistService playlistService;
+    private PlaylistService playlistService;
 
-    private final CommandManager commandManager;
+    private CommandManager commandManager;
+
+    private UndoSnackbarHandler undoSnackbarHandler;
 
     /**
-     * Costruisce il controller di sezione playlist.
-     *
-     * @param playlistService service che contiene la logica applicativa sulle playlist
-     * @param commandManager gestore dei comandi annullabili
+     * Costruttore vuoto richiesto da JavaFX quando il controller è collegato
+     * direttamente a un file FXML.
      */
-    public PlaylistController(PlaylistService playlistService, CommandManager commandManager) {
-        this.playlistService = playlistService;
-        this.commandManager = commandManager;
+    public PlaylistController() {
     }
 
     /**
-     * Collega questo controller alle componenti grafiche della sezione playlist.
+     * Imposta il gestore dello snackbar globale.
      *
-     * Questo metodo viene chiamato dal MainController durante l'inizializzazione
-     * della schermata principale.
+     * @param undoSnackbarHandler handler fornito dal MainController
+     */
+    public void setUndoSnackbarHandler(UndoSnackbarHandler undoSnackbarHandler) {
+        this.undoSnackbarHandler = undoSnackbarHandler;
+    }
+
+    /**
+     * Collega questo controller alle componenti grafiche condivise.
      *
-     * @param playlistListView lista grafica delle playlist
-     * @param trackTableView tabella principale della Track Library
-     * @param playlistTrackTableView tabella delle tracce della playlist selezionata
-     * @param playlistTrackOrderColumn colonna ordine tracce nella playlist
-     * @param playlistTrackTitleColumn colonna titolo
-     * @param playlistTrackAuthorColumn colonna autore
-     * @param playlistTrackLengthColumn colonna durata
-     * @param playlistTrackGenreColumn colonna genere
-     * @param statusLabel label di stato della schermata
-     * @param playlists lista osservabile delle playlist
-     * @param selectedPlaylistTracks lista osservabile delle tracce della playlist selezionata
-     * @param playerControlController controller del player, usato per aggiornare la traccia corrente
+     * La ListView delle playlist viene iniettata direttamente da PlaylistView.fxml.
+     * La tabella della selected playlist viene invece passata dal MainController,
+     * perché si trova ancora nella view principale.
      */
     public void initializeSection(
-            ListView<Playlist> playlistListView,
             TableView<Track> trackTableView,
             TableView<Track> playlistTrackTableView,
             TableColumn<Track, Integer> playlistTrackOrderColumn,
@@ -116,9 +135,10 @@ public class PlaylistController {
             Label statusLabel,
             ObservableList<Playlist> playlists,
             ObservableList<Track> selectedPlaylistTracks,
-            PlayerController playerControlController
+            PlayerController playerControlController,
+            PlaylistService playlistService,
+            CommandManager commandManager
     ) {
-        this.playlistListView = playlistListView;
         this.trackTableView = trackTableView;
         this.playlistTrackTableView = playlistTrackTableView;
         this.playlistTrackOrderColumn = playlistTrackOrderColumn;
@@ -130,9 +150,59 @@ public class PlaylistController {
         this.playlists = playlists;
         this.selectedPlaylistTracks = selectedPlaylistTracks;
         this.playerControlController = playerControlController;
+        this.playlistService = playlistService;
+        this.commandManager = commandManager;
 
         configurePlaylistListView();
         configureSelectedPlaylistTable();
+    }
+
+    /**
+     * Gestisce il click sul pulsante New della sidebar playlist.
+     */
+    @FXML
+    private void handleNewPlaylist() {
+        createPlaylist();
+    }
+
+    /**
+     * Gestisce il click sul pulsante Rename della sidebar playlist.
+     */
+    @FXML
+    private void handleRenamePlaylist() {
+        renamePlaylist();
+    }
+
+    /**
+     * Gestisce il click sul pulsante Delete selected playlist della sidebar playlist.
+     */
+    @FXML
+    private void handleDeletePlaylist() {
+        deletePlaylist();
+    }
+
+    /**
+     * Gestisce il click sul pulsante Generate by genre.
+     */
+    @FXML
+    private void handleGenerateByGenre() {
+        generatePlaylistByGenre(trackTableView.getItems());
+    }
+
+    /**
+     * Gestisce il click sul pulsante Generate by year.
+     */
+    @FXML
+    private void handleGenerateByYear() {
+        generatePlaylistByYear(trackTableView.getItems());
+    }
+
+    /**
+     * Gestisce il click sul pulsante Generate by tag.
+     */
+    @FXML
+    private void handleGenerateByTag() {
+        generatePlaylistByTag(trackTableView.getItems());
     }
 
     /**
@@ -144,10 +214,9 @@ public class PlaylistController {
 
         playlistListView.getSelectionModel()
                 .selectedItemProperty()
-                .addListener((observable, oldPlaylist, newPlaylist) ->{
-                    System.out.println("Playlist selezionata: " + newPlaylist);
-                    updateSelectedPlaylistView(newPlaylist);
-                });
+                .addListener((observable, oldPlaylist, newPlaylist) ->
+                        updateSelectedPlaylistView(newPlaylist)
+                );
     }
 
     /**
@@ -186,21 +255,36 @@ public class PlaylistController {
         playlistTrackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
         playlistTrackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
 
+        configurePlayingTrackStyle();
+    }
+
+    /**
+     * Configura l'evidenziazione della traccia in riproduzione.
+     *
+     * Il controller aggiunge solo una classe CSS. Lo stile grafico effettivo
+     * viene definito nel file CSS.
+     */
+    private void configurePlayingTrackStyle() {
         playlistTrackTableView.setRowFactory(tableView -> new TableRow<>() {
             @Override
             protected void updateItem(Track track, boolean empty) {
                 super.updateItem(track, empty);
+
+                getStyleClass().remove("playing-track");
+
                 if (empty || track == null || playerControlController == null) {
-                    getStyleClass().remove("playing-track");
                     return;
                 }
+
                 Track currentTrack = playerControlController.getCurrentTrack();
-                if (currentTrack != null && currentTrack.equals(track) && playerControlController.isPlaying()) {
+
+                if (currentTrack != null
+                        && currentTrack.equals(track)
+                        && playerControlController.isPlaying()) {
+
                     if (!getStyleClass().contains("playing-track")) {
                         getStyleClass().add("playing-track");
                     }
-                } else {
-                    getStyleClass().remove("playing-track");
                 }
             }
         });
@@ -208,9 +292,6 @@ public class PlaylistController {
 
     /**
      * Gestisce la creazione di una nuova playlist.
-     *
-     * Il controller raccoglie il nome tramite dialog e delega al PlaylistService
-     * la validazione e la creazione effettiva della playlist.
      */
     public void createPlaylist() {
         TextInputDialog dialog = new TextInputDialog();
@@ -273,7 +354,7 @@ public class PlaylistController {
     }
 
     /**
-     * Gestisce l'eliminazione della playlist selezionata.
+     * Gestisce l'eliminazione temporanea della playlist selezionata.
      */
     public void deletePlaylist() {
         Playlist selectedPlaylist = getSelectedPlaylist();
@@ -302,13 +383,159 @@ public class PlaylistController {
             return;
         }
 
+        playlistService.softDeletePlaylist(playlists, selectedPlaylist);
+
+        playlistListView.getSelectionModel().clearSelection();
+        updateSelectedPlaylistView(null);
+
+        if (undoSnackbarHandler != null) {
+            undoSnackbarHandler.showUndoSnackbar(
+                    "Playlist rimossa",
+                    this::restorePendingDeletedPlaylist,
+                    this::confirmPendingDeletedPlaylist
+            );
+        }
+
+        setStatus("Playlist rimossa temporaneamente: " + selectedPlaylist.getName());
+    }
+
+    /**
+     * Ripristina una playlist eliminata temporaneamente.
+     */
+    private void restorePendingDeletedPlaylist() {
+        if (!playlistService.hasPendingDeletedPlaylist()) {
+            return;
+        }
+
+        Playlist restoredPlaylist = playlistService.getPendingDeletedPlaylist();
+
+        playlistService.restorePendingDeletedPlaylist(playlists);
+
+        playlistListView.getSelectionModel().select(restoredPlaylist);
+        updateSelectedPlaylistView(restoredPlaylist);
+
+        setStatus("Eliminazione playlist annullata: " + restoredPlaylist.getName());
+    }
+
+    /**
+     * Conferma definitivamente l'eliminazione temporanea della playlist.
+     */
+    private void confirmPendingDeletedPlaylist() {
+        if (!playlistService.hasPendingDeletedPlaylist()) {
+            return;
+        }
+
+        Playlist deletedPlaylist = playlistService.getPendingDeletedPlaylist();
+
+        playlistService.clearPendingDeletedPlaylist();
+
+        setStatus("Playlist eliminata definitivamente: " + deletedPlaylist.getName());
+    }
+
+    /**
+     * Genera una smart playlist filtrando per genere.
+     */
+    public void generatePlaylistByGenre(ObservableList<Track> tracks) {
+        List<String> uniqueGenres = tracks.stream()
+                .map(Track::getGenre)
+                .filter(genre -> genre != null && !genre.trim().isEmpty())
+                .map(genre -> genre.trim().toLowerCase())
+                .map(genre -> genre.substring(0, 1).toUpperCase() + genre.substring(1))
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        if (uniqueGenres.isEmpty()) {
+            showError("Nessun genere presente nella libreria.");
+            return;
+        }
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(uniqueGenres.get(0), uniqueGenres);
+        dialog.setTitle("Generate Smart Playlist");
+        dialog.setHeaderText("Filtra per genere");
+        dialog.setContentText("Seleziona il genere desiderato:");
+
+        Optional<String> result = dialog.showAndWait();
+
+        if (result.isEmpty()) {
+            return;
+        }
+
         try {
-            playlistService.deletePlaylist(playlists, selectedPlaylist);
+            Playlist generated = playlistService.generatePlaylistByGenre(playlists, tracks, result.get());
 
-            selectedPlaylistTracks.clear();
-            playlistListView.getSelectionModel().clearSelection();
+            playlistListView.getSelectionModel().select(generated);
+            updateSelectedPlaylistView(generated);
 
-            setStatus("Playlist eliminata: " + selectedPlaylist.getName());
+            setStatus("Smart playlist creata: " + generated.getName());
+
+        } catch (IllegalArgumentException exception) {
+            showError(exception.getMessage());
+        }
+    }
+
+    /**
+     * Genera una smart playlist filtrando per anno.
+     */
+    public void generatePlaylistByYear(ObservableList<Track> tracks) {
+        List<Integer> uniqueYears = tracks.stream()
+                .map(Track::getYear)
+                .filter(year -> year > 0)
+                .distinct()
+                .sorted(java.util.Comparator.reverseOrder())
+                .collect(Collectors.toList());
+
+        if (uniqueYears.isEmpty()) {
+            showError("Nessun anno presente nella libreria.");
+            return;
+        }
+
+        ChoiceDialog<Integer> dialog = new ChoiceDialog<>(uniqueYears.get(0), uniqueYears);
+        dialog.setTitle("Generate Smart Playlist");
+        dialog.setHeaderText("Filtra per anno");
+        dialog.setContentText("Seleziona l'anno desiderato:");
+
+        Optional<Integer> result = dialog.showAndWait();
+
+        if (result.isEmpty()) {
+            return;
+        }
+
+        try {
+            Playlist generated = playlistService.generatePlaylistByYear(playlists, tracks, result.get());
+
+            playlistListView.getSelectionModel().select(generated);
+            updateSelectedPlaylistView(generated);
+
+            setStatus("Smart playlist creata: " + generated.getName());
+
+        } catch (IllegalArgumentException exception) {
+            showError(exception.getMessage());
+        }
+    }
+
+    /**
+     * Genera una smart playlist filtrando per tag.
+     */
+    public void generatePlaylistByTag(ObservableList<Track> tracks) {
+        ChoiceDialog<Tag> dialog = new ChoiceDialog<>(Tag.FAV, Tag.values());
+        dialog.setTitle("Generate Smart Playlist");
+        dialog.setHeaderText("Filtra per tag");
+        dialog.setContentText("Seleziona il tag desiderato:");
+
+        Optional<Tag> result = dialog.showAndWait();
+
+        if (result.isEmpty()) {
+            return;
+        }
+
+        try {
+            Playlist generated = playlistService.generatePlaylistByTag(playlists, tracks, result.get());
+
+            playlistListView.getSelectionModel().select(generated);
+            updateSelectedPlaylistView(generated);
+
+            setStatus("Smart playlist creata: " + generated.getName());
 
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
@@ -349,9 +576,6 @@ public class PlaylistController {
 
     /**
      * Rimuove dalla playlist la traccia selezionata.
-     *
-     * L'operazione viene eseguita tramite CommandManager, così da predisporre
-     * Undo/Redo secondo il Command Pattern.
      */
     public void removeSelectedTrackFromPlaylist() {
         Playlist selectedPlaylist = getSelectedPlaylist();
@@ -422,7 +646,7 @@ public class PlaylistController {
     }
 
     /**
-     * Sposta la traccia selezionata verso l'alto di una posizione.
+     * Sposta la traccia selezionata verso l'alto.
      */
     public void moveSelectedTrackUp() {
         Playlist selectedPlaylist = getSelectedPlaylist();
@@ -433,6 +657,7 @@ public class PlaylistController {
         }
 
         int currentIndex = selectedPlaylist.getTracks().indexOf(selectedTrack);
+
         if (currentIndex <= 0) {
             return;
         }
@@ -451,13 +676,14 @@ public class PlaylistController {
             }
 
             setStatus("Traccia spostata su: " + selectedTrack.getTitle());
+
         } catch (Exception exception) {
             showError(exception.getMessage());
         }
     }
 
     /**
-     * Sposta la traccia selezionata verso il basso di una posizione.
+     * Sposta la traccia selezionata verso il basso.
      */
     public void moveSelectedTrackDown() {
         Playlist selectedPlaylist = getSelectedPlaylist();
@@ -468,6 +694,7 @@ public class PlaylistController {
         }
 
         int currentIndex = selectedPlaylist.getTracks().indexOf(selectedTrack);
+
         if (currentIndex == -1 || currentIndex >= selectedPlaylist.getTracks().size() - 1) {
             return;
         }
@@ -486,6 +713,7 @@ public class PlaylistController {
             }
 
             setStatus("Traccia spostata giù: " + selectedTrack.getTitle());
+
         } catch (Exception exception) {
             showError(exception.getMessage());
         }
@@ -493,8 +721,6 @@ public class PlaylistController {
 
     /**
      * Aggiorna la tabella della playlist selezionata.
-     *
-     * @param playlist playlist selezionata
      */
     public void updateSelectedPlaylistView(Playlist playlist) {
         selectedPlaylistTracks.clear();
@@ -533,11 +759,6 @@ public class PlaylistController {
 
     /**
      * Forza l'aggiornamento grafico della tabella della playlist selezionata.
-     * <p>
-     * Il metodo viene usato quando cambia la traccia in riproduzione, così da
-     * applicare o rimuovere immediatamente lo stile evidenziato dalla riga
-     * corrispondente.
-     * </p>
      */
     public void refreshSelectedPlaylistTable() {
         if (playlistTrackTableView != null) {
@@ -547,10 +768,6 @@ public class PlaylistController {
 
     /**
      * Gestisce il caso in cui una traccia rimossa dalla playlist fosse in riproduzione.
-     *
-     * @param playlist playlist da cui la traccia è stata rimossa
-     * @param removedTrack traccia rimossa
-     * @param removedIndex indice originale della traccia rimossa
      */
     private void handleRemovedTrackPlayback(Playlist playlist, Track removedTrack, int removedIndex) {
         if (playlist == null || removedTrack == null || playerControlController == null) {
@@ -587,8 +804,6 @@ public class PlaylistController {
 
     /**
      * Restituisce la playlist selezionata.
-     *
-     * @return playlist selezionata, oppure null
      */
     public Playlist getSelectedPlaylist() {
         return playlistListView.getSelectionModel().getSelectedItem();
@@ -596,8 +811,6 @@ public class PlaylistController {
 
     /**
      * Restituisce la traccia selezionata nella Track Library.
-     *
-     * @return traccia selezionata, oppure null
      */
     private Track getSelectedTrackFromLibrary() {
         return trackTableView.getSelectionModel().getSelectedItem();
@@ -605,17 +818,13 @@ public class PlaylistController {
 
     /**
      * Restituisce la traccia selezionata nella tabella della playlist.
-     *
-     * @return traccia selezionata, oppure null
      */
     private Track getSelectedTrackFromPlaylist() {
         return playlistTrackTableView.getSelectionModel().getSelectedItem();
     }
 
     /**
-     * Imposta un messaggio nella status label.
-     *
-     * @param message messaggio da mostrare
+     * Aggiorna la status label.
      */
     private void setStatus(String message) {
         if (statusLabel != null) {
@@ -625,8 +834,6 @@ public class PlaylistController {
 
     /**
      * Mostra un pop-up di errore.
-     *
-     * @param message messaggio di errore
      */
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
