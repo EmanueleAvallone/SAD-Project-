@@ -505,4 +505,28 @@ public class PlaylistService {
 
         playlist.moveTrack(currentIndex, targetIndex);
     }
+
+    /**
+     * Aggiorna le playlist dinamiche se la traccia modificata ha cambiato i suoi Tag.
+     */
+    public void refreshSmartPlaylists(ObservableList<Playlist> playlists, Track updatedTrack) {
+        if (playlists == null || updatedTrack == null) {
+            return;
+        }
+
+        for (Playlist playlist : playlists) {
+            com.musicplayer.model.filter.TrackFilterStrategy strategy = playlist.getFilterStrategy();
+
+            if (strategy != null) {
+                boolean matches = strategy.matches(updatedTrack);
+                boolean contains = playlist.getTracks().contains(updatedTrack);
+
+                if (matches && !contains) {
+                    playlist.addTrack(updatedTrack);
+                } else if (!matches && contains) {
+                    playlist.removeTrack(updatedTrack);
+                }
+            }
+        }
+    }
 }

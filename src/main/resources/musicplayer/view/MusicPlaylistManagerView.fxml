@@ -145,7 +145,6 @@
                             <TableColumn fx:id="playlistTrackAuthorColumn" prefWidth="170.0" text="Author"/>
                             <TableColumn fx:id="playlistTrackLengthColumn" prefWidth="90.0" text="Length"/>
                             <TableColumn fx:id="playlistTrackGenreColumn" prefWidth="120.0" text="Genre"/>
-                            <TableColumn fx:id="playlistTrackTagsColumn" prefWidth="190.0" text="Tags"/>
                         </columns>
                     </TableView>
                 </VBox>

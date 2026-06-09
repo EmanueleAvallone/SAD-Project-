@@ -236,14 +236,7 @@ public class TrackService {
     }
 
     /**
-     * Aggiorna i campi modificabili di una traccia esistente.
-     *
-     * La durata non viene aggiornata perché, secondo i requisiti,
-     * è un dato fisso derivato dal file audio.
-     *
-     * @param originalTrack traccia già presente nel catalogo
-     * @param editedTrack traccia contenente i nuovi valori
-     * @throws IllegalArgumentException se una delle due tracce è null
+     * Aggiorna i campi modificabili di una traccia esistente, inclusi i Tag.
      */
     public void updateEditableFields(Track originalTrack, Track editedTrack) {
         if (originalTrack == null || editedTrack == null) {
@@ -254,6 +247,12 @@ public class TrackService {
         originalTrack.setAuthor(editedTrack.getAuthor());
         originalTrack.setGenre(editedTrack.getGenre());
         originalTrack.setYear(editedTrack.getYear());
+
+        if (editedTrack.getTags() != null) {
+            originalTrack.setTags(new java.util.HashSet<>(editedTrack.getTags()));
+        } else {
+            originalTrack.getTags().clear();
+        }
     }
 
     /**

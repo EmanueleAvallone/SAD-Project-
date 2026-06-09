@@ -324,10 +324,12 @@ public class LibraryController {
             if (editedTrack != null) {
                 trackService.updateEditableFields(selectedTrack, editedTrack);
 
+                playlistService.refreshSmartPlaylists(playlists, selectedTrack);
                 refreshTrackLibrary();
 
                 if (playlistController != null) {
-                    playlistController.refreshSelectedPlaylistTable();
+                    Playlist selectedPlaylist = playlistController.getSelectedPlaylist();
+                    playlistController.updateSelectedPlaylistView(selectedPlaylist);
                 }
 
                 updateMostPlayedSection();

@@ -7,6 +7,7 @@ public class Playlist {
 
     private String name;
     private final List<Track> tracks;
+    private com.musicplayer.model.filter.TrackFilterStrategy filterStrategy;
 
     public Playlist(String name) {
         this.name = name;
@@ -81,6 +82,14 @@ public class Playlist {
 
         Track trackToMove = tracks.remove(oldIndex);
         tracks.add(newIndex, trackToMove);
+    }
+
+    public void setFilterStrategy(com.musicplayer.model.filter.TrackFilterStrategy filterStrategy) {
+        this.filterStrategy = filterStrategy;
+    }
+
+    public com.musicplayer.model.filter.TrackFilterStrategy getFilterStrategy() {
+        return filterStrategy;
     }
 
     @Override

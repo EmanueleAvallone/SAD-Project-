@@ -26,6 +26,7 @@ public class PlaylistFactory {
         int maxTracks = Math.min(10, filteredTracks.size());
 
         Playlist generatedPlaylist = new Playlist(playlistName);
+        generatedPlaylist.setFilterStrategy(strategy);
         for (Track track : filteredTracks.subList(0, maxTracks)) {
             generatedPlaylist.addTrack(track);
         }
