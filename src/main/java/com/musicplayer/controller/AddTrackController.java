@@ -241,10 +241,19 @@ public class AddTrackController {
         stage.close();
     }
 
+    /**
+     * Mostra un messaggio di errore nella finestra Add/Edit Track.
+     *
+     * @param message messaggio da mostrare
+     */
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Errore");
-        alert.setHeaderText(message);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+
+        StyleManager.applyToDialog(alert);
+
         alert.showAndWait();
     }
 }

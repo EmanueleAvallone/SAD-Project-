@@ -290,6 +290,8 @@ public class PlaylistController {
         dialog.setHeaderText("Crea una nuova playlist");
         dialog.setContentText("Nome playlist:");
 
+        StyleManager.applyToDialog(dialog);
+
         Optional<String> result = dialog.showAndWait();
 
         if (result.isEmpty()) {
@@ -324,6 +326,8 @@ public class PlaylistController {
         dialog.setTitle("Rename playlist");
         dialog.setHeaderText("Rinomina playlist");
         dialog.setContentText("Nuovo nome:");
+
+        StyleManager.applyToDialog(dialog); //collego css
 
         Optional<String> result = dialog.showAndWait();
 
@@ -366,6 +370,8 @@ public class PlaylistController {
         ButtonType deleteButton = new ButtonType("Delete");
 
         confirmationAlert.getButtonTypes().setAll(cancelButton, deleteButton);
+
+        StyleManager.applyToDialog(confirmationAlert);
 
         Optional<ButtonType> result = confirmationAlert.showAndWait();
 
@@ -446,6 +452,8 @@ public class PlaylistController {
         dialog.setHeaderText("Filtra per genere");
         dialog.setContentText("Seleziona il genere desiderato:");
 
+        StyleManager.applyToDialog(dialog);
+
         Optional<String> result = dialog.showAndWait();
 
         if (result.isEmpty()) {
@@ -486,6 +494,8 @@ public class PlaylistController {
         dialog.setHeaderText("Filtra per anno");
         dialog.setContentText("Seleziona l'anno desiderato:");
 
+        StyleManager.applyToDialog(dialog);
+
         Optional<Integer> result = dialog.showAndWait();
 
         if (result.isEmpty()) {
@@ -513,6 +523,8 @@ public class PlaylistController {
         dialog.setTitle("Generate Smart Playlist");
         dialog.setHeaderText("Filtra per tag");
         dialog.setContentText("Seleziona il tag desiderato:");
+
+        StyleManager.applyToDialog(dialog);
 
         Optional<Tag> result = dialog.showAndWait();
 
@@ -590,6 +602,8 @@ public class PlaylistController {
             ButtonType removeButton = new ButtonType("Remove");
 
             confirmationAlert.getButtonTypes().setAll(cancelButton, removeButton);
+
+            StyleManager.applyToDialog(confirmationAlert);
 
             Optional<ButtonType> result = confirmationAlert.showAndWait();
 
@@ -824,13 +838,18 @@ public class PlaylistController {
     }
 
     /**
-     * Mostra un pop-up di errore.
+     * Mostra un pop-up di errore applicando il CSS globale.
+     *
+     * @param message messaggio da visualizzare
      */
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Errore");
         alert.setHeaderText(null);
         alert.setContentText(message);
+
+        StyleManager.applyToDialog(alert);
+
         alert.showAndWait();
     }
     /**

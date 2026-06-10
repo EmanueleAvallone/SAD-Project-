@@ -373,6 +373,8 @@ public class LibraryController {
 
         confirmationAlert.getButtonTypes().setAll(cancelButton, deleteButton);
 
+        StyleManager.applyToDialog(confirmationAlert);
+
         Optional<ButtonType> result = confirmationAlert.showAndWait();
 
         if (result.isEmpty() || result.get() == cancelButton) {
@@ -684,15 +686,24 @@ public class LibraryController {
     }
 
     /**
-     * Crea uno stage modale per Add/Edit Track.
+     * Crea uno stage modale per Add/Edit Track e applica il CSS globale.
+     *
+     * @param title titolo della finestra
+     * @param root nodo radice caricato da FXML
+     * @return stage modale configurato
      */
     private Stage createModalStage(String title, Parent root) {
         Stage stage = new Stage();
+
+        Scene scene = new Scene(root);
+        StyleManager.applyToScene(scene);
+
         stage.setTitle(title);
-        stage.setScene(new Scene(root));
+        stage.setScene(scene);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.initOwner(trackTableView.getScene().getWindow());
         stage.setResizable(false);
+
         return stage;
     }
 
@@ -706,13 +717,18 @@ public class LibraryController {
     }
 
     /**
-     * Mostra un messaggio di errore.
+     * Mostra un messaggio di errore applicando il CSS globale al popup.
+     *
+     * @param message messaggio da visualizzare
      */
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Errore");
         alert.setHeaderText(null);
         alert.setContentText(message);
+
+        StyleManager.applyToDialog(alert);
+
         alert.showAndWait();
     }
     /**
