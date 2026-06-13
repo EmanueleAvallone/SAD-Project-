@@ -123,6 +123,10 @@ public class LibraryController {
     private final TrackSortStrategy yearSortStrategy = new YearSortStrategy();
     private final TrackSortStrategy playedCountSortStrategy = new PlayedCountSortStrategy();
 
+    private TableColumn<Track, ?> activeTrackLibrarySortColumn;
+
+    private boolean trackLibrarySortAscending = true;
+
     private String currentSearchQuery = "";
 
     private int lastTotalPlays = -1;
@@ -287,6 +291,9 @@ public class LibraryController {
 
             if (tableView.getSortOrder().isEmpty()) {
                 sortedTracks.setComparator(null);
+                activeTrackLibrarySortColumn = null;
+                trackLibrarySortAscending = true;
+                setStatus("Ordinamento Track Library rimosso: ordine originale ripristinato.");
                 return true;
             }
 
@@ -295,16 +302,28 @@ public class LibraryController {
 
             if (sortStrategy == null) {
                 sortedTracks.setComparator(null);
+                activeTrackLibrarySortColumn = null;
+                trackLibrarySortAscending = true;
                 return true;
             }
 
+            activeTrackLibrarySortColumn = sortColumn;
+            trackLibrarySortAscending = sortColumn.getSortType() != TableColumn.SortType.DESCENDING;
+
             Comparator<Track> comparator = sortStrategy.getComparator();
 
-            if (sortColumn.getSortType() == TableColumn.SortType.DESCENDING) {
+            if (!trackLibrarySortAscending) {
                 comparator = comparator.reversed();
             }
 
             sortedTracks.setComparator(comparator);
+
+            setStatus(
+                    "Track Library ordinata per "
+                            + getTrackLibrarySortLabel(sortColumn)
+                            + " in ordine "
+                            + (trackLibrarySortAscending ? "crescente." : "decrescente.")
+            );
 
             return true;
         });
@@ -341,6 +360,37 @@ public class LibraryController {
         }
 
         return null;
+    }
+
+    /**
+     * Restituisce l'etichetta testuale della colonna usata per ordinare
+     * la Track Library.
+     *
+     * @param sortColumn colonna selezionata per l'ordinamento
+     * @return nome leggibile del criterio di ordinamento
+     */
+    private String getTrackLibrarySortLabel(TableColumn<Track, ?> sortColumn) {
+        if (sortColumn == trackTitleColumn) {
+            return "titolo";
+        }
+
+        if (sortColumn == trackAuthorColumn) {
+            return "autore";
+        }
+
+        if (sortColumn == trackLengthColumn) {
+            return "durata";
+        }
+
+        if (sortColumn == trackYearColumn) {
+            return "anno";
+        }
+
+        if (sortColumn == trackPlayCountColumn) {
+            return "numero di riproduzioni";
+        }
+
+        return "metadato";
     }
 
 

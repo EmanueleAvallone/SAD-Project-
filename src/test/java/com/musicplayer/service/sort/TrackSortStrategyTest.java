@@ -293,4 +293,83 @@ public class TrackSortStrategyTest {
         assertEquals(trackB, visibleTracks.get(1));
         assertEquals(unknownTrack, visibleTracks.get(2));
     }
+
+    @Test
+    void titleSortStrategyShouldHandleNullOrEmptyTitles() {
+        TrackSortStrategy strategy = new TitleSortStrategy();
+
+        Track nullTitleTrack = new Track(null, "Author A", "3:00", "Pop", 2020);
+        Track emptyTitleTrack = new Track("", "Author B", "4:00", "Rock", 2021);
+        Track validTitleTrack = new Track("Zebra", "Author C", "2:00", "Jazz", 2022);
+
+        List<Track> tracks = new ArrayList<>(
+                List.of(validTitleTrack, nullTitleTrack, emptyTitleTrack)
+        );
+
+        tracks.sort(strategy.getComparator());
+
+        assertEquals(nullTitleTrack, tracks.get(0));
+        assertEquals(emptyTitleTrack, tracks.get(1));
+        assertEquals(validTitleTrack, tracks.get(2));
+    }
+
+    @Test
+    void authorSortStrategyShouldHandleNullOrEmptyAuthors() {
+        TrackSortStrategy strategy = new AuthorSortStrategy();
+
+        Track nullAuthorTrack = new Track("Song A", null, "3:00", "Pop", 2020);
+        Track emptyAuthorTrack = new Track("Song B", "", "4:00", "Rock", 2021);
+        Track validAuthorTrack = new Track("Song C", "Zebra Author", "2:00", "Jazz", 2022);
+
+        List<Track> tracks = new ArrayList<>(
+                List.of(validAuthorTrack, nullAuthorTrack, emptyAuthorTrack)
+        );
+
+        tracks.sort(strategy.getComparator());
+
+        assertEquals(nullAuthorTrack, tracks.get(0));
+        assertEquals(emptyAuthorTrack, tracks.get(1));
+        assertEquals(validAuthorTrack, tracks.get(2));
+    }
+
+    @Test
+    void lengthSortStrategyShouldHandleNullEmptyAndInvalidLength() {
+        TrackSortStrategy strategy = new LengthSortStrategy();
+
+        Track nullLengthTrack = new Track("Song A", "Author A", null, "Pop", 2020);
+        Track emptyLengthTrack = new Track("Song B", "Author B", "", "Rock", 2021);
+        Track invalidLengthTrack = new Track("Song C", "Author C", "wrong", "Jazz", 2022);
+        Track validLengthTrack = new Track("Song D", "Author D", "2:00", "Pop", 2023);
+
+        List<Track> tracks = new ArrayList<>(
+                List.of(validLengthTrack, invalidLengthTrack, emptyLengthTrack, nullLengthTrack)
+        );
+
+        tracks.sort(strategy.getComparator());
+
+        assertEquals(invalidLengthTrack, tracks.get(0));
+        assertEquals(emptyLengthTrack, tracks.get(1));
+        assertEquals(nullLengthTrack, tracks.get(2));
+        assertEquals(validLengthTrack, tracks.get(3));
+    }
+
+    @Test
+    void playedCountSortStrategyShouldHandleZeroPlays() {
+        TrackSortStrategy strategy = new PlayedCountSortStrategy();
+
+        Track zeroPlaysTrack = new Track("Song A", "Author A", "3:00", "Pop", 2020);
+        Track fivePlaysTrack = new Track("Song B", "Author B", "4:00", "Rock", 2021);
+
+        zeroPlaysTrack.setPlayedCount(0);
+        fivePlaysTrack.setPlayedCount(5);
+
+        List<Track> tracks = new ArrayList<>(List.of(fivePlaysTrack, zeroPlaysTrack));
+
+        tracks.sort(strategy.getComparator());
+
+        assertEquals(zeroPlaysTrack, tracks.get(0));
+        assertEquals(fivePlaysTrack, tracks.get(1));
+    }
+
+
 }

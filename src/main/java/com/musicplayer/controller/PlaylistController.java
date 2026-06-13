@@ -106,6 +106,10 @@ public class PlaylistController {
 
     private final TrackSortStrategy selectedPlaylistLengthSortStrategy = new LengthSortStrategy();
 
+    private TableColumn<Track, ?> activeSelectedPlaylistSortColumn;
+
+    private boolean selectedPlaylistSortAscending = true;
+
     private PlayerController playerControlController;
 
     private PlaylistService playlistService;
@@ -323,6 +327,9 @@ public class PlaylistController {
 
             if (tableView.getSortOrder().isEmpty()) {
                 sortedSelectedPlaylistTracks.setComparator(null);
+                activeSelectedPlaylistSortColumn = null;
+                selectedPlaylistSortAscending = true;
+                setStatus("Ordinamento Selected Playlist rimosso: ordine originale ripristinato.");
                 return true;
             }
 
@@ -331,16 +338,28 @@ public class PlaylistController {
 
             if (sortStrategy == null) {
                 sortedSelectedPlaylistTracks.setComparator(null);
+                activeSelectedPlaylistSortColumn = null;
+                selectedPlaylistSortAscending = true;
                 return true;
             }
 
+            activeSelectedPlaylistSortColumn = sortColumn;
+            selectedPlaylistSortAscending = sortColumn.getSortType() != TableColumn.SortType.DESCENDING;
+
             Comparator<Track> comparator = sortStrategy.getComparator();
 
-            if (sortColumn.getSortType() == TableColumn.SortType.DESCENDING) {
+            if (!selectedPlaylistSortAscending) {
                 comparator = comparator.reversed();
             }
 
             sortedSelectedPlaylistTracks.setComparator(comparator);
+
+            setStatus(
+                    "Selected Playlist ordinata per "
+                            + getSelectedPlaylistSortLabel(sortColumn)
+                            + " in ordine "
+                            + (selectedPlaylistSortAscending ? "crescente." : "decrescente.")
+            );
 
             return true;
         });
@@ -376,6 +395,33 @@ public class PlaylistController {
         }
 
         return null;
+    }
+
+    /**
+     * Restituisce l'etichetta testuale della colonna usata per ordinare
+     * la Selected Playlist.
+     *
+     * @param sortColumn colonna selezionata per l'ordinamento
+     * @return nome leggibile del criterio di ordinamento
+     */
+    private String getSelectedPlaylistSortLabel(TableColumn<Track, ?> sortColumn) {
+        if (sortColumn == playlistTrackOrderColumn) {
+            return "posizione originale";
+        }
+
+        if (sortColumn == playlistTrackTitleColumn) {
+            return "titolo";
+        }
+
+        if (sortColumn == playlistTrackAuthorColumn) {
+            return "autore";
+        }
+
+        if (sortColumn == playlistTrackLengthColumn) {
+            return "durata";
+        }
+
+        return "metadato";
     }
 
     /**
