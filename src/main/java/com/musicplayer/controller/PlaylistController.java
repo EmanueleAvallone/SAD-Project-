@@ -318,7 +318,7 @@ public class PlaylistController {
         playlistTrackTitleColumn.setSortable(true);
         playlistTrackAuthorColumn.setSortable(true);
         playlistTrackLengthColumn.setSortable(true);
-        playlistTrackGenreColumn.setSortable(false);
+        playlistTrackGenreColumn.setSortable(true);
 
         playlistTrackTableView.setSortPolicy(tableView -> {
             if (sortedSelectedPlaylistTracks == null) {
@@ -337,9 +337,18 @@ public class PlaylistController {
             TrackSortStrategy sortStrategy = getSelectedPlaylistSortStrategy(sortColumn);
 
             if (sortStrategy == null) {
+                tableView.getSortOrder().clear();
+
                 sortedSelectedPlaylistTracks.setComparator(null);
                 activeSelectedPlaylistSortColumn = null;
                 selectedPlaylistSortAscending = true;
+
+                setStatus(
+                        "La colonna "
+                                + getSelectedPlaylistSortLabel(sortColumn)
+                                + " non è ordinabile."
+                );
+
                 return true;
             }
 
@@ -419,6 +428,12 @@ public class PlaylistController {
 
         if (sortColumn == playlistTrackLengthColumn) {
             return "durata";
+        }
+
+        if (sortColumn == playlistTrackGenreColumn) {
+
+            return "genere";
+
         }
 
         return "metadato";

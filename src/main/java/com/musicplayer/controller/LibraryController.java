@@ -278,10 +278,10 @@ public class LibraryController {
             trackPlayCountColumn.setSortable(true);
         }
 
-        trackGenreColumn.setSortable(false);
+        trackGenreColumn.setSortable(true);
 
         if (trackTagsColumn != null) {
-            trackTagsColumn.setSortable(false);
+            trackTagsColumn.setSortable(true);
         }
 
         trackTableView.setSortPolicy(tableView -> {
@@ -301,9 +301,19 @@ public class LibraryController {
             TrackSortStrategy sortStrategy = getTrackLibrarySortStrategy(sortColumn);
 
             if (sortStrategy == null) {
+                tableView.getSortOrder().clear();
+
                 sortedTracks.setComparator(null);
                 activeTrackLibrarySortColumn = null;
                 trackLibrarySortAscending = true;
+
+                setStatus(
+                        "La colonna "
+                                + getTrackLibrarySortLabel(sortColumn)
+                                + " non è ordinabile."
+
+                );
+
                 return true;
             }
 
@@ -388,6 +398,14 @@ public class LibraryController {
 
         if (sortColumn == trackPlayCountColumn) {
             return "numero di riproduzioni";
+        }
+
+        if (sortColumn == trackGenreColumn) {
+            return "genere";
+        }
+
+        if (sortColumn == trackTagsColumn) {
+            return "tag";
         }
 
         return "metadato";
