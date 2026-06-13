@@ -759,3 +759,31 @@
     -fx-text-fill: #FFFFFF !important;
 }
 
+.table-cell {
+    -fx-text-overrun: ellipsis;
+}
+
+.table-view {
+    -fx-min-height: 160px;
+}
+
+.list-view {
+    -fx-min-height: 120px;
+}
+
+
+/*
+per dare uno stile all'area note id AddTrackView.fxml
+ */
+.notes-area {
+    -fx-background-color: #282828;
+    -fx-text-fill: #FFFFFF;
+    -fx-prompt-text-fill: #9F9F9F;
+    -fx-border-color: #373737;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.notes-area .content {
+    -fx-background-color: #282828;
+}

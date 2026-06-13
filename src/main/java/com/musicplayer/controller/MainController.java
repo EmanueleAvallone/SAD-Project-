@@ -6,7 +6,7 @@ import com.musicplayer.model.Track;
 import com.musicplayer.service.PlaylistService;
 import com.musicplayer.service.SearchService;
 import com.musicplayer.service.TrackService;
-
+import javafx.scene.control.TableView;
 import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -182,6 +182,7 @@ public class MainController {
         initializePlaylistSection();
         initializeLibrarySection();
         configurePlaybackRefresh();
+        configureResponsiveTables();
 
         hideUndoSnackbar();
 
@@ -377,6 +378,7 @@ public class MainController {
         librarySectionController.playAllMostPlayed();
     }
 
+
     /**
      * Predisposizione per Undo generale.
      */
@@ -476,5 +478,31 @@ public class MainController {
             undoSnackbar.setVisible(false);
             undoSnackbar.setManaged(false);
         }
+    }
+
+    /**
+     * Configura il comportamento responsive delle tabelle principali dell'applicazione.
+     *
+     * Questa configurazione viene applicata sia alla tabella della libreria delle tracce
+     * sia alla tabella della playlist selezionata.
+     * </p>
+     */
+    private void configureResponsiveTables() {
+        trackTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        playlistTrackTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        trackTitleColumn.setMinWidth(120);
+        trackAuthorColumn.setMinWidth(100);
+        trackLengthColumn.setMinWidth(70);
+        trackGenreColumn.setMinWidth(90);
+        trackYearColumn.setMinWidth(60);
+        trackTagsColumn.setMinWidth(110);
+        trackPlayCountColumn.setMinWidth(70);
+
+        playlistTrackOrderColumn.setMinWidth(45);
+        playlistTrackTitleColumn.setMinWidth(130);
+        playlistTrackAuthorColumn.setMinWidth(110);
+        playlistTrackLengthColumn.setMinWidth(70);
+        playlistTrackGenreColumn.setMinWidth(90);
     }
 }

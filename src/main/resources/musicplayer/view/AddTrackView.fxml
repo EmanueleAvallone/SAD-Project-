@@ -92,6 +92,7 @@
                        GridPane.columnIndex="0"/>
 
                 <TextArea fx:id="notesArea"
+                          styleClass="notes-area"
                           prefHeight="130.0"
                           promptText="Optional notes..."
                           wrapText="true"
