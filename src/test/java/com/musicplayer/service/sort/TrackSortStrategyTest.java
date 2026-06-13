@@ -232,4 +232,65 @@ public class TrackSortStrategyTest {
 
         assertEquals(0, tracks.size());
     }
+
+    @Test
+    void playlistOrderSortStrategyShouldSortTracksByOriginalPlaylistOrderAscending() {
+        Track trackA = new Track("It's my life", "Bon Jovi", "03:46", "Pop Rock", 1984);
+        Track trackB = new Track("Summertime Sadness", "Lana Del Rey", "03:00", "Pop Rock", 1984);
+        Track trackC = new Track("Billie Jean", "Michael Jackson", "04:35", "Pop Rock", 1982);
+        Track trackD = new Track("Stairway To Heaven", "Led Zeppelin", "06:46", "Rock", 1972);
+
+        List<Track> originalOrder = List.of(trackA, trackB, trackC, trackD);
+
+        TrackSortStrategy strategy = new PlaylistOrderSortStrategy(originalOrder);
+
+        List<Track> visibleTracks = new ArrayList<>(List.of(trackD, trackC, trackA, trackB));
+
+        visibleTracks.sort(strategy.getComparator());
+
+        assertEquals(trackA, visibleTracks.get(0));
+        assertEquals(trackB, visibleTracks.get(1));
+        assertEquals(trackC, visibleTracks.get(2));
+        assertEquals(trackD, visibleTracks.get(3));
+    }
+
+    @Test
+    void playlistOrderSortStrategyShouldSortTracksByOriginalPlaylistOrderDescending() {
+        Track trackA = new Track("It's my life", "Bon Jovi", "03:46", "Pop Rock", 1984);
+        Track trackB = new Track("Summertime Sadness", "Lana Del Rey", "03:00", "Pop Rock", 1984);
+        Track trackC = new Track("Billie Jean", "Michael Jackson", "04:35", "Pop Rock", 1982);
+        Track trackD = new Track("Stairway To Heaven", "Led Zeppelin", "06:46", "Rock", 1972);
+
+        List<Track> originalOrder = List.of(trackA, trackB, trackC, trackD);
+
+        TrackSortStrategy strategy = new PlaylistOrderSortStrategy(originalOrder);
+
+        List<Track> visibleTracks = new ArrayList<>(List.of(trackA, trackB, trackC, trackD));
+
+        visibleTracks.sort(strategy.getComparator().reversed());
+
+        assertEquals(trackD, visibleTracks.get(0));
+        assertEquals(trackC, visibleTracks.get(1));
+        assertEquals(trackB, visibleTracks.get(2));
+        assertEquals(trackA, visibleTracks.get(3));
+    }
+
+    @Test
+    void playlistOrderSortStrategyShouldPlaceUnknownTracksAtTheEnd() {
+        Track trackA = new Track("It's my life", "Bon Jovi", "03:46", "Pop Rock", 1984);
+        Track trackB = new Track("Summertime Sadness", "Lana Del Rey", "03:00", "Pop Rock", 1984);
+        Track unknownTrack = new Track("Unknown", "Unknown Author", "01:00", "Pop", 2024);
+
+        List<Track> originalOrder = List.of(trackA, trackB);
+
+        TrackSortStrategy strategy = new PlaylistOrderSortStrategy(originalOrder);
+
+        List<Track> visibleTracks = new ArrayList<>(List.of(unknownTrack, trackB, trackA));
+
+        visibleTracks.sort(strategy.getComparator());
+
+        assertEquals(trackA, visibleTracks.get(0));
+        assertEquals(trackB, visibleTracks.get(1));
+        assertEquals(unknownTrack, visibleTracks.get(2));
+    }
 }

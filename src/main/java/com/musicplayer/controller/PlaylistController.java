@@ -7,18 +7,27 @@ import com.musicplayer.model.Playlist;
 import com.musicplayer.model.Tag;
 import com.musicplayer.model.Track;
 import com.musicplayer.service.PlaylistService;
-
 import com.musicplayer.service.SearchService;
+import com.musicplayer.service.sort.AuthorSortStrategy;
+import com.musicplayer.service.sort.LengthSortStrategy;
+import com.musicplayer.service.sort.PlaylistOrderSortStrategy;
+import com.musicplayer.service.sort.TitleSortStrategy;
+import com.musicplayer.service.sort.TrackSortStrategy;
+
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+
 import javafx.fxml.FXML;
+
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 /**
  * Controller di sezione dedicato alla gestione delle playlist.
@@ -86,6 +95,16 @@ public class PlaylistController {
     private ObservableList<Playlist> playlists;
 
     private ObservableList<Track> selectedPlaylistTracks;
+
+    private SortedList<Track> sortedSelectedPlaylistTracks;
+
+    private Playlist currentSelectedPlaylist;
+
+    private final TrackSortStrategy selectedPlaylistTitleSortStrategy = new TitleSortStrategy();
+
+    private final TrackSortStrategy selectedPlaylistAuthorSortStrategy = new AuthorSortStrategy();
+
+    private final TrackSortStrategy selectedPlaylistLengthSortStrategy = new LengthSortStrategy();
 
     private PlayerController playerControlController;
 
@@ -214,7 +233,8 @@ public class PlaylistController {
      * Configura la tabella delle tracce appartenenti alla playlist selezionata.
      */
     private void configureSelectedPlaylistTable() {
-        playlistTrackTableView.setItems(selectedPlaylistTracks);
+        sortedSelectedPlaylistTracks = new SortedList<>(selectedPlaylistTracks);
+        playlistTrackTableView.setItems(sortedSelectedPlaylistTracks);
         playlistTrackTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
         playlistTrackTableView.getSelectionModel()
@@ -237,7 +257,7 @@ public class PlaylistController {
 
         playlistTrackOrderColumn.setCellValueFactory(cellData ->
                 new SimpleIntegerProperty(
-                        playlistTrackTableView.getItems().indexOf(cellData.getValue()) + 1
+                        getOriginalPlaylistPosition(cellData.getValue())
                 ).asObject()
         );
 
@@ -246,7 +266,116 @@ public class PlaylistController {
         playlistTrackLengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
         playlistTrackGenreColumn.setCellValueFactory(new PropertyValueFactory<>("genre"));
 
+        configureSelectedPlaylistSorting();
         configurePlayingTrackStyle();
+    }
+
+    /**
+     * Restituisce la posizione originale della traccia nella playlist selezionata.
+     * <p>
+     * Il valore viene usato dalla colonna "#". La posizione viene calcolata rispetto
+     * all'ordine salvato nel Model, non rispetto all'ordine temporaneo mostrato
+     * dalla tabella dopo un ordinamento locale.
+     * </p>
+     *
+     * @param track traccia da cercare nella playlist corrente
+     * @return posizione originale della traccia, partendo da 1; restituisce 0 se
+     *         la traccia non è presente o se non esiste una playlist selezionata
+     */
+    private int getOriginalPlaylistPosition(Track track) {
+        if (currentSelectedPlaylist == null || track == null) {
+            return 0;
+        }
+
+        int index = currentSelectedPlaylist.getTracks().indexOf(track);
+
+        if (index < 0) {
+            return 0;
+        }
+
+        return index + 1;
+    }
+
+    /**
+     * Configura l'ordinamento locale della Selected Playlist.
+     * <p>
+     * Sono ordinabili solo le colonne "#", titolo, autore e durata.
+     * La colonna genere viene esclusa perché non è prevista come criterio
+     * ordinabile per questa User Story.
+     * </p>
+     * <p>
+     * L'ordinamento viene applicato alla SortedList usata dalla tabella,
+     * quindi modifica solo l'ordine visualizzato nella Selected Playlist
+     * senza alterare l'ordine reale salvato nella playlist del Model.
+     * </p>
+     */
+    private void configureSelectedPlaylistSorting() {
+        playlistTrackOrderColumn.setSortable(true);
+        playlistTrackTitleColumn.setSortable(true);
+        playlistTrackAuthorColumn.setSortable(true);
+        playlistTrackLengthColumn.setSortable(true);
+        playlistTrackGenreColumn.setSortable(false);
+
+        playlistTrackTableView.setSortPolicy(tableView -> {
+            if (sortedSelectedPlaylistTracks == null) {
+                return true;
+            }
+
+            if (tableView.getSortOrder().isEmpty()) {
+                sortedSelectedPlaylistTracks.setComparator(null);
+                return true;
+            }
+
+            TableColumn<Track, ?> sortColumn = tableView.getSortOrder().get(0);
+            TrackSortStrategy sortStrategy = getSelectedPlaylistSortStrategy(sortColumn);
+
+            if (sortStrategy == null) {
+                sortedSelectedPlaylistTracks.setComparator(null);
+                return true;
+            }
+
+            Comparator<Track> comparator = sortStrategy.getComparator();
+
+            if (sortColumn.getSortType() == TableColumn.SortType.DESCENDING) {
+                comparator = comparator.reversed();
+            }
+
+            sortedSelectedPlaylistTracks.setComparator(comparator);
+
+            return true;
+        });
+    }
+
+    /**
+     * Restituisce la strategia di ordinamento associata alla colonna selezionata
+     * nella Selected Playlist.
+     *
+     * @param sortColumn colonna cliccata dall'utente
+     * @return strategia di ordinamento corrispondente, oppure null se la colonna
+     *         non è ordinabile
+     */
+    private TrackSortStrategy getSelectedPlaylistSortStrategy(TableColumn<Track, ?> sortColumn) {
+        if (sortColumn == playlistTrackOrderColumn) {
+            List<Track> originalOrder = currentSelectedPlaylist == null
+                    ? List.of()
+                    : currentSelectedPlaylist.getTracks();
+
+            return new PlaylistOrderSortStrategy(originalOrder);
+        }
+
+        if (sortColumn == playlistTrackTitleColumn) {
+            return selectedPlaylistTitleSortStrategy;
+        }
+
+        if (sortColumn == playlistTrackAuthorColumn) {
+            return selectedPlaylistAuthorSortStrategy;
+        }
+
+        if (sortColumn == playlistTrackLengthColumn) {
+            return selectedPlaylistLengthSortStrategy;
+        }
+
+        return null;
     }
 
     /**
@@ -728,6 +857,7 @@ public class PlaylistController {
      * Aggiorna la tabella della playlist selezionata.
      */
     public void updateSelectedPlaylistView(Playlist playlist) {
+        currentSelectedPlaylist = playlist;
         selectedPlaylistTracks.clear();
 
         if (playlist == null) {
