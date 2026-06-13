@@ -50,7 +50,8 @@ public class TrackService {
                              String author,
                              String length,
                              String genre,
-                             String yearText) {
+                             String yearText,
+                             String audioFilePath) {
         validateTextField(title, "Il titolo della traccia è obbligatorio.");
         validateTextField(author, "L'autore della traccia è obbligatorio.");
         validateTextField(length, "La durata della traccia è obbligatoria.");
@@ -59,13 +60,14 @@ public class TrackService {
 
         int year = parseAndValidateYear(yearText);
         validateLength(length);
-
+        validateAudioFilePath(audioFilePath);
         return new Track(
                 title.trim(),
                 author.trim(),
                 length.trim(),
                 genre.trim(),
-                year
+                year,
+                normalizeAudioFilePath(audioFilePath)
         );
     }
 
@@ -279,7 +281,7 @@ public class TrackService {
         originalTrack.setAuthor(editedTrack.getAuthor());
         originalTrack.setGenre(editedTrack.getGenre());
         originalTrack.setYear(editedTrack.getYear());
-
+        originalTrack.setAudioFilePath(editedTrack.getAudioFilePath());
         if (editedTrack.getTags() != null) {
             originalTrack.setTags(new java.util.HashSet<>(editedTrack.getTags()));
         } else {
@@ -397,5 +399,34 @@ public class TrackService {
         track.setDeletedAt(null);
 
         tracks.add(track);
+    }
+    private void validateAudioFilePath(String audioFilePath) {
+        if (audioFilePath == null || audioFilePath.trim().isEmpty()) {
+            return;
+        }
+
+        java.io.File file = new java.io.File(audioFilePath.trim());
+
+        if (!file.exists()) {
+            throw new IllegalArgumentException("Il file audio selezionato non esiste.");
+        }
+
+        if (!file.isFile()) {
+            throw new IllegalArgumentException("Il percorso selezionato non è un file valido.");
+        }
+
+        String lowerCaseName = file.getName().toLowerCase();
+
+        if (!lowerCaseName.endsWith(".mp3")) {
+            throw new IllegalArgumentException("Sono supportati solo file audio in formato .mp3.");
+        }
+    }
+
+    private String normalizeAudioFilePath(String audioFilePath) {
+        if (audioFilePath == null || audioFilePath.trim().isEmpty()) {
+            return null;
+        }
+
+        return audioFilePath.trim();
     }
 }
