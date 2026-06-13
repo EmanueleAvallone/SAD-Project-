@@ -131,6 +131,8 @@ public class LibraryController {
 
     private int lastTotalPlays = -1;
 
+    private ObservableList<Track> trashList;
+
     /**
      * Inizializza la sezione Track Library.
      */
@@ -154,6 +156,7 @@ public class LibraryController {
             PlaylistService playlistService,
             ObservableList<Track> tracks,
             ObservableList<Playlist> playlists,
+            ObservableList<Track> trashList,
             PlayerController playerController,
             PlaylistController playlistController,
             UndoSnackbarHandler undoSnackbarHandler,
@@ -189,6 +192,8 @@ public class LibraryController {
         this.searchService = searchService;
 
         this.undoSnackbarHandler = undoSnackbarHandler;
+
+        this.trashList = trashList;
 
         configureTrackLibraryTable();
         updateMostPlayedSection();
@@ -634,10 +639,20 @@ public class LibraryController {
 
         Track deletedTrack = trackService.getPendingDeletedTrack();
 
+        trackService.moveToTrash(tracks, playlists, trashList, deletedTrack);
+
         trackService.clearPendingDeletedTrack();
         playlistService.clearPendingDeletedTrackFromPlaylists();
 
-        setStatus("Traccia eliminata definitivamente: " + deletedTrack.getTitle());
+        if (playerController != null) {
+            playerController.stopPlaybackIfCurrentTrackWasRemoved(deletedTrack);
+        }
+
+        if (playlistController != null) {
+            playlistController.refreshSelectedPlaylistTable();
+        }
+
+        setStatus("Track moved to Trash: " + deletedTrack.getTitle());
     }
 
     /**

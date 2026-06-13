@@ -1,0 +1,492 @@
+@startuml
+
+title __MUSIC-PLAYLIST-MANAGER's Class Diagram__\n
+
+  namespace com.musicplayer {
+    class com.musicplayer.Launcher {
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    class com.musicplayer.MainApp {
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace command {
+      class com.musicplayer.command.AddTrackPCommand {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace command {
+      interface com.musicplayer.command.Command {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace command {
+      class com.musicplayer.command.CommandManager {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace command {
+      class com.musicplayer.command.DeleteTrackCommand {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace command {
+      class com.musicplayer.command.RemoveTrackPCommand {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.AddTrackController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.AddTrackController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.LibraryController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.MainController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.MainController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.MainController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.PlayerController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.PlayerController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.PlaylistController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.StyleManager {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      class com.musicplayer.model.Library {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      enum PlayMode {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      enum PlayMode {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      class com.musicplayer.model.Playlist {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      class com.musicplayer.model.Playlist {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      class com.musicplayer.model.Playlist {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      class com.musicplayer.model.PlaylistFactory {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      enum Tag {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      enum Tag {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      class com.musicplayer.model.Track {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      class com.musicplayer.model.Track {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      class com.musicplayer.model.Track {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        class com.musicplayer.model.engine.LoopPlay {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        class com.musicplayer.model.engine.MediaPlayerEngine {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        class com.musicplayer.model.engine.PausedState {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        interface com.musicplayer.model.engine.PlayStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        interface com.musicplayer.model.engine.PlayerObservable {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        interface com.musicplayer.model.engine.PlayerObserver {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        interface com.musicplayer.model.engine.PlayerState {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        class com.musicplayer.model.engine.PlayingState {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        class com.musicplayer.model.engine.SequentialPlay {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        class com.musicplayer.model.engine.ShufflePlay {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace engine {
+        class com.musicplayer.model.engine.StoppedState {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace filter {
+        class com.musicplayer.model.filter.GenreFilterStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace filter {
+        class com.musicplayer.model.filter.TagFilterStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace filter {
+        interface com.musicplayer.model.filter.TrackFilterStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace model {
+      namespace filter {
+        class com.musicplayer.model.filter.YearFilterStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      class com.musicplayer.service.PlaybackService {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      class com.musicplayer.service.PlaybackService {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      class com.musicplayer.service.PlaylistService {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      class com.musicplayer.service.SearchService {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      class com.musicplayer.service.TrackService {
+      }
+    }
+  }
+  
+
+  com.musicplayer.MainApp -up-|> javafx.application.Application
+  com.musicplayer.command.AddTrackPCommand .up.|> com.musicplayer.command.Command
+  com.musicplayer.command.DeleteTrackCommand .up.|> com.musicplayer.command.Command
+  com.musicplayer.command.RemoveTrackPCommand .up.|> com.musicplayer.command.Command
+  com.musicplayer.command.RemoveTrackPCommand o-- com.musicplayer.model.Playlist : playlist
+  com.musicplayer.command.RemoveTrackPCommand o-- com.musicplayer.service.PlaylistService : playlistService
+  com.musicplayer.command.RemoveTrackPCommand o-- com.musicplayer.model.Track : track
+  com.musicplayer.controller.AddTrackController o-- com.musicplayer.model.Track : createdTrack
+  com.musicplayer.controller.AddTrackController o-- com.musicplayer.service.TrackService : trackService
+  com.musicplayer.controller.AddTrackController o-- com.musicplayer.model.Track : trackToEdit
+  com.musicplayer.controller.AddTrackController o-- com.musicplayer.model.Track : createdTrack
+  com.musicplayer.controller.AddTrackController o-- com.musicplayer.model.Track : trackToEdit
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.controller.PlayerController : playerController
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.controller.PlaylistController : playlistController
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.service.PlaylistService : playlistService
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.service.SearchService : searchService
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.service.TrackService : trackService
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.controller.LibraryController.UndoSnackbarHandler : undoSnackbarHandler
+  com.musicplayer.controller.MainController o-- com.musicplayer.controller.PlayerController : playerControlController
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.PlaylistService : playlistService
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.TrackService : trackService
+  com.musicplayer.controller.MainController o-- com.musicplayer.command.CommandManager : commandManager
+  com.musicplayer.controller.MainController o-- com.musicplayer.controller.LibraryController : librarySectionController
+  com.musicplayer.controller.MainController o-- com.musicplayer.controller.PlayerController : playerControlController
+  com.musicplayer.controller.MainController o-- com.musicplayer.controller.PlaylistController : playlistSectionController
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.PlaylistService : playlistService
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.SearchService : searchService
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.TrackService : trackService
+  com.musicplayer.controller.MainController o-- com.musicplayer.controller.PlayerController : playerControlController
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.PlaylistService : playlistService
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.TrackService : trackService
+  com.musicplayer.controller.PlayerController .up.|> com.musicplayer.model.engine.PlayerObserver
+  com.musicplayer.controller.PlayerController o-- com.musicplayer.service.PlaybackService : playbackService
+  com.musicplayer.controller.PlayerController o-- com.musicplayer.model.Track : selectedTrack
+  com.musicplayer.controller.PlayerController .up.|> com.musicplayer.model.engine.PlayerObserver
+  com.musicplayer.controller.PlayerController o-- com.musicplayer.service.PlaybackService : playbackService
+  com.musicplayer.controller.PlayerController o-- com.musicplayer.model.Track : selectedTrack
+  com.musicplayer.controller.PlaylistController o-- com.musicplayer.command.CommandManager : commandManager
+  com.musicplayer.controller.PlaylistController o-- com.musicplayer.controller.PlayerController : playerControlController
+  com.musicplayer.controller.PlaylistController o-- com.musicplayer.service.PlaylistService : playlistService
+  com.musicplayer.controller.PlaylistController o-- com.musicplayer.service.SearchService : searchService
+  com.musicplayer.controller.PlaylistController o-- com.musicplayer.controller.PlaylistController.UndoSnackbarHandler : undoSnackbarHandler
+  com.musicplayer.model.Playlist o-- com.musicplayer.model.filter.TrackFilterStrategy : filterStrategy
+  com.musicplayer.model.engine.LoopPlay .up.|> com.musicplayer.model.engine.PlayStrategy
+  com.musicplayer.model.engine.MediaPlayerEngine .up.|> com.musicplayer.model.engine.PlayerObservable
+  com.musicplayer.model.engine.MediaPlayerEngine o-- com.musicplayer.model.engine.PlayStrategy : currentPlayMode
+  com.musicplayer.model.engine.MediaPlayerEngine o-- com.musicplayer.model.Playlist : currentPlaylist
+  com.musicplayer.model.engine.MediaPlayerEngine o-- com.musicplayer.model.engine.PlayerState : currentState
+  com.musicplayer.model.engine.PausedState .up.|> com.musicplayer.model.engine.PlayerState
+  com.musicplayer.model.engine.PlayingState .up.|> com.musicplayer.model.engine.PlayerState
+  com.musicplayer.model.engine.SequentialPlay .up.|> com.musicplayer.model.engine.PlayStrategy
+  com.musicplayer.model.engine.ShufflePlay .up.|> com.musicplayer.model.engine.PlayStrategy
+  com.musicplayer.model.engine.StoppedState .up.|> com.musicplayer.model.engine.PlayerState
+  com.musicplayer.model.filter.GenreFilterStrategy .up.|> com.musicplayer.model.filter.TrackFilterStrategy
+  com.musicplayer.model.filter.TagFilterStrategy .up.|> com.musicplayer.model.filter.TrackFilterStrategy
+  com.musicplayer.model.filter.YearFilterStrategy .up.|> com.musicplayer.model.filter.TrackFilterStrategy
+  com.musicplayer.service.PlaybackService o-- com.musicplayer.model.Track : currentTrack
+  com.musicplayer.service.PlaybackService o-- com.musicplayer.model.Track : currentTrack
+  com.musicplayer.service.PlaylistService o-- com.musicplayer.model.Playlist : pendingDeletedPlaylist
+  com.musicplayer.service.TrackService o-- com.musicplayer.model.Track : pendingDeletedTrack
+
+
+right footer
+
+
+PlantUML diagram generated by SketchIt! (https://bitbucket.org/pmesmeur/sketch.it)
+For more information about this tool, please contact philippe.mesmeur@gmail.com
+endfooter
+
+@enduml

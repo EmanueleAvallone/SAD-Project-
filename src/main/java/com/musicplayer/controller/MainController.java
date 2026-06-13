@@ -220,12 +220,16 @@ public class MainController {
         );
 
         playlistSectionController.setUndoSnackbarHandler(this::showUndoSnackbar);
+        playlistSectionController.setOpenTrashAction(this::handleOpenTrash);
     }
 
     /**
      * Inizializza la sezione libreria delegando a LibraryController.
      */
     private void initializeLibrarySection() {
+        this.trashList = FXCollections.observableArrayList();
+        this.trashController = new TrashController(trackService, tracks, trashList);
+
         librarySectionController.initializeSection(
                 trackTableView,
                 trackTitleColumn,
@@ -246,6 +250,7 @@ public class MainController {
                 playlistService,
                 tracks,
                 playlists,
+                trashList,
                 playerControlController,
                 playlistSectionController,
                 this::showUndoSnackbar,
@@ -303,6 +308,15 @@ public class MainController {
     @FXML
     private void handleDeleteTrack() {
         librarySectionController.deleteSelectedTrack();
+    }
+
+    /**
+     * Apre la finestra del Cestino.
+     */
+    @FXML
+    private void handleOpenTrash() {
+        trashController.showTrashBinDialog();
+        trackTableView.refresh();
     }
 
     /**
@@ -378,6 +392,12 @@ public class MainController {
     private void handleRedo() {
         System.out.println("Redo");
     }
+
+    @FXML
+    private Button openTrashButton;
+
+    private ObservableList<Track> trashList;
+    private TrashController trashController;
 
     /**
      * Mostra lo snackbar globale.

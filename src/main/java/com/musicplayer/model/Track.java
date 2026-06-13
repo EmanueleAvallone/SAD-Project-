@@ -3,6 +3,7 @@ package com.musicplayer.model;
 import java.util.Objects;
 import java.util.HashSet;
 import java.util.Set;
+import java.time.LocalDateTime;
 
 /**
  * Rappresenta una traccia audio nella libreria.
@@ -16,6 +17,7 @@ public class Track {
     private int year;
     private int playedCount;
     private Set<Tag> tags;
+    private LocalDateTime deletedAt;
 
     public Track(String title, String author, String length, String genre, int year) {
         this.title = title;
@@ -117,5 +119,13 @@ public class Track {
     @Override
     public int hashCode() {
         return Objects.hash(title, author);
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

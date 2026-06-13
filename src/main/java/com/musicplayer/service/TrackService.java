@@ -121,6 +121,38 @@ public class TrackService {
     }
 
     /**
+     * Sposta una traccia nel cestino (Soft Delete di dominio).
+     * Rimuove la traccia dal catalogo principale e da tutte le playlist in cui è presente,
+     * registra il momento esatto dell'eliminazione e la inserisce nella collezione del cestino.
+     *
+     * @param tracks    Lista principale delle tracce
+     * @param playlists Lista di tutte le playlist
+     * @param trashList Lista delle tracce nel cestino
+     * @param track     Traccia da spostare nel cestino
+     * @throws IllegalArgumentException se uno dei parametri è null
+     */
+    public void moveToTrash(ObservableList<Track> tracks,
+                            ObservableList<Playlist> playlists,
+                            ObservableList<Track> trashList,
+                            Track track) {
+        if (tracks == null || playlists == null || trashList == null || track == null) {
+            throw new IllegalArgumentException("I parametri per lo spostamento nel cestino non possono essere null.");
+        }
+
+        tracks.remove(track);
+
+        for (Playlist playlist : playlists) {
+            if (playlist.getTracks().contains(track)) {
+                playlist.removeTrack(track);
+            }
+        }
+
+        track.setDeletedAt(java.time.LocalDateTime.now());
+
+        trashList.add(track);
+    }
+
+    /**
      * Rimuove temporaneamente una traccia dal catalogo visibile.
      * <p>
      * Questo metodo realizza la logica di soft delete: la traccia viene rimossa
@@ -337,5 +369,33 @@ public class TrackService {
                 .sorted((t1, t2) -> Integer.compare(t2.getPlayedCount(), t1.getPlayedCount()))
                 .limit(limit)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Ripristina una traccia dal cestino alla libreria principale.
+     * Rimuove la traccia dalla collezione del cestino, azzera il timestamp
+     * di eliminazione e la reinserisce nel catalogo visibile.
+     *
+     * @param tracks    Lista principale delle tracce
+     * @param trashList Lista delle tracce nel cestino
+     * @param track     Traccia da ripristinare
+     * @throws IllegalArgumentException se uno dei parametri è null o se la traccia non è nel cestino
+     */
+    public void restoreFromTrash(ObservableList<Track> tracks,
+                                 ObservableList<Track> trashList,
+                                 Track track) {
+        if (tracks == null || trashList == null || track == null) {
+            throw new IllegalArgumentException("I parametri per il ripristino non possono essere null.");
+        }
+
+        if (!trashList.contains(track)) {
+            throw new IllegalArgumentException("La traccia selezionata non è presente nel cestino.");
+        }
+
+        trashList.remove(track);
+
+        track.setDeletedAt(null);
+
+        tracks.add(track);
     }
 }

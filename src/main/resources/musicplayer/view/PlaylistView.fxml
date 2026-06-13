@@ -58,4 +58,9 @@
             maxWidth="Infinity"
             onAction="#handleGenerateByTag"/>
 
+    <Separator />
+    <Label styleClass="section-title" text="Trash" />
+    <Button fx:id="openTrashButton" maxWidth="Infinity" onAction="#handleOpenTrash" text="Open Trash Bin" />
+
 </VBox>
+

@@ -1066,4 +1066,25 @@ public class PlaylistController {
                         .toList()
         ));
     }
+
+    /**
+     * Azione da eseguire per aprire il cestino (delegata al MainController).
+     */
+    private Runnable openTrashAction;
+
+    public void setOpenTrashAction(Runnable openTrashAction) {
+        this.openTrashAction = openTrashAction;
+    }
+
+    /**
+     * Gestisce il click sul pulsante "Open Trash Bin" della sidebar.
+     * È invocato direttamente dal file PlaylistView.fxml.
+     */
+    @FXML
+    private void handleOpenTrash() {
+        if (openTrashAction != null) {
+            openTrashAction.run();
+        }
+    }
+
 }
