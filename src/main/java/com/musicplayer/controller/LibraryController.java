@@ -8,6 +8,12 @@ import com.musicplayer.model.filter.TrackFilterStrategy;
 import com.musicplayer.service.PlaylistService;
 import com.musicplayer.service.SearchService;
 import com.musicplayer.service.TrackService;
+import com.musicplayer.service.sort.AuthorSortStrategy;
+import com.musicplayer.service.sort.LengthSortStrategy;
+import com.musicplayer.service.sort.PlayedCountSortStrategy;
+import com.musicplayer.service.sort.TitleSortStrategy;
+import com.musicplayer.service.sort.TrackSortStrategy;
+import com.musicplayer.service.sort.YearSortStrategy;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -40,6 +46,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 /**
@@ -108,6 +115,14 @@ public class LibraryController {
     private UndoSnackbarHandler undoSnackbarHandler;
 
     private FilteredList<Track> filteredTracks;
+    private SortedList<Track> sortedTracks;
+
+    private final TrackSortStrategy titleSortStrategy = new TitleSortStrategy();
+    private final TrackSortStrategy authorSortStrategy = new AuthorSortStrategy();
+    private final TrackSortStrategy lengthSortStrategy = new LengthSortStrategy();
+    private final TrackSortStrategy yearSortStrategy = new YearSortStrategy();
+    private final TrackSortStrategy playedCountSortStrategy = new PlayedCountSortStrategy();
+
     private String currentSearchQuery = "";
 
     private int lastTotalPlays = -1;
@@ -227,13 +242,107 @@ public class LibraryController {
 
         filteredTracks = new FilteredList<>(tracks, track -> true);
 
-        SortedList<Track> sortedTracks = new SortedList<>(filteredTracks);
-        sortedTracks.comparatorProperty().bind(trackTableView.comparatorProperty());
+        sortedTracks = new SortedList<>(filteredTracks);
 
         trackTableView.setItems(sortedTracks);
 
+        configureTrackLibrarySorting();
         configurePlayingTrackStyle();
     }
+
+
+    /**
+     * Configura l'ordinamento locale della Track Library.
+     * <p>
+     * Solo alcune colonne sono ordinabili: titolo, autore, durata, anno
+     * e numero di riproduzioni. Le colonne genere e tag vengono escluse
+     * perché sono usate da altre funzionalità, come filtri e smart playlist.
+     * </p>
+     * <p>
+     * L'ordinamento viene applicato alla SortedList usata dalla tabella,
+     * quindi modifica solo l'ordine visualizzato nella Track Library senza
+     * alterare l'ordine salvato nel Model.
+     * </p>
+     */
+    private void configureTrackLibrarySorting() {
+        trackTitleColumn.setSortable(true);
+        trackAuthorColumn.setSortable(true);
+        trackLengthColumn.setSortable(true);
+        trackYearColumn.setSortable(true);
+
+        if (trackPlayCountColumn != null) {
+            trackPlayCountColumn.setSortable(true);
+        }
+
+        trackGenreColumn.setSortable(false);
+
+        if (trackTagsColumn != null) {
+            trackTagsColumn.setSortable(false);
+        }
+
+        trackTableView.setSortPolicy(tableView -> {
+            if (sortedTracks == null) {
+                return true;
+            }
+
+            if (tableView.getSortOrder().isEmpty()) {
+                sortedTracks.setComparator(null);
+                return true;
+            }
+
+            TableColumn<Track, ?> sortColumn = tableView.getSortOrder().get(0);
+            TrackSortStrategy sortStrategy = getTrackLibrarySortStrategy(sortColumn);
+
+            if (sortStrategy == null) {
+                sortedTracks.setComparator(null);
+                return true;
+            }
+
+            Comparator<Track> comparator = sortStrategy.getComparator();
+
+            if (sortColumn.getSortType() == TableColumn.SortType.DESCENDING) {
+                comparator = comparator.reversed();
+            }
+
+            sortedTracks.setComparator(comparator);
+
+            return true;
+        });
+    }
+
+
+    /**
+     * Restituisce la strategia di ordinamento associata alla colonna selezionata
+     * nella Track Library.
+     *
+     * @param sortColumn colonna cliccata dall'utente
+     * @return strategia di ordinamento corrispondente, oppure null se la colonna
+     *         non è ordinabile
+     */
+    private TrackSortStrategy getTrackLibrarySortStrategy(TableColumn<Track, ?> sortColumn) {
+        if (sortColumn == trackTitleColumn) {
+            return titleSortStrategy;
+        }
+
+        if (sortColumn == trackAuthorColumn) {
+            return authorSortStrategy;
+        }
+
+        if (sortColumn == trackLengthColumn) {
+            return lengthSortStrategy;
+        }
+
+        if (sortColumn == trackYearColumn) {
+            return yearSortStrategy;
+        }
+
+        if (sortColumn == trackPlayCountColumn) {
+            return playedCountSortStrategy;
+        }
+
+        return null;
+    }
+
 
     /**
      * Configura l'evidenziazione grafica della traccia in riproduzione.
