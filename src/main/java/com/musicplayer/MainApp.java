@@ -1,5 +1,6 @@
 package com.musicplayer;
 
+import com.musicplayer.controller.MainController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -14,8 +15,15 @@ public class MainApp extends Application {
         );
 
         Scene scene = new Scene(loader.load());
-
+        MainController mainController = loader.getController();
         stage.setTitle("Music Playlist Manager");
+        stage.setOnCloseRequest(event -> {
+            try {
+                mainController.saveSessionOnExit();
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
         stage.setScene(scene);
         stage.setMinWidth(1100);
         stage.setMinHeight(720);

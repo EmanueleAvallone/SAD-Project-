@@ -43,7 +43,6 @@
             maxWidth="Infinity"
             styleClass="danger-button"
             onAction="#handleDeletePlaylist"/>
-
     <Separator/>
 
     <Label text="Smart playlists" styleClass="section-title"/>

@@ -143,4 +143,38 @@ public class PersistenceService {
         String json = exportToJsonString(tracks, playlists, deletedTracks, deletedPlaylists);
         writeToFile(outputPath, json);
     }
+    /**
+     * Importa lo stato applicativo dal file di persistenza specificato.
+     *
+     * @param inputPath percorso del file JSON da leggere
+     * @return stato applicativo deserializzato dal file
+     * @throws IOException se si verifica un errore durante la lettura
+     *                     o la deserializzazione del contenuto
+     * @throws IllegalArgumentException se il percorso è null
+     */
+    public AppState importFromFile(Path inputPath) throws IOException {
+        if (inputPath == null) {
+            throw new IllegalArgumentException("Il percorso di input non può essere null");
+        }
+
+        return objectMapper.readValue(inputPath.toFile(), AppState.class);
+    }
+    /**
+     * Importa lo stato applicativo dal file di persistenza predefinito.
+     *
+     * @return stato applicativo letto dal file predefinito
+     * @throws IOException se si verifica un errore durante la lettura
+     *                     o la deserializzazione del file
+     */
+    public AppState importFromDefaultFile() throws IOException {
+        return importFromFile(DEFAULT_EXPORT_PATH);
+    }
+    /**
+     * Verifica se il file di persistenza predefinito è presente nel filesystem.
+     *
+     * @return {@code true} se il file esiste, {@code false} altrimenti
+     */
+    public boolean defaultSaveExists() {
+        return Files.exists(DEFAULT_EXPORT_PATH);
+    }
 }

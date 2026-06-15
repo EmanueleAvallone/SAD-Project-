@@ -3,6 +3,7 @@ package com.musicplayer.controller;
 import com.musicplayer.command.CommandManager;
 import com.musicplayer.model.Playlist;
 import com.musicplayer.model.Track;
+import com.musicplayer.persistence.AppState;
 import com.musicplayer.service.PlaylistService;
 import com.musicplayer.service.SearchService;
 import com.musicplayer.service.TrackService;
@@ -16,6 +17,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import com.musicplayer.service.PersistenceService;
+import java.io.IOException;
 
 /**
  * Controller principale dell'applicazione Music Playlist Manager.
@@ -173,7 +176,15 @@ public class MainController {
      * Gestore di Ricerca.
      */
     private final SearchService searchService = new SearchService();
+    /**
+     * Service per la persistenza dello stato applicativo.
+     */
+    private final PersistenceService persistenceService = new PersistenceService();
 
+    /**
+     * Lista osservabile delle playlist presenti nel cestino.
+     */
+    private final ObservableList<Playlist> deletedPlaylists = FXCollections.observableArrayList();
     /**
      * Inizializza la schermata principale e collega i controller di sezione.
      */
@@ -186,9 +197,12 @@ public class MainController {
 
         hideUndoSnackbar();
 
-        if (statusLabel != null) {
+        boolean restored = loadPreviousSession();
+
+        if (statusLabel != null && !restored) {
             statusLabel.setText("Applicazione avviata correttamente.");
         }
+
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             librarySectionController.applySearch(newValue);
             playlistSectionController.applySearch(newValue);
@@ -213,6 +227,7 @@ public class MainController {
                 playlistTrackGenreColumn,
                 statusLabel,
                 playlists,
+                deletedPlaylists,
                 selectedPlaylistTracks,
                 playerControlController,
                 playlistService,
@@ -504,5 +519,147 @@ public class MainController {
         playlistTrackAuthorColumn.setMinWidth(110);
         playlistTrackLengthColumn.setMinWidth(70);
         playlistTrackGenreColumn.setMinWidth(90);
+    }
+    /**
+     * Esporta lo stato completo dell'applicazione nel file locale predefinito.
+     * <p>
+     * L'esportazione include la libreria musicale, le playlist correnti,
+     * il contenuto del cestino delle tracce e quello del cestino delle playlist.
+     * In caso di errore durante la scrittura su disco, viene mostrato un messaggio
+     * di errore all'utente.
+     * </p>
+     */
+    private void handleExportLibrary() {
+        try {
+            persistenceService.exportToDefaultFile(
+                    tracks,
+                    playlists,
+                    trashList,
+                    deletedPlaylists
+            );
+
+            if (statusLabel != null) {
+                statusLabel.setText("Esportazione completata con successo.");
+            }
+
+            showInfo("Export completato", "La libreria è stata salvata correttamente.");
+        } catch (IOException exception) {
+            if (statusLabel != null) {
+                statusLabel.setText("Errore durante l'esportazione.");
+            }
+
+            showError("Impossibile salvare i dati su disco: " + exception.getMessage());
+        }
+    }
+    /**
+     * Mostra un messaggio informativo applicando lo stile globale dei dialog.
+     *
+     * @param title titolo della finestra
+     * @param message messaggio da visualizzare
+     */
+    private void showInfo(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+
+        StyleManager.applyToDialog(alert);
+
+        alert.showAndWait();
+    }
+
+    /**
+     * Mostra un messaggio di errore applicando lo stile globale dei dialog.
+     *
+     * @param message messaggio da visualizzare
+     */
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Errore");
+        alert.setHeaderText("Esportazione non riuscita");
+        alert.setContentText(message);
+
+        StyleManager.applyToDialog(alert);
+
+        alert.showAndWait();
+    }
+    /**
+     * Tenta di ripristinare lo stato dell'ultima sessione salvata.
+     *
+     * @return {@code true} se il ripristino è avvenuto con successo,
+     *         {@code false} se il file non esiste o non è leggibile
+     */
+    private boolean loadPreviousSession() {
+        if (!persistenceService.defaultSaveExists()) {
+            return false;
+        }
+
+        try {
+            AppState state = persistenceService.importFromDefaultFile();
+
+            tracks.clear();
+            playlists.clear();
+            trashList.clear();
+            deletedPlaylists.clear();
+            selectedPlaylistTracks.clear();
+
+            if (state.getTracks() != null) {
+                tracks.addAll(state.getTracks());
+            }
+
+            if (state.getPlaylists() != null) {
+                playlists.addAll(state.getPlaylists());
+            }
+
+            if (state.getDeletedTracks() != null) {
+                trashList.addAll(state.getDeletedTracks());
+            }
+
+            if (state.getDeletedPlaylists() != null) {
+                deletedPlaylists.addAll(state.getDeletedPlaylists());
+            }
+
+            trackTableView.refresh();
+            playlistTrackTableView.refresh();
+            playlistSectionController.updateSelectedPlaylistView(null);
+
+            if (statusLabel != null) {
+                statusLabel.setText("Sessione precedente ripristinata correttamente.");
+            }
+
+            return true;
+
+        } catch (Exception exception) {
+            tracks.clear();
+            playlists.clear();
+            trashList.clear();
+            deletedPlaylists.clear();
+            selectedPlaylistTracks.clear();
+
+            if (statusLabel != null) {
+                statusLabel.setText("Nessun salvataggio valido trovato: avvio con libreria vuota.");
+            }
+
+            return false;
+        }
+    }
+    /**
+     * Salva automaticamente lo stato corrente dell'applicazione
+     * nel file di persistenza predefinito.
+     * <p>
+     * Questo metodo è pensato per essere invocato alla chiusura
+     * dell'applicazione JavaFX, così da permettere il ripristino
+     * della sessione nella successiva apertura.
+     * </p>
+     *
+     * @throws IOException se si verifica un errore durante la scrittura del file
+     */
+    public void saveSessionOnExit() throws IOException {
+        persistenceService.exportToDefaultFile(
+                tracks,
+                playlists,
+                trashList,
+                deletedPlaylists
+        );
     }
 }

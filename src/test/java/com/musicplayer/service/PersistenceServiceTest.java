@@ -3,6 +3,7 @@ package com.musicplayer.service;
 import com.musicplayer.model.Playlist;
 import com.musicplayer.model.Tag;
 import com.musicplayer.model.Track;
+import com.musicplayer.persistence.AppState;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -89,5 +90,68 @@ class PersistenceServiceTest {
         );
 
         assertEquals("Scrittura fallita", exception.getMessage());
+    }
+    @Test
+    void importFromFile_shouldRestoreExactModel_whenJsonIsValid() throws Exception {
+        String json = """
+                {
+                  "tracks": [
+                    {
+                      "audioFilePath": null,
+                      "title": "Numb",
+                      "author": "Linkin Park",
+                      "length": "3:07",
+                      "genre": "Rock",
+                      "year": 2003,
+                      "playedCount": 5,
+                      "tags": ["FAV"],
+                      "deletedAt": null
+                    }
+                  ],
+                  "playlists": [
+                    {
+                      "name": "Preferiti",
+                      "tracks": [
+                        {
+                          "audioFilePath": null,
+                          "title": "Numb",
+                          "author": "Linkin Park",
+                          "length": "3:07",
+                          "genre": "Rock",
+                          "year": 2003,
+                          "playedCount": 5,
+                          "tags": ["FAV"],
+                          "deletedAt": null
+                        }
+                      ]
+                    }
+                  ],
+                  "deletedTracks": [],
+                  "deletedPlaylists": [],
+                  "savedAt": "2026-06-15T16:00:00Z"
+                }
+                """;
+
+        Path tempFile = Files.createTempFile("music-state-valid", ".json");
+        Files.writeString(tempFile, json);
+
+        PersistenceService service = new PersistenceService();
+        AppState state = service.importFromFile(tempFile);
+
+        assertNotNull(state);
+        assertEquals(1, state.getTracks().size());
+        assertEquals(1, state.getPlaylists().size());
+
+        Track track = state.getTracks().get(0);
+        assertEquals("Numb", track.getTitle());
+        assertEquals("Linkin Park", track.getAuthor());
+        assertEquals("Rock", track.getGenre());
+        assertEquals(2003, track.getYear());
+        assertEquals(5, track.getPlayedCount());
+
+        Playlist playlist = state.getPlaylists().get(0);
+        assertEquals("Preferiti", playlist.getName());
+        assertEquals(1, playlist.getTracks().size());
+        assertEquals("Numb", playlist.getTracks().get(0).getTitle());
     }
 }

@@ -2,6 +2,10 @@ package com.musicplayer.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.musicplayer.model.filter.TrackFilterStrategy;
 
 public class Playlist {
 
@@ -13,7 +17,20 @@ public class Playlist {
         this.name = name;
         this.tracks = new ArrayList<>();
     }
-
+    /**
+     * Costruttore completo usato per la deserializzazione JSON.
+     *
+     * @param name nome della playlist
+     * @param tracks lista delle tracce contenute
+     */
+    @JsonCreator
+    public Playlist(@JsonProperty("name") String name,
+                    @JsonProperty("tracks") List<Track> tracks
+                   ) {
+        this.name = name;
+        this.tracks = (tracks != null) ? new ArrayList<>(tracks) : new ArrayList<>();
+        this.filterStrategy = null;
+    }
     public String getName() {
         return name;
     }
@@ -88,9 +105,11 @@ public class Playlist {
         this.filterStrategy = filterStrategy;
     }
 
-    public com.musicplayer.model.filter.TrackFilterStrategy getFilterStrategy() {
+    @JsonIgnore
+    public TrackFilterStrategy getFilterStrategy() {
         return filterStrategy;
     }
+
 
     @Override
     public String toString() {

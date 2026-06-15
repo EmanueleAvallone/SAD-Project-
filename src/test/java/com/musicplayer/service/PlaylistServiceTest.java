@@ -292,6 +292,7 @@ public class PlaylistServiceTest {
         PlaylistService playlistService = new PlaylistService();
 
         ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+        ObservableList<Playlist> deletedPlaylists = FXCollections.observableArrayList();
 
         Playlist firstPlaylist = new Playlist("Playlist A");
         Playlist secondPlaylist = new Playlist("Playlist B");
@@ -305,7 +306,7 @@ public class PlaylistServiceTest {
         playlists.add(firstPlaylist);
         playlists.add(secondPlaylist);
 
-        playlistService.softDeletePlaylist(playlists, secondPlaylist);
+        playlistService.softDeletePlaylist(playlists, deletedPlaylists, secondPlaylist);
 
         assertFalse(playlists.contains(secondPlaylist));
         assertEquals(1, playlists.size());
@@ -313,6 +314,9 @@ public class PlaylistServiceTest {
 
         assertTrue(playlistService.hasPendingDeletedPlaylist());
         assertEquals(secondPlaylist, playlistService.getPendingDeletedPlaylist());
+
+        assertTrue(deletedPlaylists.contains(secondPlaylist));
+        assertEquals(1, deletedPlaylists.size());
 
         assertEquals(2, playlistService.getPendingDeletedPlaylist().getTracks().size());
         assertTrue(playlistService.getPendingDeletedPlaylist().getTracks().contains(trackOne));
@@ -324,6 +328,7 @@ public class PlaylistServiceTest {
         PlaylistService playlistService = new PlaylistService();
 
         ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+        ObservableList<Playlist> deletedPlaylists = FXCollections.observableArrayList();
 
         Playlist firstPlaylist = new Playlist("Playlist A");
         Playlist secondPlaylist = new Playlist("Playlist B");
@@ -339,8 +344,8 @@ public class PlaylistServiceTest {
         playlists.add(secondPlaylist);
         playlists.add(thirdPlaylist);
 
-        playlistService.softDeletePlaylist(playlists, secondPlaylist);
-        playlistService.restorePendingDeletedPlaylist(playlists);
+        playlistService.softDeletePlaylist(playlists, deletedPlaylists, secondPlaylist);
+        playlistService.restorePendingDeletedPlaylist(playlists, deletedPlaylists);
 
         assertEquals(3, playlists.size());
         assertEquals(firstPlaylist, playlists.get(0));
@@ -354,6 +359,7 @@ public class PlaylistServiceTest {
         assertEquals(trackOne, restoredPlaylist.getTracks().get(0));
         assertEquals(trackTwo, restoredPlaylist.getTracks().get(1));
 
+        assertFalse(deletedPlaylists.contains(secondPlaylist));
         assertFalse(playlistService.hasPendingDeletedPlaylist());
     }
 
@@ -362,14 +368,16 @@ public class PlaylistServiceTest {
         PlaylistService playlistService = new PlaylistService();
 
         ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+        ObservableList<Playlist> deletedPlaylists = FXCollections.observableArrayList();
 
         Playlist playlist = new Playlist("Playlist A");
         playlists.add(playlist);
 
-        playlistService.restorePendingDeletedPlaylist(playlists);
+        playlistService.restorePendingDeletedPlaylist(playlists, deletedPlaylists);
 
         assertEquals(1, playlists.size());
         assertEquals(playlist, playlists.get(0));
+        assertTrue(deletedPlaylists.isEmpty());
         assertFalse(playlistService.hasPendingDeletedPlaylist());
     }
 
@@ -378,11 +386,12 @@ public class PlaylistServiceTest {
         PlaylistService playlistService = new PlaylistService();
 
         ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+        ObservableList<Playlist> deletedPlaylists = FXCollections.observableArrayList();
 
         Playlist playlist = new Playlist("Playlist A");
         playlists.add(playlist);
 
-        playlistService.softDeletePlaylist(playlists, playlist);
+        playlistService.softDeletePlaylist(playlists, deletedPlaylists, playlist);
 
         assertTrue(playlistService.hasPendingDeletedPlaylist());
 
@@ -390,17 +399,19 @@ public class PlaylistServiceTest {
 
         assertFalse(playlistService.hasPendingDeletedPlaylist());
         assertNull(playlistService.getPendingDeletedPlaylist());
+        assertTrue(deletedPlaylists.contains(playlist));
     }
 
     @Test
     void softDeletePlaylistShouldRejectNullPlaylistList() {
         PlaylistService playlistService = new PlaylistService();
 
+        ObservableList<Playlist> deletedPlaylists = FXCollections.observableArrayList();
         Playlist playlist = new Playlist("Playlist A");
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> playlistService.softDeletePlaylist(null, playlist)
+                () -> playlistService.softDeletePlaylist(null, deletedPlaylists, playlist)
         );
     }
 
@@ -409,10 +420,11 @@ public class PlaylistServiceTest {
         PlaylistService playlistService = new PlaylistService();
 
         ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+        ObservableList<Playlist> deletedPlaylists = FXCollections.observableArrayList();
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> playlistService.softDeletePlaylist(playlists, null)
+                () -> playlistService.softDeletePlaylist(playlists, deletedPlaylists, null)
         );
     }
 
@@ -421,12 +433,13 @@ public class PlaylistServiceTest {
         PlaylistService playlistService = new PlaylistService();
 
         ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+        ObservableList<Playlist> deletedPlaylists = FXCollections.observableArrayList();
 
         Playlist playlist = new Playlist("Playlist A");
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> playlistService.softDeletePlaylist(playlists, playlist)
+                () -> playlistService.softDeletePlaylist(playlists, deletedPlaylists, playlist)
         );
     }
 
@@ -434,9 +447,11 @@ public class PlaylistServiceTest {
     void restorePendingDeletedPlaylistShouldRejectNullPlaylistList() {
         PlaylistService playlistService = new PlaylistService();
 
+        ObservableList<Playlist> deletedPlaylists = FXCollections.observableArrayList();
+
         assertThrows(
                 IllegalArgumentException.class,
-                () -> playlistService.restorePendingDeletedPlaylist(null)
+                () -> playlistService.restorePendingDeletedPlaylist(null, deletedPlaylists)
         );
     }
 

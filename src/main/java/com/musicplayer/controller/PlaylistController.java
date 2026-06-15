@@ -75,51 +75,39 @@ public class PlaylistController {
     @FXML
     private ListView<Playlist> playlistListView;
 
-
     private TableView<Track> trackTableView;
-
     private TableView<Track> playlistTrackTableView;
-
     private TableColumn<Track, Integer> playlistTrackOrderColumn;
-
     private TableColumn<Track, String> playlistTrackTitleColumn;
-
     private TableColumn<Track, String> playlistTrackAuthorColumn;
-
     private TableColumn<Track, String> playlistTrackLengthColumn;
-
     private TableColumn<Track, String> playlistTrackGenreColumn;
-
     private Label statusLabel;
 
     private ObservableList<Playlist> playlists;
-
+    private ObservableList<Playlist> deletedPlaylists;
     private ObservableList<Track> selectedPlaylistTracks;
 
     private SortedList<Track> sortedSelectedPlaylistTracks;
-
     private Playlist currentSelectedPlaylist;
 
     private final TrackSortStrategy selectedPlaylistTitleSortStrategy = new TitleSortStrategy();
-
     private final TrackSortStrategy selectedPlaylistAuthorSortStrategy = new AuthorSortStrategy();
-
     private final TrackSortStrategy selectedPlaylistLengthSortStrategy = new LengthSortStrategy();
 
     private TableColumn<Track, ?> activeSelectedPlaylistSortColumn;
-
     private boolean selectedPlaylistSortAscending = true;
 
     private PlayerController playerControlController;
-
     private PlaylistService playlistService;
-
     private CommandManager commandManager;
-
     private UndoSnackbarHandler undoSnackbarHandler;
-
     private SearchService searchService;
 
+    /**
+     * Azione da eseguire per aprire il cestino (delegata al MainController).
+     */
+    private Runnable openTrashAction;
 
     /**
      * Imposta il gestore dello snackbar globale.
@@ -128,6 +116,15 @@ public class PlaylistController {
      */
     public void setUndoSnackbarHandler(UndoSnackbarHandler undoSnackbarHandler) {
         this.undoSnackbarHandler = undoSnackbarHandler;
+    }
+
+    /**
+     * Imposta l'azione da eseguire per aprire il cestino.
+     *
+     * @param openTrashAction azione fornita dal MainController
+     */
+    public void setOpenTrashAction(Runnable openTrashAction) {
+        this.openTrashAction = openTrashAction;
     }
 
     /**
@@ -147,6 +144,7 @@ public class PlaylistController {
             TableColumn<Track, String> playlistTrackGenreColumn,
             Label statusLabel,
             ObservableList<Playlist> playlists,
+            ObservableList<Playlist> deletedPlaylists,
             ObservableList<Track> selectedPlaylistTracks,
             PlayerController playerControlController,
             PlaylistService playlistService,
@@ -161,6 +159,7 @@ public class PlaylistController {
         this.playlistTrackGenreColumn = playlistTrackGenreColumn;
         this.statusLabel = statusLabel;
         this.playlists = playlists;
+        this.deletedPlaylists = deletedPlaylists;
         this.selectedPlaylistTracks = selectedPlaylistTracks;
         this.playerControlController = playerControlController;
         this.playlistService = playlistService;
@@ -219,6 +218,7 @@ public class PlaylistController {
         generatePlaylistByTag(trackTableView.getItems());
     }
 
+
     /**
      * Configura la ListView delle playlist.
      */
@@ -276,11 +276,6 @@ public class PlaylistController {
 
     /**
      * Restituisce la posizione originale della traccia nella playlist selezionata.
-     * <p>
-     * Il valore viene usato dalla colonna "#". La posizione viene calcolata rispetto
-     * all'ordine salvato nel Model, non rispetto all'ordine temporaneo mostrato
-     * dalla tabella dopo un ordinamento locale.
-     * </p>
      *
      * @param track traccia da cercare nella playlist corrente
      * @return posizione originale della traccia, partendo da 1; restituisce 0 se
@@ -302,16 +297,6 @@ public class PlaylistController {
 
     /**
      * Configura l'ordinamento locale della Selected Playlist.
-     * <p>
-     * Sono ordinabili solo le colonne "#", titolo, autore e durata.
-     * La colonna genere viene esclusa perché non è prevista come criterio
-     * ordinabile per questa User Story.
-     * </p>
-     * <p>
-     * L'ordinamento viene applicato alla SortedList usata dalla tabella,
-     * quindi modifica solo l'ordine visualizzato nella Selected Playlist
-     * senza alterare l'ordine reale salvato nella playlist del Model.
-     * </p>
      */
     private void configureSelectedPlaylistSorting() {
         playlistTrackOrderColumn.setSortable(true);
@@ -431,9 +416,7 @@ public class PlaylistController {
         }
 
         if (sortColumn == playlistTrackGenreColumn) {
-
             return "genere";
-
         }
 
         return "metadato";
@@ -441,9 +424,6 @@ public class PlaylistController {
 
     /**
      * Configura l'evidenziazione della traccia in riproduzione.
-     *
-     * Il controller aggiunge solo una classe CSS. Lo stile grafico effettivo
-     * viene definito nel file CSS.
      */
     private void configurePlayingTrackStyle() {
         playlistTrackTableView.setRowFactory(tableView -> new TableRow<>() {
@@ -517,7 +497,7 @@ public class PlaylistController {
         dialog.setHeaderText("Rinomina playlist");
         dialog.setContentText("Nuovo nome:");
 
-        StyleManager.applyToDialog(dialog); //collego css
+        StyleManager.applyToDialog(dialog);
 
         Optional<String> result = dialog.showAndWait();
 
@@ -570,7 +550,7 @@ public class PlaylistController {
             return;
         }
 
-        playlistService.softDeletePlaylist(playlists, selectedPlaylist);
+        playlistService.softDeletePlaylist(playlists, deletedPlaylists, selectedPlaylist);
 
         playlistListView.getSelectionModel().clearSelection();
         updateSelectedPlaylistView(null);
@@ -596,7 +576,7 @@ public class PlaylistController {
 
         Playlist restoredPlaylist = playlistService.getPendingDeletedPlaylist();
 
-        playlistService.restorePendingDeletedPlaylist(playlists);
+        playlistService.restorePendingDeletedPlaylist(playlists, deletedPlaylists);
 
         playlistListView.getSelectionModel().select(restoredPlaylist);
         updateSelectedPlaylistView(restoredPlaylist);
@@ -1043,14 +1023,9 @@ public class PlaylistController {
 
         alert.showAndWait();
     }
+
     /**
      * Applica il filtro di ricerca alla lista delle playlist visibili.
-     * <p>
-     * Il metodo aggiorna gli elementi mostrati nella {@code ListView} mantenendo
-     * solo le playlist che corrispondono alla query tramite {@link SearchService}.
-     * Se i riferimenti grafici o i dati necessari non sono disponibili,
-     * il metodo non esegue alcuna operazione.
-     * </p>
      *
      * @param query testo da cercare; se {@code null} o vuoto, vengono mostrate
      *              tutte le playlist disponibili
@@ -1068,15 +1043,6 @@ public class PlaylistController {
     }
 
     /**
-     * Azione da eseguire per aprire il cestino (delegata al MainController).
-     */
-    private Runnable openTrashAction;
-
-    public void setOpenTrashAction(Runnable openTrashAction) {
-        this.openTrashAction = openTrashAction;
-    }
-
-    /**
      * Gestisce il click sul pulsante "Open Trash Bin" della sidebar.
      * È invocato direttamente dal file PlaylistView.fxml.
      */
@@ -1086,5 +1052,4 @@ public class PlaylistController {
             openTrashAction.run();
         }
     }
-
 }
