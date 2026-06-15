@@ -16,7 +16,6 @@ import com.musicplayer.service.sort.TrackSortStrategy;
 import com.musicplayer.service.sort.YearSortStrategy;
 
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -695,12 +694,6 @@ public class LibraryController {
         setStatus("Filtri rimossi.");
     }
 
-    /**
-     * Predisposizione per la ricerca globale.
-     */
-    //public void clearSearch() {
-      //  resetFilters();
-    //}
 
     /**
      * Aggiorna la sezione Most Played solo se cambia il totale delle riproduzioni.

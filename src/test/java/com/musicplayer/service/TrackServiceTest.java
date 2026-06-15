@@ -99,7 +99,8 @@ class TrackServiceTest {
                 "Artist A",
                 "3:45",
                 "Pop",
-                "2024"
+                "2024",
+                "x"
         );
 
         assertEquals("Song A", track.getTitle());
@@ -107,6 +108,7 @@ class TrackServiceTest {
         assertEquals("3:45", track.getLength());
         assertEquals("Pop", track.getGenre());
         assertEquals(2024, track.getYear());
+        assertEquals("x",track.getAudioFilePath());
     }
 
     @Test
@@ -117,7 +119,8 @@ class TrackServiceTest {
                         "Artist A",
                         "3:45",
                         "Pop",
-                        "abcd"
+                        "abcd",
+                        "x"
                 )
         );
     }
@@ -130,7 +133,8 @@ class TrackServiceTest {
                         "Artist A",
                         "wrong",
                         "Pop",
-                        "2024"
+                        "2024",
+                        "x"
                 )
         );
     }
@@ -143,7 +147,8 @@ class TrackServiceTest {
                         "Artist A",
                         "3:45",
                         "Pop",
-                        "2024"
+                        "2024",
+                        "x"
                 )
         );
     }
