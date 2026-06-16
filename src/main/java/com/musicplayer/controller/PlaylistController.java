@@ -806,6 +806,14 @@ public class PlaylistController {
             playlistTrackTableView.getSelectionModel().clearSelection();
             playlistTrackTableView.refresh();
 
+            if (undoSnackbarHandler != null) {
+                undoSnackbarHandler.showUndoSnackbar(
+                        "Track removed from playlist",
+                        () -> undoRemoveTrackFromPlaylist(selectedPlaylist, selectedTrack, removedIndex),
+                        () -> confirmRemoveTrackFromPlaylist()
+                );
+            }
+
             if (!removedTrackWasPlaying) {
                 setStatus(
                         "Track removed from playlist: "
@@ -934,11 +942,25 @@ public class PlaylistController {
     }
 
     /**
-     * Forza l'aggiornamento grafico della tabella della playlist selezionata.
+     * Sincronizza e aggiorna la tabella della playlist selezionata.
+     * Questo metodo ricarichiamo i dati dalla playlist corrente nella lista osservabile
+     * e quindi aggiorna la vista. È essenziale per l'undo/redo.
      */
     public void refreshSelectedPlaylistTable() {
+        if (currentSelectedPlaylist == null) {
+            return;
+        }
+
+        // Sincronizza i dati dalla playlist con la lista osservabile
+        selectedPlaylistTracks.clear();
+        selectedPlaylistTracks.addAll(currentSelectedPlaylist.getTracks());
+
         if (playlistTrackTableView != null) {
             playlistTrackTableView.refresh();
+        }
+
+        if (playerControlController != null) {
+            playerControlController.setCurrentPlaylist(selectedPlaylistTracks);
         }
     }
 
@@ -1040,6 +1062,49 @@ public class PlaylistController {
                         .filter(playlist -> searchService.matchesPlaylist(playlist, query))
                         .toList()
         ));
+    }
+
+    /**
+     * Gestisce il click sul pulsante "Open Trash Bin" della sidebar.
+     * È invocato direttamente dal file PlaylistView.fxml.
+     */
+     /**
+     * Annulla la rimozione della traccia dalla playlist.
+     */
+    private void undoRemoveTrackFromPlaylist(Playlist selectedPlaylist, Track selectedTrack, int removedIndex) {
+        if (selectedPlaylist == null || selectedTrack == null) {
+            return;
+        }
+
+        // Esegui l'undo del comando
+        commandManager.undo();
+
+        // Aggiorna l'UI per riflettere il cambio nel modello
+        selectedPlaylistTracks.add(removedIndex, selectedTrack);
+        playlistTrackTableView.getSelectionModel().select(selectedTrack);
+        playlistTrackTableView.scrollTo(selectedTrack);
+
+        if (playerControlController != null) {
+            playerControlController.setCurrentPlaylist(selectedPlaylistTracks);
+        }
+
+        playlistTrackTableView.refresh();
+
+        setStatus(
+                "Track added back to playlist: "
+                        + selectedTrack.getTitle()
+                        + " → "
+                        + selectedPlaylist.getName()
+        );
+    }
+
+    /**
+     * Conferma definitivamente la rimozione della traccia dalla playlist.
+     */
+    private void confirmRemoveTrackFromPlaylist() {
+        // Non è necessario fare nulla - la traccia è già stata rimossa dal modello
+        // e dalla UI quando si è eseguito il comando
+        setStatus("Track removal confirmed.");
     }
 
     /**

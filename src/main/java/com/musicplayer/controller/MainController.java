@@ -395,19 +395,63 @@ public class MainController {
 
 
     /**
-     * Predisposizione per Undo generale.
+     * Gestisce il click sul pulsante Undo generale.
+     * Annulla l'ultimo comando eseguito tramite il CommandManager.
      */
     @FXML
     private void handleUndo() {
-        System.out.println("Undo");
+        if (commandManager != null && commandManager.canUndo()) {
+            // Se lo snackbar è visibile, nascondilo (l'undo globale sostituisce il "Annulla" dello snackbar)
+            if (snackbarTimer != null) {
+                snackbarTimer.stop();
+            }
+            clearSnackbarActions();
+            hideUndoSnackbar();
+
+            // Esegui l'undo del comando
+            commandManager.undo();
+
+            // Aggiorna l'UI del PlaylistController dopo l'undo
+            if (playlistSectionController != null) {
+                playlistSectionController.refreshSelectedPlaylistTable();
+            }
+
+            if (trackTableView != null) {
+                trackTableView.refresh();
+            }
+
+            statusLabel.setText("Undo executed");
+        }
     }
 
     /**
-     * Predisposizione per Redo generale.
+     * Gestisce il click sul pulsante Redo generale.
+     * Ripete l'ultimo comando annullato tramite il CommandManager.
      */
     @FXML
     private void handleRedo() {
-        System.out.println("Redo");
+        if (commandManager != null && commandManager.canRedo()) {
+            // Se lo snackbar è visibile, nascondilo
+            if (snackbarTimer != null) {
+                snackbarTimer.stop();
+            }
+            clearSnackbarActions();
+            hideUndoSnackbar();
+
+            // Esegui il redo del comando
+            commandManager.redo();
+
+            // Aggiorna l'UI del PlaylistController dopo il redo
+            if (playlistSectionController != null) {
+                playlistSectionController.refreshSelectedPlaylistTable();
+            }
+
+            if (trackTableView != null) {
+                trackTableView.refresh();
+            }
+
+            statusLabel.setText("Redo executed");
+        }
     }
 
     @FXML
