@@ -150,11 +150,11 @@ public class PlaylistService {
      */
     public void validateTrackAdditionSelection(Playlist playlist, Track track) {
         if (playlist == null) {
-            throw new IllegalArgumentException("Nessuna playlist selezionata.");
+            throw new IllegalArgumentException("No playlist selected.");
         }
 
         if (track == null) {
-            throw new IllegalArgumentException("Nessuna traccia selezionata.");
+            throw new IllegalArgumentException("No tracks selected.");
         }
     }
 
@@ -179,11 +179,11 @@ public class PlaylistService {
      */
     public void validateTrackRemovalSelection(Playlist playlist, Track track) {
         if (playlist == null) {
-            throw new IllegalArgumentException("Nessuna playlist selezionata.");
+            throw new IllegalArgumentException("No playlist selected.");
         }
 
         if (track == null) {
-            throw new IllegalArgumentException("Nessuna traccia selezionata nella playlist.");
+            throw new IllegalArgumentException("No tracks selected.");
         }
     }
 

@@ -68,8 +68,8 @@ public class TrashController {
                     titleLabel.setStyle("-fx-font-weight: bold;");
 
                     String dateStr = track.getDeletedAt() != null ?
-                            track.getDeletedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "Sconosciuta";
-                    Label dateLabel = new Label("Eliminata il: " + dateStr);
+                            track.getDeletedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "Unknown";
+                    Label dateLabel = new Label("Eliminated on: " + dateStr);
                     dateLabel.getStyleClass().add("subtitle");
 
                     infoBox.getChildren().addAll(titleLabel, dateLabel);

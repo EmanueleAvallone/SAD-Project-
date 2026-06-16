@@ -251,7 +251,7 @@ public class PlaylistController {
 
                     if (newTrack != null) {
                         setStatus(
-                                "Traccia selezionata nella playlist: "
+                                "Track selected in playlist: "
                                         + newTrack.getTitle()
                                         + " - "
                                         + newTrack.getAuthor()
@@ -314,7 +314,7 @@ public class PlaylistController {
                 sortedSelectedPlaylistTracks.setComparator(null);
                 activeSelectedPlaylistSortColumn = null;
                 selectedPlaylistSortAscending = true;
-                setStatus("Ordinamento Selected Playlist rimosso: ordine originale ripristinato.");
+                setStatus("Selected Playlist sorting removed: original order restored.");
                 return true;
             }
 
@@ -329,9 +329,9 @@ public class PlaylistController {
                 selectedPlaylistSortAscending = true;
 
                 setStatus(
-                        "La colonna "
+                        "The column "
                                 + getSelectedPlaylistSortLabel(sortColumn)
-                                + " non è ordinabile."
+                                + " cannot be ordered."
                 );
 
                 return true;
@@ -349,10 +349,10 @@ public class PlaylistController {
             sortedSelectedPlaylistTracks.setComparator(comparator);
 
             setStatus(
-                    "Selected Playlist ordinata per "
+                    "Selected Playlist sorted by "
                             + getSelectedPlaylistSortLabel(sortColumn)
-                            + " in ordine "
-                            + (selectedPlaylistSortAscending ? "crescente." : "decrescente.")
+                            + " in order "
+                            + (selectedPlaylistSortAscending ? "increasing." : "decreasing.")
             );
 
             return true;
@@ -457,8 +457,8 @@ public class PlaylistController {
     public void createPlaylist() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("New playlist");
-        dialog.setHeaderText("Crea una nuova playlist");
-        dialog.setContentText("Nome playlist:");
+        dialog.setHeaderText("Create a new playlist");
+        dialog.setContentText("Playlist name:");
 
         StyleManager.applyToDialog(dialog);
 
@@ -474,7 +474,7 @@ public class PlaylistController {
             playlistListView.getSelectionModel().select(playlist);
             updateSelectedPlaylistView(playlist);
 
-            setStatus("Playlist creata: " + playlist.getName());
+            setStatus("Playlist created: " + playlist.getName());
 
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
@@ -488,14 +488,14 @@ public class PlaylistController {
         Playlist selectedPlaylist = getSelectedPlaylist();
 
         if (selectedPlaylist == null) {
-            showError("Seleziona una playlist da rinominare.");
+            showError("Select a playlist to rename.");
             return;
         }
 
         TextInputDialog dialog = new TextInputDialog(selectedPlaylist.getName());
         dialog.setTitle("Rename playlist");
-        dialog.setHeaderText("Rinomina playlist");
-        dialog.setContentText("Nuovo nome:");
+        dialog.setHeaderText("Rename playlist");
+        dialog.setContentText("New name:");
 
         StyleManager.applyToDialog(dialog);
 
@@ -511,7 +511,7 @@ public class PlaylistController {
             playlistListView.refresh();
             updateSelectedPlaylistView(selectedPlaylist);
 
-            setStatus("Playlist rinominata: " + selectedPlaylist.getName());
+            setStatus("Renamed playlist: " + selectedPlaylist.getName());
 
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
@@ -525,15 +525,15 @@ public class PlaylistController {
         Playlist selectedPlaylist = getSelectedPlaylist();
 
         if (selectedPlaylist == null) {
-            showError("Seleziona una playlist da eliminare.");
+            showError("Select a playlist to delete.");
             return;
         }
 
         Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
         confirmationAlert.setTitle("Delete playlist");
-        confirmationAlert.setHeaderText("Conferma eliminazione");
+        confirmationAlert.setHeaderText("Confirm deletion");
         confirmationAlert.setContentText(
-                "Vuoi eliminare la playlist \"" + selectedPlaylist.getName() + "\"?"
+                "Do you want to delete the playlist? \"" + selectedPlaylist.getName() + "\"?"
         );
 
         ButtonType cancelButton = new ButtonType("Cancel");
@@ -546,7 +546,7 @@ public class PlaylistController {
         Optional<ButtonType> result = confirmationAlert.showAndWait();
 
         if (result.isEmpty() || result.get() == cancelButton) {
-            setStatus("Eliminazione playlist annullata.");
+            setStatus("Playlist deletion canceled.");
             return;
         }
 
@@ -557,13 +557,13 @@ public class PlaylistController {
 
         if (undoSnackbarHandler != null) {
             undoSnackbarHandler.showUndoSnackbar(
-                    "Playlist rimossa",
+                    "Playlist removed",
                     this::restorePendingDeletedPlaylist,
                     this::confirmPendingDeletedPlaylist
             );
         }
 
-        setStatus("Playlist rimossa temporaneamente: " + selectedPlaylist.getName());
+        setStatus("Playlist temporarily removed: " + selectedPlaylist.getName());
     }
 
     /**
@@ -581,7 +581,7 @@ public class PlaylistController {
         playlistListView.getSelectionModel().select(restoredPlaylist);
         updateSelectedPlaylistView(restoredPlaylist);
 
-        setStatus("Eliminazione playlist annullata: " + restoredPlaylist.getName());
+        setStatus("Playlist deletion canceled: " + restoredPlaylist.getName());
     }
 
     /**
@@ -596,7 +596,7 @@ public class PlaylistController {
 
         playlistService.clearPendingDeletedPlaylist();
 
-        setStatus("Playlist eliminata definitivamente: " + deletedPlaylist.getName());
+        setStatus("Playlist permanently deleted: " + deletedPlaylist.getName());
     }
 
     /**
@@ -613,14 +613,14 @@ public class PlaylistController {
                 .collect(Collectors.toList());
 
         if (uniqueGenres.isEmpty()) {
-            showError("Nessun genere presente nella libreria.");
+            showError("No genres present in the library.");
             return;
         }
 
         ChoiceDialog<String> dialog = new ChoiceDialog<>(uniqueGenres.get(0), uniqueGenres);
         dialog.setTitle("Generate Smart Playlist");
-        dialog.setHeaderText("Filtra per genere");
-        dialog.setContentText("Seleziona il genere desiderato:");
+        dialog.setHeaderText("Filter by genre");
+        dialog.setContentText("Select the desired genre:");
 
         StyleManager.applyToDialog(dialog);
 
@@ -636,7 +636,7 @@ public class PlaylistController {
             playlistListView.getSelectionModel().select(generated);
             updateSelectedPlaylistView(generated);
 
-            setStatus("Smart playlist creata: " + generated.getName());
+            setStatus("Smart playlist created: " + generated.getName());
 
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
@@ -655,14 +655,14 @@ public class PlaylistController {
                 .collect(Collectors.toList());
 
         if (uniqueYears.isEmpty()) {
-            showError("Nessun anno presente nella libreria.");
+            showError("No years present in the library.");
             return;
         }
 
         ChoiceDialog<Integer> dialog = new ChoiceDialog<>(uniqueYears.get(0), uniqueYears);
         dialog.setTitle("Generate Smart Playlist");
-        dialog.setHeaderText("Filtra per anno");
-        dialog.setContentText("Seleziona l'anno desiderato:");
+        dialog.setHeaderText("Filter by year");
+        dialog.setContentText("Select the desired year:");
 
         StyleManager.applyToDialog(dialog);
 
@@ -678,7 +678,7 @@ public class PlaylistController {
             playlistListView.getSelectionModel().select(generated);
             updateSelectedPlaylistView(generated);
 
-            setStatus("Smart playlist creata: " + generated.getName());
+            setStatus("Smart playlist created: " + generated.getName());
 
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
@@ -691,8 +691,8 @@ public class PlaylistController {
     public void generatePlaylistByTag(ObservableList<Track> tracks) {
         ChoiceDialog<Tag> dialog = new ChoiceDialog<>(Tag.FAV, Tag.values());
         dialog.setTitle("Generate Smart Playlist");
-        dialog.setHeaderText("Filtra per tag");
-        dialog.setContentText("Seleziona il tag desiderato:");
+        dialog.setHeaderText("Filter by tag");
+        dialog.setContentText("Select the desired tag:");
 
         StyleManager.applyToDialog(dialog);
 
@@ -708,7 +708,7 @@ public class PlaylistController {
             playlistListView.getSelectionModel().select(generated);
             updateSelectedPlaylistView(generated);
 
-            setStatus("Smart playlist creata: " + generated.getName());
+            setStatus("Smart playlist created: " + generated.getName());
 
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
@@ -736,7 +736,7 @@ public class PlaylistController {
             playlistTrackTableView.refresh();
 
             setStatus(
-                    "Traccia aggiunta alla playlist: "
+                    "Track added to playlist: "
                             + selectedTrack.getTitle()
                             + " → "
                             + selectedPlaylist.getName()
@@ -759,9 +759,9 @@ public class PlaylistController {
 
             Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
             confirmationAlert.setTitle("Remove track");
-            confirmationAlert.setHeaderText("Conferma rimozione");
+            confirmationAlert.setHeaderText("Confirm removal");
             confirmationAlert.setContentText(
-                    "Vuoi rimuovere la traccia \""
+                    "You want to remove the track \""
                             + selectedTrack.getTitle()
                             + "\" dalla playlist \""
                             + selectedPlaylist.getName()
@@ -778,7 +778,7 @@ public class PlaylistController {
             Optional<ButtonType> result = confirmationAlert.showAndWait();
 
             if (result.isEmpty() || result.get() == cancelButton) {
-                setStatus("Rimozione annullata.");
+                setStatus("Removal cancelled.");
                 return;
             }
 
@@ -808,7 +808,7 @@ public class PlaylistController {
 
             if (!removedTrackWasPlaying) {
                 setStatus(
-                        "Traccia rimossa dalla playlist: "
+                        "Track removed from playlist: "
                                 + selectedTrack.getTitle()
                                 + " ← "
                                 + selectedPlaylist.getName()
@@ -850,7 +850,7 @@ public class PlaylistController {
                 playerControlController.syncQueueWithoutInterrupting(selectedPlaylist.getTracks());
             }
 
-            setStatus("Traccia spostata su: " + selectedTrack.getTitle());
+            setStatus("Track moved up: " + selectedTrack.getTitle());
 
         } catch (Exception exception) {
             showError(exception.getMessage());
@@ -887,7 +887,7 @@ public class PlaylistController {
                 playerControlController.syncQueueWithoutInterrupting(selectedPlaylist.getTracks());
             }
 
-            setStatus("Traccia spostata giù: " + selectedTrack.getTitle());
+            setStatus("Track moved down: " + selectedTrack.getTitle());
 
         } catch (Exception exception) {
             showError(exception.getMessage());
@@ -906,7 +906,7 @@ public class PlaylistController {
                 playlistTrackTableView.refresh();
             }
 
-            setStatus("Nessuna playlist selezionata.");
+            setStatus("No playlist selected.");
             return;
         }
 
@@ -921,14 +921,14 @@ public class PlaylistController {
         }
 
         if (playlist.getTracks().isEmpty()) {
-            setStatus("Playlist selezionata: " + playlist.getName() + " - nessuna traccia presente.");
+            setStatus("Selected Playlist: " + playlist.getName() + " - no trace present.");
         } else {
             setStatus(
-                    "Playlist selezionata: "
+                    "Selected Playlist: "
                             + playlist.getName()
                             + " - "
                             + playlist.getTracks().size()
-                            + " tracce"
+                            + " tracks"
             );
         }
     }
@@ -958,7 +958,7 @@ public class PlaylistController {
 
         if (playlist.getTracks().isEmpty()) {
             playerControlController.stopPlayback();
-            setStatus("La playlist è vuota: riproduzione fermata.");
+            setStatus("The playlist is empty: playback stopped.");
             return;
         }
 
@@ -973,7 +973,7 @@ public class PlaylistController {
         playerControlController.playTrackFromPlaylist(nextTrack);
 
         setStatus(
-                "Traccia rimossa durante la riproduzione. Ora in riproduzione: "
+                "Track removed during playback. Now playing.: "
                         + nextTrack.getTitle()
         );
     }
@@ -1015,7 +1015,7 @@ public class PlaylistController {
      */
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Errore");
+        alert.setTitle("Error");
         alert.setHeaderText(null);
         alert.setContentText(message);
 

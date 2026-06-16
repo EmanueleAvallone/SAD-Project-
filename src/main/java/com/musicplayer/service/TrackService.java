@@ -52,11 +52,11 @@ public class TrackService {
                              String genre,
                              String yearText,
                              String audioFilePath) {
-        validateTextField(title, "Il titolo della traccia è obbligatorio.");
-        validateTextField(author, "L'autore della traccia è obbligatorio.");
-        validateTextField(length, "La durata della traccia è obbligatoria.");
-        validateTextField(genre, "Il genere della traccia è obbligatorio.");
-        validateTextField(yearText, "L'anno della traccia è obbligatorio.");
+        validateTextField(title, "The track title is required.");
+        validateTextField(author, "The author of the track is required.");
+        validateTextField(length, "The duration of the track is mandatory.");
+        validateTextField(genre, "The genre of the track is mandatory.");
+        validateTextField(yearText, "The track year is mandatory.");
 
         int year = parseAndValidateYear(yearText);
         validateLength(length);
@@ -387,11 +387,11 @@ public class TrackService {
                                  ObservableList<Track> trashList,
                                  Track track) {
         if (tracks == null || trashList == null || track == null) {
-            throw new IllegalArgumentException("I parametri per il ripristino non possono essere null.");
+            throw new IllegalArgumentException("The restore parameters cannot be null.");
         }
 
         if (!trashList.contains(track)) {
-            throw new IllegalArgumentException("La traccia selezionata non è presente nel cestino.");
+            throw new IllegalArgumentException("The selected track is not in the recycle bin.");
         }
 
         trashList.remove(track);
@@ -408,17 +408,17 @@ public class TrackService {
         java.io.File file = new java.io.File(audioFilePath.trim());
 
         if (!file.exists()) {
-            throw new IllegalArgumentException("Il file audio selezionato non esiste.");
+            throw new IllegalArgumentException("The selected audio file does not exist.");
         }
 
         if (!file.isFile()) {
-            throw new IllegalArgumentException("Il percorso selezionato non è un file valido.");
+            throw new IllegalArgumentException("The selected path is not a valid file.");
         }
 
         String lowerCaseName = file.getName().toLowerCase();
 
         if (!lowerCaseName.endsWith(".mp3")) {
-            throw new IllegalArgumentException("Sono supportati solo file audio in formato .mp3.");
+            throw new IllegalArgumentException("Only audio files in .mp3 format are supported.");
         }
     }
 
