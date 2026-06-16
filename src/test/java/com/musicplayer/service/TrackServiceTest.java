@@ -5,12 +5,14 @@ import com.musicplayer.model.Track;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.junit.jupiter.api.Test;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
 
@@ -97,7 +99,8 @@ class TrackServiceTest {
                 "Artist A",
                 "3:45",
                 "Pop",
-                "2024"
+                "2024",
+                "x"
         );
 
         assertEquals("Song A", track.getTitle());
@@ -105,6 +108,7 @@ class TrackServiceTest {
         assertEquals("3:45", track.getLength());
         assertEquals("Pop", track.getGenre());
         assertEquals(2024, track.getYear());
+        assertEquals("x",track.getAudioFilePath());
     }
 
     @Test
@@ -115,7 +119,8 @@ class TrackServiceTest {
                         "Artist A",
                         "3:45",
                         "Pop",
-                        "abcd"
+                        "abcd",
+                        "x"
                 )
         );
     }
@@ -128,7 +133,8 @@ class TrackServiceTest {
                         "Artist A",
                         "wrong",
                         "Pop",
-                        "2024"
+                        "2024",
+                        "x"
                 )
         );
     }
@@ -141,7 +147,8 @@ class TrackServiceTest {
                         "Artist A",
                         "3:45",
                         "Pop",
-                        "2024"
+                        "2024",
+                        "x"
                 )
         );
     }
@@ -265,4 +272,71 @@ class TrackServiceTest {
                 () -> trackService.restorePendingDeletedTrack(null)
         );
     }
+
+    @Test
+    void moveToTrashShouldMoveTrackAndAssignTimestamp() {
+        ObservableList<Track> mainLibrary = FXCollections.observableArrayList();
+        ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+        ObservableList<Track> trashList = FXCollections.observableArrayList();
+
+        Track testTrack = new Track("Song to Delete", "Artist", "3:00", "Pop", 2023);
+        mainLibrary.add(testTrack);
+
+        Playlist p1 = new Playlist("My Favs");
+        p1.addTrack(testTrack);
+        playlists.add(p1);
+
+        // Esecuzione
+        trackService.moveToTrash(mainLibrary, playlists, trashList, testTrack);
+
+        // Verifica che sia sparita dalla libreria principale
+        assertFalse(mainLibrary.contains(testTrack), "La traccia deve essere rimossa dalla libreria principale");
+
+        // Verifica che sia nel cestino
+        assertTrue(trashList.contains(testTrack), "La traccia deve essere presente nel cestino");
+        assertEquals(1, trashList.size(), "Il cestino deve contenere 1 elemento");
+
+        // Verifica il timestamp
+        assertTrue(testTrack.getDeletedAt() != null, "Il timestamp deletedAt non deve essere null");
+        assertTrue(testTrack.getDeletedAt().isBefore(LocalDateTime.now().plusSeconds(1)), "Il timestamp deve essere attuale");
+    }
+
+    @Test
+    void moveToTrashShouldRemoveTrackFromAllPlaylists() {
+        ObservableList<Track> mainLibrary = FXCollections.observableArrayList();
+        ObservableList<Playlist> playlists = FXCollections.observableArrayList();
+        ObservableList<Track> trashList = FXCollections.observableArrayList();
+
+        Track testTrack = new Track("Song to Delete", "Artist", "3:00", "Pop", 2023);
+        mainLibrary.add(testTrack);
+
+        Playlist p1 = new Playlist("My Favs");
+        p1.addTrack(testTrack);
+        playlists.add(p1);
+
+        // Esecuzione
+        trackService.moveToTrash(mainLibrary, playlists, trashList, testTrack);
+
+        // Verifica che la playlist sia ora vuota
+        Playlist updatedPlaylist = playlists.get(0);
+        assertFalse(updatedPlaylist.getTracks().contains(testTrack), "La traccia deve essere rimossa dalla playlist");
+        assertTrue(updatedPlaylist.getTracks().isEmpty(), "La playlist deve risultare vuota");
+    }
+
+    @Test
+    void restoreFromTrashShouldMoveTrackBackToLibraryAndClearTimestamp() {
+        ObservableList<Track> mainLibrary = FXCollections.observableArrayList();
+        ObservableList<Track> trashList = FXCollections.observableArrayList();
+
+        Track testTrack = new Track("Song to Restore", "Artist", "3:00", "Pop", 2023);
+        testTrack.setDeletedAt(LocalDateTime.now());
+        trashList.add(testTrack);
+
+        trackService.restoreFromTrash(mainLibrary, trashList, testTrack);
+
+        assertFalse(trashList.contains(testTrack), "La traccia deve essere rimossa dal cestino");
+        assertTrue(mainLibrary.contains(testTrack), "La traccia deve tornare nella libreria principale");
+        assertNull(testTrack.getDeletedAt(), "Il timestamp deletedAt deve essere resettato a null");
+    }
+
 }

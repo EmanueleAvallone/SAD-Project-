@@ -71,15 +71,32 @@
                            GridPane.rowIndex="4"
                            GridPane.columnIndex="1"/>
 
-                <Label text="Notes / Description (optional)"
+                <Label text="Audio file"
                        GridPane.rowIndex="5"
                        GridPane.columnIndex="0"/>
 
+                <HBox spacing="8.0"
+                      GridPane.rowIndex="5"
+                      GridPane.columnIndex="1">
+                    <TextField fx:id="audioFilePathField"
+                               promptText="No audio file selected"
+                               editable="false"
+                               HBox.hgrow="ALWAYS"/>
+
+                    <Button text="Choose file"
+                            onAction="#handleChooseAudioFile"/>
+                </HBox>
+
+                <Label text="Notes / Description (optional)"
+                       GridPane.rowIndex="6"
+                       GridPane.columnIndex="0"/>
+
                 <TextArea fx:id="notesArea"
+                          styleClass="notes-area"
                           prefHeight="130.0"
                           promptText="Optional notes..."
                           wrapText="true"
-                          GridPane.rowIndex="5"
+                          GridPane.rowIndex="6"
                           GridPane.columnIndex="1"/>
 
             </GridPane>

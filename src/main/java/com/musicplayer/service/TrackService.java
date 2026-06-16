@@ -50,7 +50,8 @@ public class TrackService {
                              String author,
                              String length,
                              String genre,
-                             String yearText) {
+                             String yearText,
+                             String audioFilePath) {
         validateTextField(title, "Il titolo della traccia è obbligatorio.");
         validateTextField(author, "L'autore della traccia è obbligatorio.");
         validateTextField(length, "La durata della traccia è obbligatoria.");
@@ -59,13 +60,14 @@ public class TrackService {
 
         int year = parseAndValidateYear(yearText);
         validateLength(length);
-
+        validateAudioFilePath(audioFilePath);
         return new Track(
                 title.trim(),
                 author.trim(),
                 length.trim(),
                 genre.trim(),
-                year
+                year,
+                normalizeAudioFilePath(audioFilePath)
         );
     }
 
@@ -118,6 +120,38 @@ public class TrackService {
                 playlist.removeTrack(track);
             }
         }
+    }
+
+    /**
+     * Sposta una traccia nel cestino (Soft Delete di dominio).
+     * Rimuove la traccia dal catalogo principale e da tutte le playlist in cui è presente,
+     * registra il momento esatto dell'eliminazione e la inserisce nella collezione del cestino.
+     *
+     * @param tracks    Lista principale delle tracce
+     * @param playlists Lista di tutte le playlist
+     * @param trashList Lista delle tracce nel cestino
+     * @param track     Traccia da spostare nel cestino
+     * @throws IllegalArgumentException se uno dei parametri è null
+     */
+    public void moveToTrash(ObservableList<Track> tracks,
+                            ObservableList<Playlist> playlists,
+                            ObservableList<Track> trashList,
+                            Track track) {
+        if (tracks == null || playlists == null || trashList == null || track == null) {
+            throw new IllegalArgumentException("I parametri per lo spostamento nel cestino non possono essere null.");
+        }
+
+        tracks.remove(track);
+
+        for (Playlist playlist : playlists) {
+            if (playlist.getTracks().contains(track)) {
+                playlist.removeTrack(track);
+            }
+        }
+
+        track.setDeletedAt(java.time.LocalDateTime.now());
+
+        trashList.add(track);
     }
 
     /**
@@ -247,7 +281,7 @@ public class TrackService {
         originalTrack.setAuthor(editedTrack.getAuthor());
         originalTrack.setGenre(editedTrack.getGenre());
         originalTrack.setYear(editedTrack.getYear());
-
+        originalTrack.setAudioFilePath(editedTrack.getAudioFilePath());
         if (editedTrack.getTags() != null) {
             originalTrack.setTags(new java.util.HashSet<>(editedTrack.getTags()));
         } else {
@@ -337,5 +371,62 @@ public class TrackService {
                 .sorted((t1, t2) -> Integer.compare(t2.getPlayedCount(), t1.getPlayedCount()))
                 .limit(limit)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Ripristina una traccia dal cestino alla libreria principale.
+     * Rimuove la traccia dalla collezione del cestino, azzera il timestamp
+     * di eliminazione e la reinserisce nel catalogo visibile.
+     *
+     * @param tracks    Lista principale delle tracce
+     * @param trashList Lista delle tracce nel cestino
+     * @param track     Traccia da ripristinare
+     * @throws IllegalArgumentException se uno dei parametri è null o se la traccia non è nel cestino
+     */
+    public void restoreFromTrash(ObservableList<Track> tracks,
+                                 ObservableList<Track> trashList,
+                                 Track track) {
+        if (tracks == null || trashList == null || track == null) {
+            throw new IllegalArgumentException("I parametri per il ripristino non possono essere null.");
+        }
+
+        if (!trashList.contains(track)) {
+            throw new IllegalArgumentException("La traccia selezionata non è presente nel cestino.");
+        }
+
+        trashList.remove(track);
+
+        track.setDeletedAt(null);
+
+        tracks.add(track);
+    }
+    private void validateAudioFilePath(String audioFilePath) {
+        if (audioFilePath == null || audioFilePath.trim().isEmpty()) {
+            return;
+        }
+
+        java.io.File file = new java.io.File(audioFilePath.trim());
+
+        if (!file.exists()) {
+            throw new IllegalArgumentException("Il file audio selezionato non esiste.");
+        }
+
+        if (!file.isFile()) {
+            throw new IllegalArgumentException("Il percorso selezionato non è un file valido.");
+        }
+
+        String lowerCaseName = file.getName().toLowerCase();
+
+        if (!lowerCaseName.endsWith(".mp3")) {
+            throw new IllegalArgumentException("Sono supportati solo file audio in formato .mp3.");
+        }
+    }
+
+    private String normalizeAudioFilePath(String audioFilePath) {
+        if (audioFilePath == null || audioFilePath.trim().isEmpty()) {
+            return null;
+        }
+
+        return audioFilePath.trim();
     }
 }

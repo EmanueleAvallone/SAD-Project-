@@ -5,6 +5,9 @@ import com.musicplayer.model.Track;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import java.io.File;
 
 /**
  * Service responsabile della gestione della riproduzione simulata dei brani.
@@ -23,7 +26,7 @@ public class PlaybackService {
     private List<Track> currentQueue;
     private int currentTrackIndex;
     private boolean loopEnabled;
-
+    private MediaPlayer mediaPlayer;
     /**
      * Crea un nuovo service di riproduzione inizialmente fermo.
      */
@@ -47,12 +50,27 @@ public class PlaybackService {
         if (track == null) {
             throw new IllegalArgumentException("La traccia non può essere null");
         }
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.dispose();
+            mediaPlayer = null;
+        }
 
         this.currentTrack = track;
         this.currentTime = 0;
         this.duration = parseDuration(track.getLength());
         this.playing = true;
         track.incrementPlayedCount();
+
+        if (track.hasAudioFile()) {
+            File audioFile = new File(track.getAudioFilePath());
+
+            if (audioFile.exists() && audioFile.isFile()) {
+                Media media = new Media(audioFile.toURI().toString());
+                mediaPlayer = new MediaPlayer(media);
+                mediaPlayer.play();
+            }
+        }
     }
 
     /**
@@ -62,6 +80,9 @@ public class PlaybackService {
      * </p>
      */
     public void pauseTrack() {
+        if (mediaPlayer != null) {
+            mediaPlayer.pause();
+        }
         this.playing = false;
     }
 
@@ -81,6 +102,12 @@ public class PlaybackService {
         this.currentTime = 0;
         this.duration = 0;
         this.playing = false;
+
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.dispose();
+            mediaPlayer = null;
+        }
     }
 
     /**
@@ -224,6 +251,9 @@ public class PlaybackService {
     public void resumeTrack() {
         if (currentTrack != null && currentTime < duration) {
             this.playing = true;
+        }
+        if (mediaPlayer != null) {
+            mediaPlayer.play();
         }
     }
     /**

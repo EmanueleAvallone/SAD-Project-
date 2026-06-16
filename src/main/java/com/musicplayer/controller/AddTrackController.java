@@ -1,5 +1,7 @@
 package com.musicplayer.controller;
 
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import com.musicplayer.model.Track;
 import com.musicplayer.model.Tag;
 import javafx.fxml.FXML;
@@ -16,6 +18,7 @@ import java.io.FileInputStream;
 import java.util.Properties;
 import java.util.HashSet;
 import java.util.Set;
+import java.io.File;
 
 import com.musicplayer.service.TrackService;
 
@@ -56,6 +59,11 @@ public class AddTrackController {
     @FXML
     private Button submitButton;
 
+    @FXML
+    private TextField audioFilePathField;
+
+    private File selectedAudioFile;
+    private MediaPlayer metadataPlayer;
     private Track createdTrack;
     private Track trackToEdit;
     private boolean editMode;
@@ -84,6 +92,7 @@ public class AddTrackController {
         String length = lengthField.getText();
         String genre = genreField.getText();
         String yearText = yearField.getText();
+        String audioFilePath = audioFilePathField.getText();
 
         Set<Tag> selectedTags = new HashSet<>();
         if (favouriteCheckBox.isSelected()) selectedTags.add(Tag.FAV);
@@ -97,7 +106,8 @@ public class AddTrackController {
                         author,
                         trackToEdit.getLength(),
                         genre,
-                        yearText
+                        yearText,
+                        audioFilePath
                 );
             } else {
                 createdTrack = trackService.createTrack(
@@ -105,7 +115,8 @@ public class AddTrackController {
                         author,
                         length,
                         genre,
-                        yearText
+                        yearText,
+                        audioFilePath
                 );
             }
 
@@ -135,6 +146,14 @@ public class AddTrackController {
             genreField.setText(trackToEdit.getGenre());
             yearField.setText(String.valueOf(trackToEdit.getYear()));
 
+            audioFilePathField.setText(trackToEdit.getAudioFilePath());
+
+            if (trackToEdit.getAudioFilePath() != null && !trackToEdit.getAudioFilePath().isBlank()) {
+                selectedAudioFile = new File(trackToEdit.getAudioFilePath());
+            } else {
+                selectedAudioFile = null;
+            }
+
             favouriteCheckBox.setSelected(false);
             explicitCheckBox.setSelected(false);
             newReleaseCheckBox.setSelected(false);
@@ -149,6 +168,8 @@ public class AddTrackController {
         genreField.clear();
         yearField.clear();
         notesArea.clear();
+        audioFilePathField.clear();
+        selectedAudioFile = null;
 
         favouriteCheckBox.setSelected(false);
         explicitCheckBox.setSelected(false);
@@ -192,6 +213,12 @@ public class AddTrackController {
         favouriteCheckBox.setSelected(track.hasTag(Tag.FAV));
         explicitCheckBox.setSelected(track.hasTag(Tag.EXPLICIT));
         newReleaseCheckBox.setSelected(track.hasTag(Tag.NEW));
+
+        audioFilePathField.setText(track.getAudioFilePath());
+
+        if (track.getAudioFilePath() != null && !track.getAudioFilePath().isBlank()) {
+            selectedAudioFile = new File(track.getAudioFilePath());
+        }
 
         lengthField.setDisable(true);
 
@@ -241,6 +268,98 @@ public class AddTrackController {
         stage.close();
     }
 
+    @FXML
+    private void handleChooseAudioFile() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Seleziona file audio");
+
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("MP3 Audio Files (*.mp3)", "*.mp3")
+        );
+
+        Stage stage = (Stage) titleField.getScene().getWindow();
+        File file = fileChooser.showOpenDialog(stage);
+
+        if (file == null) {
+            return;
+        }
+
+        selectedAudioFile = file;
+
+        audioFilePathField.setText(selectedAudioFile.getAbsolutePath());
+
+        fillTitleFromAudioFile();
+        fillDurationFromAudioFile();
+
+        statusLabel.setText("File audio selezionato: " + selectedAudioFile.getName());
+    }
+
+    private void fillTitleFromAudioFile() {
+        if (selectedAudioFile == null) {
+            return;
+        }
+
+        if (titleField.getText() != null && !titleField.getText().trim().isEmpty()) {
+            return;
+        }
+
+        String fileName = selectedAudioFile.getName();
+
+        int dotIndex = fileName.lastIndexOf(".");
+        if (dotIndex > 0) {
+            fileName = fileName.substring(0, dotIndex);
+        }
+
+        fileName = fileName.replace("_", " ").replace("-", " ").trim();
+
+        titleField.setText(fileName);
+    }
+    private void fillDurationFromAudioFile() {
+        if (selectedAudioFile == null) {
+            return;
+        }
+
+        try {
+            if (metadataPlayer != null) {
+                metadataPlayer.dispose();
+                metadataPlayer = null;
+            }
+
+            Media media = new Media(selectedAudioFile.toURI().toString());
+            metadataPlayer = new MediaPlayer(media);
+
+            metadataPlayer.setOnReady(() -> {
+                double secondsValue = media.getDuration().toSeconds();
+
+                if (secondsValue > 0) {
+                    int totalSeconds = (int) Math.round(secondsValue);
+
+                    int minutes = totalSeconds / 60;
+                    int seconds = totalSeconds % 60;
+
+                    lengthField.setText(String.format("%d:%02d", minutes, seconds));
+                    statusLabel.setText("Durata rilevata automaticamente.");
+                } else {
+                    statusLabel.setText("Durata non rilevata automaticamente.");
+                }
+
+                metadataPlayer.dispose();
+                metadataPlayer = null;
+            });
+
+            metadataPlayer.setOnError(() -> {
+                statusLabel.setText("Impossibile leggere la durata del file audio.");
+
+                if (metadataPlayer != null) {
+                    metadataPlayer.dispose();
+                    metadataPlayer = null;
+                }
+            });
+
+        } catch (Exception exception) {
+            showError("Impossibile leggere la durata del file audio.");
+        }
+    }
     /**
      * Mostra un messaggio di errore nella finestra Add/Edit Track.
      *

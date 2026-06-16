@@ -19,8 +19,10 @@
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane fx:id="rootPane"
-            prefHeight="760.0"
+            minWidth="980.0"
+            minHeight="620.0"
             prefWidth="1280.0"
+            prefHeight="760.0"
             styleClass="app-root"
             stylesheets="@music-playlist-manager.css"
             xmlns="http://javafx.com/javafx/17"
@@ -34,16 +36,17 @@
             </padding>
 
             <HBox alignment="CENTER_LEFT" spacing="12.0">
-                <VBox spacing="2.0">
+                <VBox spacing="2.0" HBox.hgrow="ALWAYS">
                     <Label styleClass="app-title" text="Music Playlist Manager"/>
                     <Label styleClass="subtitle"
-                           text="Create playlists, manage tracks, simulate playback and apply advanced filters"/>
+                           text="Create playlists, manage tracks, simulate playback and apply advanced filters"
+                           wrapText="true"/>
                 </VBox>
 
-                <Region HBox.hgrow="ALWAYS"/>
-
                 <TextField fx:id="searchField"
+                           minWidth="180.0"
                            prefWidth="340.0"
+                           maxWidth="420.0"
                            promptText="Search tracks, artists, playlists..."/>
 
                 <Button fx:id="clearSearchButton"
@@ -61,15 +64,16 @@
     <center>
         <SplitPane dividerPositions="0.52"
                    orientation="VERTICAL"
-                   styleClass="content-split">
+                   styleClass="content-split"
+                   minWidth="0.0">
 
             <items>
-                <VBox spacing="10.0" styleClass="card">
+                <VBox spacing="10.0" styleClass="card" minWidth="0.0">
                     <padding>
                         <Insets bottom="14.0" left="14.0" right="14.0" top="14.0"/>
                     </padding>
 
-                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <HBox alignment="CENTER_LEFT" spacing="10.0" minWidth="0.0">
                         <Label styleClass="section-title" text="Track library"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
@@ -88,29 +92,31 @@
                                 text="Delete"/>
                     </HBox>
 
-                    <TableView fx:id="trackTableView" VBox.vgrow="ALWAYS">
+                    <TableView fx:id="trackTableView"
+                               minHeight="160.0"
+                               VBox.vgrow="ALWAYS">
                         <placeholder>
                             <Label text="No tracks yet. Add a track to start."/>
                         </placeholder>
 
                         <columns>
-                            <TableColumn fx:id="trackTitleColumn" prefWidth="180.0" text="Title"/>
-                            <TableColumn fx:id="trackAuthorColumn" prefWidth="155.0" text="Author"/>
-                            <TableColumn fx:id="trackLengthColumn" prefWidth="90.0" text="Length"/>
-                            <TableColumn fx:id="trackGenreColumn" prefWidth="110.0" text="Genre"/>
-                            <TableColumn fx:id="trackYearColumn" prefWidth="80.0" text="Year"/>
+                            <TableColumn fx:id="trackTitleColumn" prefWidth="190.0" text="Title"/>
+                            <TableColumn fx:id="trackAuthorColumn" prefWidth="160.0" text="Author"/>
+                            <TableColumn fx:id="trackLengthColumn" prefWidth="80.0" text="Length"/>
+                            <TableColumn fx:id="trackGenreColumn" prefWidth="120.0" text="Genre"/>
+                            <TableColumn fx:id="trackYearColumn" prefWidth="70.0" text="Year"/>
                             <TableColumn fx:id="trackTagsColumn" prefWidth="170.0" text="Tags"/>
-                            <TableColumn fx:id="trackPlayCountColumn" prefWidth="95.0" text="Played"/>
+                            <TableColumn fx:id="trackPlayCountColumn" prefWidth="80.0" text="Played"/>
                         </columns>
                     </TableView>
                 </VBox>
 
-                <VBox spacing="10.0" styleClass="card">
+                <VBox spacing="10.0" styleClass="card" minWidth="0.0">
                     <padding>
                         <Insets bottom="14.0" left="14.0" right="14.0" top="14.0"/>
                     </padding>
 
-                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <HBox alignment="CENTER_LEFT" spacing="10.0" minWidth="0.0">
                         <Label fx:id="selectedPlaylistTitleLabel"
                                styleClass="section-title"
                                text="Selected playlist"/>
@@ -134,14 +140,16 @@
                                 text="Move down"/>
                     </HBox>
 
-                    <TableView fx:id="playlistTrackTableView" VBox.vgrow="ALWAYS">
+                    <TableView fx:id="playlistTrackTableView"
+                               minHeight="150.0"
+                               VBox.vgrow="ALWAYS">
                         <placeholder>
                             <Label text="Select a playlist or add tracks to it."/>
                         </placeholder>
 
                         <columns>
                             <TableColumn fx:id="playlistTrackOrderColumn" prefWidth="55.0" text="#"/>
-                            <TableColumn fx:id="playlistTrackTitleColumn" prefWidth="210.0" text="Title"/>
+                            <TableColumn fx:id="playlistTrackTitleColumn" prefWidth="230.0" text="Title"/>
                             <TableColumn fx:id="playlistTrackAuthorColumn" prefWidth="170.0" text="Author"/>
                             <TableColumn fx:id="playlistTrackLengthColumn" prefWidth="90.0" text="Length"/>
                             <TableColumn fx:id="playlistTrackGenreColumn" prefWidth="120.0" text="Genre"/>
@@ -153,100 +161,117 @@
     </center>
 
     <right>
-        <VBox prefWidth="315.0" spacing="14.0" styleClass="right-panel">
-            <padding>
-                <Insets bottom="18.0" left="14.0" right="18.0" top="18.0"/>
-            </padding>
+        <ScrollPane fitToWidth="true"
+                    hbarPolicy="NEVER"
+                    vbarPolicy="AS_NEEDED"
+                    minWidth="280.0"
+                    prefWidth="315.0"
+                    maxWidth="370.0"
+                    styleClass="right-scroll-pane">
 
-            <fx:include fx:id="playerControl" source="PlayerControllerView.fxml"/>
+            <content>
+                <VBox minWidth="280.0"
+                      prefWidth="315.0"
+                      maxWidth="370.0"
+                      spacing="14.0"
+                      styleClass="right-panel">
+                    <padding>
+                        <Insets bottom="18.0" left="14.0" right="18.0" top="18.0"/>
+                    </padding>
 
-            <VBox spacing="10.0" styleClass="card">
-                <padding>
-                    <Insets bottom="14.0" left="14.0" right="14.0" top="14.0"/>
-                </padding>
+                    <fx:include fx:id="playerControl" source="PlayerControllerView.fxml"/>
 
-                <Label styleClass="section-title" text="Advanced filters"/>
+                    <VBox spacing="10.0" styleClass="card">
+                        <padding>
+                            <Insets bottom="14.0" left="14.0" right="14.0" top="14.0"/>
+                        </padding>
 
-                <TextField fx:id="filterTextField" promptText="Title or author"/>
+                        <Label styleClass="section-title" text="Advanced filters"/>
 
-                <ComboBox fx:id="genreComboBox"
-                          maxWidth="Infinity"
-                          promptText="Genre"/>
+                        <TextField fx:id="filterTextField" promptText="Title or author"/>
 
-                <HBox spacing="8.0">
-                    <TextField fx:id="yearFromField"
-                               promptText="Year from"
-                               HBox.hgrow="ALWAYS"/>
+                        <ComboBox fx:id="genreComboBox"
+                                  maxWidth="Infinity"
+                                  promptText="Genre"/>
 
-                    <TextField fx:id="yearToField"
-                               promptText="Year to"
-                               HBox.hgrow="ALWAYS"/>
-                </HBox>
+                        <HBox spacing="8.0">
+                            <TextField fx:id="yearFromField"
+                                       promptText="Year from"
+                                       HBox.hgrow="ALWAYS"/>
 
-                <Label styleClass="field-label" text="Visual tags"/>
+                            <TextField fx:id="yearToField"
+                                       promptText="Year to"
+                                       HBox.hgrow="ALWAYS"/>
+                        </HBox>
 
-                <VBox spacing="5.0">
-                    <CheckBox fx:id="favouriteTagCheckBox" text="Favourite"/>
-                    <CheckBox fx:id="explicitTagCheckBox" text="Explicit"/>
-                    <CheckBox fx:id="newReleaseTagCheckBox" text="New release"/>
-                </VBox>
+                        <Label styleClass="field-label" text="Visual tags"/>
 
-                <HBox spacing="8.0">
-                    <Button fx:id="applyFiltersButton"
-                            maxWidth="Infinity"
-                            onAction="#handleApplyFilters"
-                            text="Apply"
-                            HBox.hgrow="ALWAYS"/>
+                        <VBox spacing="5.0">
+                            <CheckBox fx:id="favouriteTagCheckBox" text="Favourite"/>
+                            <CheckBox fx:id="explicitTagCheckBox" text="Explicit"/>
+                            <CheckBox fx:id="newReleaseTagCheckBox" text="New release"/>
+                        </VBox>
 
-                    <Button fx:id="resetFiltersButton"
-                            maxWidth="Infinity"
-                            onAction="#handleResetFilters"
-                            text="Reset"
-                            HBox.hgrow="ALWAYS"/>
-                </HBox>
-            </VBox>
+                        <HBox spacing="8.0">
+                            <Button fx:id="applyFiltersButton"
+                                    maxWidth="Infinity"
+                                    onAction="#handleApplyFilters"
+                                    text="Apply"
+                                    HBox.hgrow="ALWAYS"/>
 
-            <VBox spacing="10.0" styleClass="card" VBox.vgrow="ALWAYS">
-                <padding>
-                    <Insets bottom="14.0" left="14.0" right="14.0" top="14.0"/>
-                </padding>
-
-                <HBox alignment="CENTER_LEFT" spacing="10.0">
-                    <Label styleClass="section-title" text="Most played tracks"/>
-
-                    <Region HBox.hgrow="ALWAYS"/>
-
-                    <Button fx:id="playMostPlayedButton"
-                            onAction="#handlePlayMostPlayed"
-                            text="Play all"/>
-                </HBox>
-
-                <StackPane prefHeight="280.0" VBox.vgrow="ALWAYS">
-                    <ScrollPane fx:id="mostPlayedScrollPane"
-                                fitToWidth="true"
-                                vbarPolicy="AS_NEEDED"
-                                hbarPolicy="NEVER"
-                                style="-fx-background-color: transparent;">
-                        <content>
-                            <VBox fx:id="topTracksContainer"
-                                  spacing="8.0"
-                                  alignment="TOP_CENTER"/>
-                        </content>
-                    </ScrollPane>
-
-                    <VBox fx:id="emptyMostPlayedView"
-                          alignment="CENTER"
-                          spacing="5.0"
-                          visible="false">
-                        <Label text="No songs playing"
-                               style="-fx-font-weight: bold; -fx-text-fill: gray;"/>
-
-                        <Label text="Play a song to get started"
-                               style="-fx-font-size: 11px; -fx-text-fill: darkgray;"/>
+                            <Button fx:id="resetFiltersButton"
+                                    maxWidth="Infinity"
+                                    onAction="#handleResetFilters"
+                                    text="Reset"
+                                    HBox.hgrow="ALWAYS"/>
+                        </HBox>
                     </VBox>
-                </StackPane>
-            </VBox>
-        </VBox>
+
+                    <VBox spacing="10.0" styleClass="card" VBox.vgrow="ALWAYS">
+                        <padding>
+                            <Insets bottom="14.0" left="14.0" right="14.0" top="14.0"/>
+                        </padding>
+
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Label styleClass="section-title" text="Most played tracks"/>
+
+                            <Region HBox.hgrow="ALWAYS"/>
+
+                            <Button fx:id="playMostPlayedButton"
+                                    onAction="#handlePlayMostPlayed"
+                                    text="Play all"/>
+                        </HBox>
+
+                        <StackPane minHeight="180.0"
+                                   prefHeight="260.0"
+                                   VBox.vgrow="ALWAYS">
+                            <ScrollPane fx:id="mostPlayedScrollPane"
+                                        fitToWidth="true"
+                                        vbarPolicy="AS_NEEDED"
+                                        hbarPolicy="NEVER"
+                                        style="-fx-background-color: transparent;">
+                                <content>
+                                    <VBox fx:id="topTracksContainer"
+                                          spacing="8.0"
+                                          alignment="TOP_CENTER"/>
+                                </content>
+                            </ScrollPane>
+
+                            <VBox fx:id="emptyMostPlayedView"
+                                  alignment="CENTER"
+                                  spacing="5.0"
+                                  visible="false">
+                                <Label text="No songs playing"
+                                       style="-fx-font-weight: bold; -fx-text-fill: gray;"/>
+
+                                <Label text="Play a song to get started"
+                                       style="-fx-font-size: 11px; -fx-text-fill: darkgray;"/>
+                            </VBox>
+                        </StackPane>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
     </right>
 
     <bottom>
