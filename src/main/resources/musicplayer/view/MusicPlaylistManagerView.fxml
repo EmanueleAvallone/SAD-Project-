@@ -186,25 +186,26 @@
                             <Insets bottom="14.0" left="14.0" right="14.0" top="14.0"/>
                         </padding>
 
-                        <Label styleClass="section-title" text="Advanced filters"/>
+                        <Label styleClass="section-title" text="Visual tags"/>
 
-                        <TextField fx:id="filterTextField" promptText="Title or author"/>
+                        <!-- Campi mantenuti nascosti per non rompere i controller già esistenti -->
+                        <VBox managed="false" visible="false">
+                            <TextField fx:id="filterTextField" promptText="Title or author"/>
 
-                        <ComboBox fx:id="genreComboBox"
-                                  maxWidth="Infinity"
-                                  promptText="Genre"/>
+                            <ComboBox fx:id="genreComboBox"
+                                      maxWidth="Infinity"
+                                      promptText="Genre"/>
 
-                        <HBox spacing="8.0">
-                            <TextField fx:id="yearFromField"
-                                       promptText="Year from"
-                                       HBox.hgrow="ALWAYS"/>
+                            <HBox spacing="8.0">
+                                <TextField fx:id="yearFromField"
+                                           promptText="Year from"
+                                           HBox.hgrow="ALWAYS"/>
 
-                            <TextField fx:id="yearToField"
-                                       promptText="Year to"
-                                       HBox.hgrow="ALWAYS"/>
-                        </HBox>
-
-                        <Label styleClass="field-label" text="Visual tags"/>
+                                <TextField fx:id="yearToField"
+                                           promptText="Year to"
+                                           HBox.hgrow="ALWAYS"/>
+                            </HBox>
+                        </VBox>
 
                         <VBox spacing="5.0">
                             <CheckBox fx:id="favouriteTagCheckBox" text="Favourite"/>
