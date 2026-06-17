@@ -35,7 +35,7 @@ public class TrashController {
     public void showTrashBinDialog() {
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle("Trash Bin");
-        dialog.setHeaderText("Tracce eliminate di recente");
+        dialog.setHeaderText("Recently deleted tracks");
 
         DialogPane dialogPane = dialog.getDialogPane();
         StyleManager.applyToDialog(dialog);
@@ -68,8 +68,8 @@ public class TrashController {
                     titleLabel.setStyle("-fx-font-weight: bold;");
 
                     String dateStr = track.getDeletedAt() != null ?
-                            track.getDeletedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "Sconosciuta";
-                    Label dateLabel = new Label("Eliminata il: " + dateStr);
+                            track.getDeletedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "Unknown";
+                    Label dateLabel = new Label("Eliminated on: " + dateStr);
                     dateLabel.getStyleClass().add("subtitle");
 
                     infoBox.getChildren().addAll(titleLabel, dateLabel);
@@ -95,8 +95,8 @@ public class TrashController {
 
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
             confirm.setTitle("Empty Trash");
-            confirm.setHeaderText("Svuotare il cestino?");
-            confirm.setContentText("Tutte le tracce verranno rimosse definitivamente dal sistema.");
+            confirm.setHeaderText("Empty the trash?");
+            confirm.setContentText("All traces will be permanently removed from your system.");
 
             StyleManager.applyToDialog(confirm);
 

@@ -160,7 +160,7 @@ public class PlayerController implements PlayerObserver {
     @FXML
     public void handlePlay() {
         if (selectedTrack == null) {
-            updateStatus("Seleziona una traccia da riprodurre.");
+            updateStatus("Select a track to play.");
             refreshPlaybackView();
             return;
         }
@@ -179,7 +179,7 @@ public class PlayerController implements PlayerObserver {
                 playbackTimeline.playFromStart();
             }
 
-            updateStatus("Riproduzione avviata: " + selectedTrack.getTitle());
+            updateStatus("Playback started: " + selectedTrack.getTitle());
         } else if (!playbackService.isPlaying()) {
             playbackService.resumeTrack();
 
@@ -187,7 +187,7 @@ public class PlayerController implements PlayerObserver {
                 playbackTimeline.play();
             }
 
-            updateStatus("Riproduzione ripresa: " + selectedTrack.getTitle());
+            updateStatus("Resume playback: " + selectedTrack.getTitle());
         }
 
         refreshPlaybackView();
@@ -213,7 +213,7 @@ public class PlayerController implements PlayerObserver {
             playbackTimeline.pause();
         }
 
-        updateStatus("Riproduzione sospesa.");
+        updateStatus("Playback paused.");
         refreshPlaybackView();
     }
 
@@ -238,7 +238,7 @@ public class PlayerController implements PlayerObserver {
         Track trackBeforeCommand = playbackService.getCurrentTrack();
 
         if (trackBeforeCommand == null) {
-            updateStatus("Nessuna traccia in riproduzione.");
+            updateStatus("No tracks playing.");
             refreshPlaybackView();
             return;
         }
@@ -260,9 +260,9 @@ public class PlayerController implements PlayerObserver {
         selectedTrack = currentTrack;
 
         if (currentTrack != null && !currentTrack.equals(trackBeforeCommand)) {
-            updateStatus("Riproduzione passata a: " + currentTrack.getTitle());
+            updateStatus("Playback switched to: " + currentTrack.getTitle());
         } else {
-            updateStatus("Nessuna traccia successiva disponibile. Riproduzione fermata sull'ultimo brano.");
+            updateStatus("No next track available. Playback stopped on the last track.");
         }
 
         refreshPlaybackView();
@@ -278,7 +278,7 @@ public class PlayerController implements PlayerObserver {
         Track trackBeforeCommand = playbackService.getCurrentTrack();
 
         if (trackBeforeCommand == null) {
-            updateStatus("Nessuna traccia in riproduzione.");
+            updateStatus("No tracks playing.");
             refreshPlaybackView();
             return;
         }
@@ -300,9 +300,9 @@ public class PlayerController implements PlayerObserver {
         selectedTrack = currentTrack;
 
         if (currentTrack != null && !currentTrack.equals(trackBeforeCommand)) {
-            updateStatus("Riproduzione tornata a: " + currentTrack.getTitle());
+            updateStatus("Playback returned to: " + currentTrack.getTitle());
         } else {
-            updateStatus("Nessuna traccia precedente disponibile. Brano riportato all'inizio.");
+            updateStatus("No previous tracks available. Song reverts to beginning.");
         }
 
         refreshPlaybackView();
@@ -374,7 +374,7 @@ public class PlayerController implements PlayerObserver {
         setSelectedTrack(null);
         refreshPlaybackView();
 
-        updateStatus("Riproduzione interrotta: la traccia è stata rimossa.");
+        updateStatus("Playback stopped: The track has been removed.");
     }
 
     /**
@@ -433,7 +433,7 @@ public class PlayerController implements PlayerObserver {
      */
     public void playTrackFromPlaylist(Track track) {
         if (track == null) {
-            updateStatus("Nessuna traccia disponibile per continuare la riproduzione.");
+            updateStatus("No tracks available to continue playing.");
             refreshPlaybackView();
             return;
         }
@@ -450,7 +450,7 @@ public class PlayerController implements PlayerObserver {
             playbackTimeline.playFromStart();
         }
 
-        updateStatus("Riproduzione continuata con: " + track.getTitle());
+        updateStatus("Continued playback with: " + track.getTitle());
         refreshPlaybackView();
     }
     /**
@@ -469,7 +469,7 @@ public class PlayerController implements PlayerObserver {
         }
 
         selectedTrack = null;
-        updateStatus("Riproduzione fermata.");
+        updateStatus("Playback stopped.");
         refreshPlaybackView();
     }
 
@@ -724,7 +724,7 @@ public class PlayerController implements PlayerObserver {
      */
     private void handleShuffleMode() {
         if (originalPlaylist == null || originalPlaylist.isEmpty()) {
-            updateStatus("Nessuna playlist disponibile per la modalità casuale.");
+            updateStatus("No playlists available for shuffle mode.");
             return;
         }
 
@@ -733,7 +733,7 @@ public class PlayerController implements PlayerObserver {
         playbackService.shuffleRemainingQueue();
         currentPlaylist = playbackService.getCurrentQueue();
 
-        updateStatus("Modalità casuale attivata.");
+        updateStatus("Random mode activated.");
         refreshPlaybackView();
     }
 
@@ -764,7 +764,7 @@ public class PlayerController implements PlayerObserver {
                 playbackTimeline.playFromStart();
             }
 
-            updateStatus("Riproduzione continuata con: " + currentTrack.getTitle());
+            updateStatus("Continued playback with: " + currentTrack.getTitle());
         } else {
             selectedTrack = currentTrack;
 
@@ -816,7 +816,7 @@ public class PlayerController implements PlayerObserver {
             this.originalPlaylist = List.copyOf(updatedPlaylist);
             this.currentPlaylist = List.copyOf(updatedPlaylist);
             playbackService.setCurrentQueue(this.currentPlaylist);
-            System.out.println("Coda di riproduzione aggiornata al nuovo ordine.");
+            System.out.println("Play queue updated to new order.");
         }
     }
 }

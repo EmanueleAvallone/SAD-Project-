@@ -395,19 +395,63 @@ public class MainController {
 
 
     /**
-     * Predisposizione per Undo generale.
+     * Gestisce il click sul pulsante Undo generale.
+     * Annulla l'ultimo comando eseguito tramite il CommandManager.
      */
     @FXML
     private void handleUndo() {
-        System.out.println("Undo");
+        if (commandManager != null && commandManager.canUndo()) {
+            // Se lo snackbar è visibile, nascondilo (l'undo globale sostituisce il "Annulla" dello snackbar)
+            if (snackbarTimer != null) {
+                snackbarTimer.stop();
+            }
+            clearSnackbarActions();
+            hideUndoSnackbar();
+
+            // Esegui l'undo del comando
+            commandManager.undo();
+
+            // Aggiorna l'UI del PlaylistController dopo l'undo
+            if (playlistSectionController != null) {
+                playlistSectionController.refreshSelectedPlaylistTable();
+            }
+
+            if (trackTableView != null) {
+                trackTableView.refresh();
+            }
+
+            statusLabel.setText("Undo executed");
+        }
     }
 
     /**
-     * Predisposizione per Redo generale.
+     * Gestisce il click sul pulsante Redo generale.
+     * Ripete l'ultimo comando annullato tramite il CommandManager.
      */
     @FXML
     private void handleRedo() {
-        System.out.println("Redo");
+        if (commandManager != null && commandManager.canRedo()) {
+            // Se lo snackbar è visibile, nascondilo
+            if (snackbarTimer != null) {
+                snackbarTimer.stop();
+            }
+            clearSnackbarActions();
+            hideUndoSnackbar();
+
+            // Esegui il redo del comando
+            commandManager.redo();
+
+            // Aggiorna l'UI del PlaylistController dopo il redo
+            if (playlistSectionController != null) {
+                playlistSectionController.refreshSelectedPlaylistTable();
+            }
+
+            if (trackTableView != null) {
+                trackTableView.refresh();
+            }
+
+            statusLabel.setText("Redo executed");
+        }
     }
 
     @FXML
@@ -539,16 +583,16 @@ public class MainController {
             );
 
             if (statusLabel != null) {
-                statusLabel.setText("Esportazione completata con successo.");
+                statusLabel.setText("Export completed successfully.");
             }
 
-            showInfo("Export completato", "La libreria è stata salvata correttamente.");
+            showInfo("Export completed", "The library has been saved successfully.");
         } catch (IOException exception) {
             if (statusLabel != null) {
-                statusLabel.setText("Errore durante l'esportazione.");
+                statusLabel.setText("Error during export.");
             }
 
-            showError("Impossibile salvare i dati su disco: " + exception.getMessage());
+            showError("Unable to save data to disk: " + exception.getMessage());
         }
     }
     /**
@@ -575,8 +619,8 @@ public class MainController {
      */
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Errore");
-        alert.setHeaderText("Esportazione non riuscita");
+        alert.setTitle("Error");
+        alert.setHeaderText("Export failed");
         alert.setContentText(message);
 
         StyleManager.applyToDialog(alert);
@@ -624,7 +668,7 @@ public class MainController {
             playlistSectionController.updateSelectedPlaylistView(null);
 
             if (statusLabel != null) {
-                statusLabel.setText("Sessione precedente ripristinata correttamente.");
+                statusLabel.setText("Previous session restored successfully.");
             }
 
             return true;
@@ -637,7 +681,7 @@ public class MainController {
             selectedPlaylistTracks.clear();
 
             if (statusLabel != null) {
-                statusLabel.setText("Nessun salvataggio valido trovato: avvio con libreria vuota.");
+                statusLabel.setText("No valid save found: boot with empty library.");
             }
 
             return false;

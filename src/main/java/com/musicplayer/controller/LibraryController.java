@@ -214,7 +214,7 @@ public class LibraryController {
 
                     if (newTrack != null) {
                         setStatus(
-                                "Traccia selezionata: "
+                                "Selected track: "
                                         + newTrack.getTitle()
                                         + " - "
                                         + newTrack.getAuthor()
@@ -297,7 +297,7 @@ public class LibraryController {
                 sortedTracks.setComparator(null);
                 activeTrackLibrarySortColumn = null;
                 trackLibrarySortAscending = true;
-                setStatus("Ordinamento Track Library rimosso: ordine originale ripristinato.");
+                setStatus("Track Library sorting removed: original order restored.");
                 return true;
             }
 
@@ -312,9 +312,9 @@ public class LibraryController {
                 trackLibrarySortAscending = true;
 
                 setStatus(
-                        "La colonna "
+                        "The column "
                                 + getTrackLibrarySortLabel(sortColumn)
-                                + " non è ordinabile."
+                                + " cannot be ordered."
 
                 );
 
@@ -470,12 +470,12 @@ public class LibraryController {
                 trackTableView.getSelectionModel().select(createdTrack);
                 updateMostPlayedSection();
 
-                setStatus("Traccia aggiunta: " + createdTrack.getTitle());
+                setStatus("Track added: " + createdTrack.getTitle());
             }
 
         } catch (IOException exception) {
             exception.printStackTrace();
-            showError("Impossibile aprire la schermata di aggiunta traccia.");
+            showError("Unable to open the add track screen.");
         }
     }
 
@@ -488,7 +488,7 @@ public class LibraryController {
         Track selectedTrack = getSelectedTrack();
 
         if (selectedTrack == null) {
-            showError("Seleziona una traccia da modificare.");
+            showError("Select a track to edit.");
             return;
         }
 
@@ -520,12 +520,12 @@ public class LibraryController {
 
                 updateMostPlayedSection();
 
-                setStatus("Traccia modificata: " + selectedTrack.getTitle());
+                setStatus("Track modified: " + selectedTrack.getTitle());
             }
 
         } catch (Exception exception) {
             exception.printStackTrace();
-            showError("Impossibile aprire la schermata di modifica traccia.");
+            showError("Unable to open track edit screen.");
         }
     }
 
@@ -536,17 +536,17 @@ public class LibraryController {
         Track selectedTrack = getSelectedTrack();
 
         if (selectedTrack == null) {
-            showError("Seleziona una traccia da eliminare.");
+            showError("Select a track to delete.");
             return;
         }
 
         Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
         confirmationAlert.setTitle("Delete track");
-        confirmationAlert.setHeaderText("Conferma eliminazione");
+        confirmationAlert.setHeaderText("Confirm deletion");
         confirmationAlert.setContentText(
-                "Vuoi eliminare definitivamente la traccia \""
+                "Do you want to permanently delete the track \""
                         + selectedTrack.getTitle()
-                        + "\" dalla libreria?"
+                        + "\" from the library?"
         );
 
         ButtonType cancelButton = new ButtonType("Cancel");
@@ -559,7 +559,7 @@ public class LibraryController {
         Optional<ButtonType> result = confirmationAlert.showAndWait();
 
         if (result.isEmpty() || result.get() == cancelButton) {
-            setStatus("Eliminazione annullata.");
+            setStatus("Deletion canceled.");
             return;
         }
 
@@ -567,13 +567,13 @@ public class LibraryController {
 
         if (undoSnackbarHandler != null) {
             undoSnackbarHandler.showUndoSnackbar(
-                    "Traccia rimossa",
+                    "Track removed",
                     this::restorePendingDeletedTrackFromCatalog,
                     this::confirmPendingDeletedTrack
             );
         }
 
-        setStatus("Traccia rimossa temporaneamente: " + selectedTrack.getTitle());
+        setStatus("Track temporarily removed: " + selectedTrack.getTitle());
     }
 
     /**
@@ -625,7 +625,7 @@ public class LibraryController {
 
         updateMostPlayedSection();
 
-        setStatus("Eliminazione annullata: " + restoredTrack.getTitle());
+        setStatus("Delete canceled: " + restoredTrack.getTitle());
     }
 
     /**
@@ -671,7 +671,7 @@ public class LibraryController {
     public void applyFilters() {
         updateCombinedFilter();
 
-        setStatus("Filtri applicati.");
+        setStatus("Filters applied.");
     }
 
     /**
@@ -691,7 +691,7 @@ public class LibraryController {
         }
 
         updateCombinedFilter();
-        setStatus("Filtri rimossi.");
+        setStatus("Filters removed.");
     }
 
 
@@ -805,14 +805,14 @@ public class LibraryController {
         List<Track> topTracks = trackService.getTopPlayedTracks(tracks, 10);
 
         if (topTracks == null || topTracks.isEmpty()) {
-            setStatus("Nessuna traccia disponibile nella classifica.");
+            setStatus("No tracks available in the top.");
             return;
         }
 
         playerController.setCurrentPlaylist(topTracks);
         playerController.playTrackFromPlaylist(topTracks.get(0));
 
-        setStatus("Riproduzione classifica Most Played avviata.");
+        setStatus("Most Played leaderboard playback started.");
     }
 
     /**
@@ -975,9 +975,9 @@ public class LibraryController {
         });
 
         if (currentSearchQuery.isBlank() && selectedTags.isEmpty()) {
-            setStatus("Nessun filtro attivo.");
+            setStatus("No active filters.");
         } else {
-            setStatus("Filtri e ricerca applicati.");
+            setStatus("Filters and search applied.");
         }
     }
 }

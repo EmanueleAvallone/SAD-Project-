@@ -50,11 +50,7 @@ public class PlaybackService {
         if (track == null) {
             throw new IllegalArgumentException("La traccia non può essere null");
         }
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();
-            mediaPlayer.dispose();
-            mediaPlayer = null;
-        }
+        startMediaPlayback(track);
 
         this.currentTrack = track;
         this.currentTime = 0;
@@ -62,15 +58,6 @@ public class PlaybackService {
         this.playing = true;
         track.incrementPlayedCount();
 
-        if (track.hasAudioFile()) {
-            File audioFile = new File(track.getAudioFilePath());
-
-            if (audioFile.exists() && audioFile.isFile()) {
-                Media media = new Media(audioFile.toURI().toString());
-                mediaPlayer = new MediaPlayer(media);
-                mediaPlayer.play();
-            }
-        }
     }
 
     /**
@@ -321,6 +308,7 @@ public class PlaybackService {
             this.playing = true;
 
             nextTrack.incrementPlayedCount();
+            startMediaPlayback(nextTrack);
 
             return;
         }
@@ -334,6 +322,7 @@ public class PlaybackService {
             this.playing = true;
 
             firstTrack.incrementPlayedCount();
+            startMediaPlayback(firstTrack);
 
         } else {
             this.currentTrackIndex = index;
@@ -360,6 +349,7 @@ public class PlaybackService {
 
         if (currentTime > 3) {
             this.currentTime = 0;
+            startMediaPlayback(currentTrack);
             return;
         }
 
@@ -381,7 +371,7 @@ public class PlaybackService {
         this.playing = true;
 
         previousTrack.incrementPlayedCount();
-
+        startMediaPlayback(previousTrack);
     }
     /**
      * Riorganizza in ordine casuale le tracce rimanenti della coda corrente,
@@ -433,4 +423,40 @@ public class PlaybackService {
     public void setLoopEnabled(boolean loopEnabled) {
         this.loopEnabled = loopEnabled;
     }
+    /**
+     * Avvia il MediaPlayer per una traccia se il file audio esiste.
+     * <p>
+     * Questo metodo è usato internamente per gestire l'avvio dell'audio
+     * quando si riproduce una traccia, si salta a quella successiva o si torna
+     * a quella precedente.
+     * </p>
+     *
+     * @param track la traccia di cui avviare la riproduzione audio
+     */
+    private void startMediaPlayback(Track track) {
+        if (track == null) {
+            return;
+        }
+
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.dispose();
+            mediaPlayer = null;
+        }
+
+        if (track.hasAudioFile()) {
+            File audioFile = new File(track.getAudioFilePath());
+
+            if (audioFile.exists() && audioFile.isFile()) {
+                try {
+                    Media media = new Media(audioFile.toURI().toString());
+                    mediaPlayer = new MediaPlayer(media);
+                    mediaPlayer.play();
+                 } catch (Exception e) {
+                     System.err.println("Error playing audio file: " + e.getMessage());
+                     mediaPlayer = null;
+                 }
+             }
+         }
+     }
 }
