@@ -135,6 +135,14 @@ title __MUSIC-PLAYLIST-MANAGER's Class Diagram__\n
   
 
   namespace com.musicplayer {
+    namespace controller {
+      class com.musicplayer.controller.TrashController {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
     namespace model {
       class com.musicplayer.model.Library {
       }
@@ -381,6 +389,22 @@ title __MUSIC-PLAYLIST-MANAGER's Class Diagram__\n
   
 
   namespace com.musicplayer {
+    namespace persistence {
+      class com.musicplayer.persistence.AppState {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      class com.musicplayer.service.PersistenceService {
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
     namespace service {
       class com.musicplayer.service.PlaybackService {
       }
@@ -420,6 +444,76 @@ title __MUSIC-PLAYLIST-MANAGER's Class Diagram__\n
   }
   
 
+  namespace com.musicplayer {
+    namespace service {
+      namespace sort {
+        class com.musicplayer.service.sort.AuthorSortStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      namespace sort {
+        class com.musicplayer.service.sort.LengthSortStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      namespace sort {
+        class com.musicplayer.service.sort.PlayedCountSortStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      namespace sort {
+        class com.musicplayer.service.sort.PlaylistOrderSortStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      namespace sort {
+        class com.musicplayer.service.sort.TitleSortStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      namespace sort {
+        interface com.musicplayer.service.sort.TrackSortStrategy {
+        }
+      }
+    }
+  }
+  
+
+  namespace com.musicplayer {
+    namespace service {
+      namespace sort {
+        class com.musicplayer.service.sort.YearSortStrategy {
+        }
+      }
+    }
+  }
+  
+
   com.musicplayer.MainApp -up-|> javafx.application.Application
   com.musicplayer.command.AddTrackPCommand .up.|> com.musicplayer.command.Command
   com.musicplayer.command.DeleteTrackCommand .up.|> com.musicplayer.command.Command
@@ -432,21 +526,28 @@ title __MUSIC-PLAYLIST-MANAGER's Class Diagram__\n
   com.musicplayer.controller.AddTrackController o-- com.musicplayer.model.Track : trackToEdit
   com.musicplayer.controller.AddTrackController o-- com.musicplayer.model.Track : createdTrack
   com.musicplayer.controller.AddTrackController o-- com.musicplayer.model.Track : trackToEdit
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.service.sort.TrackSortStrategy : authorSortStrategy
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.service.sort.TrackSortStrategy : lengthSortStrategy
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.service.sort.TrackSortStrategy : playedCountSortStrategy
   com.musicplayer.controller.LibraryController o-- com.musicplayer.controller.PlayerController : playerController
   com.musicplayer.controller.LibraryController o-- com.musicplayer.controller.PlaylistController : playlistController
   com.musicplayer.controller.LibraryController o-- com.musicplayer.service.PlaylistService : playlistService
   com.musicplayer.controller.LibraryController o-- com.musicplayer.service.SearchService : searchService
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.service.sort.TrackSortStrategy : titleSortStrategy
   com.musicplayer.controller.LibraryController o-- com.musicplayer.service.TrackService : trackService
   com.musicplayer.controller.LibraryController o-- com.musicplayer.controller.LibraryController.UndoSnackbarHandler : undoSnackbarHandler
-  com.musicplayer.controller.MainController o-- com.musicplayer.controller.PlayerController : playerControlController
-  com.musicplayer.controller.MainController o-- com.musicplayer.service.PlaylistService : playlistService
-  com.musicplayer.controller.MainController o-- com.musicplayer.service.TrackService : trackService
+  com.musicplayer.controller.LibraryController o-- com.musicplayer.service.sort.TrackSortStrategy : yearSortStrategy
   com.musicplayer.controller.MainController o-- com.musicplayer.command.CommandManager : commandManager
   com.musicplayer.controller.MainController o-- com.musicplayer.controller.LibraryController : librarySectionController
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.PersistenceService : persistenceService
   com.musicplayer.controller.MainController o-- com.musicplayer.controller.PlayerController : playerControlController
   com.musicplayer.controller.MainController o-- com.musicplayer.controller.PlaylistController : playlistSectionController
   com.musicplayer.controller.MainController o-- com.musicplayer.service.PlaylistService : playlistService
   com.musicplayer.controller.MainController o-- com.musicplayer.service.SearchService : searchService
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.TrackService : trackService
+  com.musicplayer.controller.MainController o-- com.musicplayer.controller.TrashController : trashController
+  com.musicplayer.controller.MainController o-- com.musicplayer.controller.PlayerController : playerControlController
+  com.musicplayer.controller.MainController o-- com.musicplayer.service.PlaylistService : playlistService
   com.musicplayer.controller.MainController o-- com.musicplayer.service.TrackService : trackService
   com.musicplayer.controller.MainController o-- com.musicplayer.controller.PlayerController : playerControlController
   com.musicplayer.controller.MainController o-- com.musicplayer.service.PlaylistService : playlistService
@@ -458,10 +559,15 @@ title __MUSIC-PLAYLIST-MANAGER's Class Diagram__\n
   com.musicplayer.controller.PlayerController o-- com.musicplayer.service.PlaybackService : playbackService
   com.musicplayer.controller.PlayerController o-- com.musicplayer.model.Track : selectedTrack
   com.musicplayer.controller.PlaylistController o-- com.musicplayer.command.CommandManager : commandManager
+  com.musicplayer.controller.PlaylistController o-- com.musicplayer.model.Playlist : currentSelectedPlaylist
   com.musicplayer.controller.PlaylistController o-- com.musicplayer.controller.PlayerController : playerControlController
   com.musicplayer.controller.PlaylistController o-- com.musicplayer.service.PlaylistService : playlistService
   com.musicplayer.controller.PlaylistController o-- com.musicplayer.service.SearchService : searchService
+  com.musicplayer.controller.PlaylistController o-- com.musicplayer.service.sort.TrackSortStrategy : selectedPlaylistAuthorSortStrategy
+  com.musicplayer.controller.PlaylistController o-- com.musicplayer.service.sort.TrackSortStrategy : selectedPlaylistLengthSortStrategy
+  com.musicplayer.controller.PlaylistController o-- com.musicplayer.service.sort.TrackSortStrategy : selectedPlaylistTitleSortStrategy
   com.musicplayer.controller.PlaylistController o-- com.musicplayer.controller.PlaylistController.UndoSnackbarHandler : undoSnackbarHandler
+  com.musicplayer.controller.TrashController o-- com.musicplayer.service.TrackService : trackService
   com.musicplayer.model.Playlist o-- com.musicplayer.model.filter.TrackFilterStrategy : filterStrategy
   com.musicplayer.model.engine.LoopPlay .up.|> com.musicplayer.model.engine.PlayStrategy
   com.musicplayer.model.engine.MediaPlayerEngine .up.|> com.musicplayer.model.engine.PlayerObservable
@@ -480,6 +586,12 @@ title __MUSIC-PLAYLIST-MANAGER's Class Diagram__\n
   com.musicplayer.service.PlaybackService o-- com.musicplayer.model.Track : currentTrack
   com.musicplayer.service.PlaylistService o-- com.musicplayer.model.Playlist : pendingDeletedPlaylist
   com.musicplayer.service.TrackService o-- com.musicplayer.model.Track : pendingDeletedTrack
+  com.musicplayer.service.sort.AuthorSortStrategy .up.|> com.musicplayer.service.sort.TrackSortStrategy
+  com.musicplayer.service.sort.LengthSortStrategy .up.|> com.musicplayer.service.sort.TrackSortStrategy
+  com.musicplayer.service.sort.PlayedCountSortStrategy .up.|> com.musicplayer.service.sort.TrackSortStrategy
+  com.musicplayer.service.sort.PlaylistOrderSortStrategy .up.|> com.musicplayer.service.sort.TrackSortStrategy
+  com.musicplayer.service.sort.TitleSortStrategy .up.|> com.musicplayer.service.sort.TrackSortStrategy
+  com.musicplayer.service.sort.YearSortStrategy .up.|> com.musicplayer.service.sort.TrackSortStrategy
 
 
 right footer
